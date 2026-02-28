@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  font-family: "Outfit", sans-serif;
+  background-color: #f3f5f7;
+  color: #000;
+  min-height: 100vh;
+  overflow-x: hidden;
+  max-width: 100vw;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Custom scrollbar — hidden globally */
+::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
+
+/* Aviator game animations */
+@keyframes fly {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  100% {
+    transform: translateX(100px) translateY(-100px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.8);
+  }
+}
+
+.animate-fly {
+  animation: fly 0.1s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+/* Graph line animation */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.graph-line {
+  stroke-dasharray: 1000;
+  animation: draw-line 2s ease-in-out forwards;
+}
+
+/* Spinner: highlight the triangular pointer when stopped (not the Thanks text) */
+@keyframes pointer-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.8)) drop-shadow(0 0 12px rgba(251, 191, 36, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 1)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.7));
+  }
+}
+
+.pointer-highlight {
+  animation: pointer-glow 1.2s ease-in-out infinite;
+  border-top-color: rgb(253, 224, 71) !important;
+}
+
+.pointer-highlight-inner {
+  animation: pointer-glow 1.2s ease-in-out infinite;
+  border-top-color: rgb(254, 240, 138) !important;
+}
+
+/* Spinner: whole-segment light background when stopped (no border) */
+.segment-wedge-bg {
+  /* optional: very subtle pulse */
+  animation: wedge-bg-subtle 2s ease-in-out infinite;
+}
+
+@keyframes wedge-bg-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
