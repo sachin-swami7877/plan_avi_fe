@@ -110,7 +110,7 @@ const Home = () => {
                 key={game.id}
                 onClick={() => {
                   if (game.isExternal) {
-                    window.open(supportWhatsApp ? `https://wa.me/${supportWhatsApp}` : 'https://wa.me/', '_blank');
+                    window.location.href = supportWhatsApp ? `https://wa.me/${supportWhatsApp}` : 'https://wa.me/';
                   } else {
                     navigate(game.path);
                   }

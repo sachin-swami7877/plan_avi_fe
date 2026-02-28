@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { getToken, removeToken } from '../utils/cookies';
 
-const API_URL = 'http://localhost:5050/api';
+const BASE = import.meta.env.VITE_APP_ENVIRONMENT === 'production'
+  ? import.meta.env.VITE_APP_PRODUCTION_API_URL
+  : import.meta.env.VITE_APP_LOCAL_API_URL;
+const API_URL = `${BASE}/api`;
 
 const api = axios.create({
   baseURL: API_URL,

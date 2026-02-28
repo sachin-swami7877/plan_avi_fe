@@ -228,7 +228,7 @@ const MoneyRequests = () => {
 
                 {tab === 'deposit' && request.screenshotUrl && (
                   <a
-                    href={request.screenshotUrl.startsWith('http') ? request.screenshotUrl : `http://localhost:5050${request.screenshotUrl}`}
+                    href={request.screenshotUrl.startsWith('http') ? request.screenshotUrl : `${import.meta.env.VITE_APP_ENVIRONMENT === 'production' ? import.meta.env.VITE_APP_PRODUCTION_API_URL : import.meta.env.VITE_APP_LOCAL_API_URL}${request.screenshotUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block bg-violet-50 text-violet-700 text-center py-2 rounded-lg mb-3 font-medium text-sm"

@@ -60,7 +60,10 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     const token = getToken() || localStorage.getItem('token');
 
-    const newSocket = io('http://localhost:5050', {
+    const socketUrl = import.meta.env.VITE_APP_ENVIRONMENT === 'production'
+      ? import.meta.env.VITE_APP_PRODUCTION_API_URL
+      : import.meta.env.VITE_APP_LOCAL_API_URL;
+    const newSocket = io(socketUrl, {
       auth: { token }
     });
 

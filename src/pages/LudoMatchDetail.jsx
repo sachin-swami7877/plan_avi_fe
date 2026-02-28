@@ -629,7 +629,6 @@ export default function LudoMatchDetail() {
       {whatsAppNumber && (
         <a
           href={`https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}`}
-          target="_blank"
           rel="noopener noreferrer"
           aria-label="Contact Support on WhatsApp"
           className="fixed right-4 z-[9999] w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform cursor-pointer"

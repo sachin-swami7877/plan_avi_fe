@@ -17,6 +17,7 @@ const Profile = () => {
   const [stats, setStats] = useState({ totalBets: 0, totalWins: 0, todayEarnings: 0, spinnerEarnings: 0, ludoEarnings: 0 });
   const [support, setSupport] = useState({ supportPhone: null, supportWhatsApp: null });
   const whatsAppNumber = support.supportWhatsApp || support.supportPhone;
+  const [showInstallTip, setShowInstallTip] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', phone: '', upiId: '', upiNumber: '' });
   const [editLoading, setEditLoading] = useState(false);
@@ -234,7 +235,7 @@ const Profile = () => {
                 key={game.id}
                 onClick={() => {
                   if (game.isExternal) {
-                    window.open(whatsAppNumber ? `https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}` : 'https://wa.me/', '_blank');
+                    window.location.href = whatsAppNumber ? `https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}` : 'https://wa.me/';
                   } else {
                     navigate(game.path);
                   }
@@ -331,15 +332,12 @@ const Profile = () => {
                 key={i} 
                 onClick={() => {
                   if (func.isDownload) {
-                    // Trigger browser's install prompt if available
                     if (window.deferredPrompt) {
                       window.deferredPrompt.prompt();
-                      window.deferredPrompt.userChoice.then((choiceResult) => {
-                        window.deferredPrompt = null;
-                      });
+                      window.deferredPrompt.userChoice.then(() => { window.deferredPrompt = null; });
                     } else {
-                      // Fallback: show instructions or open app store
-                      alert('To install this app:\n\nOn Android: Tap the menu (⋮) and select "Add to Home screen"\n\nOn iOS: Tap the Share button and select "Add to Home Screen"');
+                      setShowInstallTip(true);
+                      setTimeout(() => setShowInstallTip(false), 5000);
                     }
                   } else if (func.path !== '#') {
                     navigate(func.path);
@@ -359,7 +357,6 @@ const Profile = () => {
           <div className="mb-6">
             <a
               href={`https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}`}
-              target="_blank"
               rel="noopener noreferrer"
               className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
             >
@@ -377,7 +374,6 @@ const Profile = () => {
           <div className="flex gap-3">
             <a
               href={`https://wa.me/?text=${encodeURIComponent('Play Ludo, Aviator & Lucky Spinner! Win real cash with instant UPI withdrawals. Join now: ' + window.location.origin)}`}
-              target="_blank"
               rel="noopener noreferrer"
               className="flex-1 bg-[#25D366] text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 text-sm"
             >
@@ -414,11 +410,20 @@ const Profile = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Install tip toast (fallback for iOS / already installed) */}
+      {showInstallTip && (
+        <div className="fixed top-4 left-4 right-4 z-[99999] bg-gray-900 text-white rounded-xl p-4 shadow-2xl">
+          <p className="font-bold text-sm mb-1">Install App</p>
+          <p className="text-xs text-gray-300">Android: Tap browser menu ⋮ → "Add to Home screen"</p>
+          <p className="text-xs text-gray-300">iOS: Tap Share → "Add to Home Screen"</p>
+          <button onClick={() => setShowInstallTip(false)} className="absolute top-2 right-3 text-gray-400 text-lg">&times;</button>
+        </div>
+      )}
+
       {/* Floating WhatsApp Icon - Absolute position above navbar */}
       {whatsAppNumber && (
         <a
           href={`https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}`}
-          target="_blank"
           rel="noopener noreferrer"
           className="absolute right-4 z-[9999] w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center shadow-2xl hover:shadow-green-500/50 hover:scale-110 transition-all cursor-pointer"
           style={{

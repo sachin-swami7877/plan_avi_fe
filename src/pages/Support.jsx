@@ -34,7 +34,7 @@ const Support = () => {
               </a>
             )}
             {info.supportWhatsApp && (
-              <a href={`https://wa.me/${info.supportWhatsApp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="block bg-white rounded-xl p-4 shadow-sm">
+              <a href={`https://wa.me/${info.supportWhatsApp.replace(/[^0-9]/g, '')}`} rel="noopener noreferrer" className="block bg-white rounded-xl p-4 shadow-sm">
                 <p className="text-sm text-gray-500">WhatsApp</p>
                 <p className="text-lg font-bold text-green-600">{info.supportWhatsApp}</p>
                 <p className="text-xs text-gray-400 mt-1">Tap to chat on WhatsApp</p>
