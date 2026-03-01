@@ -10,8 +10,9 @@ const SEGMENTS = [
   { id: 1, label: 'Thanks', type: 'thanks', color: '#fef9c3', textColor: '#92400e' },
   { id: 2, label: '₹70', type: 'cash', value: 70, color: '#ffffff', textColor: '#047857' },
   { id: 3, label: '₹100', type: 'cash', value: 100, color: '#ffffff', textColor: '#047857' },
-  { id: 4, label: 'iPhone', type: 'prizeImage', image: 'iphone', imageUrl: '/iphone_16.jpeg', color: '#fef3c7', textColor: '#92400e' },
-  { id: 5, label: 'Tata Punch', type: 'prizeImage', image: 'tata-punch', imageUrl: '/car_creta.jpg', color: '#fef3c7', textColor: '#92400e' },
+  { id: 4, label: '₹120', type: 'cash', value: 120, color: '#ffffff', textColor: '#047857' },
+  { id: 5, label: '₹1000', type: 'cash', value: 1000, color: '#fef3c7', textColor: '#b45309' },
+  { id: 6, label: '₹5000', type: 'cash', value: 5000, color: '#fef3c7', textColor: '#b45309' },
 ];
 
 const NUM_SEGMENTS = SEGMENTS.length;
@@ -22,6 +23,7 @@ function outcomeToSegmentIndex(outcome) {
   if (outcome === '50') return 0;
   if (outcome === '70') return 2;
   if (outcome === '100') return 3;
+  if (outcome === '120') return 4;
   if (outcome === 'thank_you') return THANK_YOU_INDICES[Math.floor(Math.random() * THANK_YOU_INDICES.length)];
   return 1;
 }

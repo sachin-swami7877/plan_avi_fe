@@ -124,12 +124,12 @@ const BetPanel = () => {
       {/* Amount input + Bet button row */}
       <div className="flex gap-2 items-stretch mb-2">
         {/* Left: amount input with +/- */}
-        <div className="flex items-center bg-black/40 rounded-xl overflow-hidden h-14 w-2/5">
+        <div className="flex items-center bg-black/40 rounded-xl overflow-hidden h-14 min-w-0" style={{ width: '45%' }}>
           <button
             type="button"
             onClick={() => setBetAmount((prev) => Math.max(10, prev - 10))}
             disabled={!canChangeAmount || betAmount <= 10}
-            className="w-11 h-full flex items-center justify-center text-white text-xl font-bold hover:bg-white/10 transition disabled:opacity-30"
+            className="shrink-0 w-10 h-full flex items-center justify-center text-white text-lg font-bold hover:bg-white/10 active:bg-white/20 transition disabled:opacity-30 border-r border-white/10"
           >
             −
           </button>
@@ -142,13 +142,13 @@ const BetPanel = () => {
               if (!isNaN(v) && v >= 0) setBetAmount(v);
             }}
             disabled={!canChangeAmount}
-            className="flex-1 bg-transparent text-white text-center font-bold text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className="flex-1 min-w-0 bg-transparent text-white text-center font-bold text-base outline-none px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           <button
             type="button"
             onClick={() => setBetAmount((prev) => prev + 10)}
             disabled={!canChangeAmount}
-            className="w-11 h-full flex items-center justify-center text-white text-xl font-bold hover:bg-white/10 transition disabled:opacity-30"
+            className="shrink-0 w-10 h-full flex items-center justify-center text-white text-lg font-bold hover:bg-white/10 active:bg-white/20 transition disabled:opacity-30 border-l border-white/10"
           >
             +
           </button>

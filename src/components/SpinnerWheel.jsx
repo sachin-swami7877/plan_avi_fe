@@ -9,20 +9,23 @@ const SEGMENTS = [
   { id: 3, label: '🙏 Thank you', type: 'thanks' },
   { id: 4, label: '₹100', type: 'cash', value: 100 },
   { id: 5, label: '🙏 Thank you', type: 'thanks' },
-  { id: 6, label: '📱 iPhone 16 Pro', type: 'prize' },
+  { id: 6, label: '₹120', type: 'cash', value: 120 },
   { id: 7, label: '🙏 Thank you', type: 'thanks' },
-  { id: 8, label: '💻 MacBook', type: 'prize' },
+  { id: 8, label: '₹1000', type: 'cash', value: 1000 },
+  { id: 9, label: '🙏 Thank you', type: 'thanks' },
+  { id: 10, label: '₹5000', type: 'cash', value: 5000 },
 ];
 
 const SEGMENT_ANGLE = 360 / SEGMENTS.length; // 40°
 
-// Thank you segment indices (we never land on 6 or 8 - iPhone/MacBook)
-const THANK_YOU_INDICES = [1, 3, 5, 7];
+// Thank you segment indices (never land on 8=₹1000 or 10=₹5000)
+const THANK_YOU_INDICES = [1, 3, 5, 7, 9];
 
 function outcomeToSegmentIndex(outcome) {
   if (outcome === '50') return 0;
   if (outcome === '70') return 2;
   if (outcome === '100') return 4;
+  if (outcome === '120') return 6;
   if (outcome === 'thank_you') return THANK_YOU_INDICES[Math.floor(Math.random() * THANK_YOU_INDICES.length)];
   return 1;
 }

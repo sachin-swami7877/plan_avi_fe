@@ -35,10 +35,13 @@ const Bets = () => {
   const [adminNextCrash, setAdminNextCrash] = useState(null);
   const [settingCrash, setSettingCrash] = useState(false);
 
-  // Bulk crash: next N user-bet rounds at same value
+  // Bulk crash: next N user-bet rounds (3 modes: exact, range, auto)
   const [bulkCount, setBulkCount] = useState('');
+  const [bulkMode, setBulkMode] = useState('exact'); // 'exact' | 'range' | 'auto'
   const [bulkCrashAt, setBulkCrashAt] = useState('');
-  const [bulkCrash, setBulkCrash] = useState(null); // { crashAt, total, remaining }
+  const [bulkMin, setBulkMin] = useState('');
+  const [bulkMax, setBulkMax] = useState('');
+  const [bulkCrash, setBulkCrash] = useState(null); // { mode, crashAt?, min?, max?, total, remaining }
   const [settingBulk, setSettingBulk] = useState(false);
 
   // Sequential crash: array of specific values
@@ -248,15 +251,26 @@ const Bets = () => {
   // ── Bulk crash handlers ──
   const handleSetBulkCrash = async () => {
     const count = parseInt(bulkCount);
-    const crashAt = parseFloat(bulkCrashAt);
-    if (isNaN(count) || count < 1) { setMessage('Enter valid bet count'); return; }
-    if (isNaN(crashAt) || crashAt < 1) { setMessage('Crash value must be >= 1'); return; }
+    if (isNaN(count) || count < 1) { setMessage('Enter valid round count'); return; }
+    const payload = { count, mode: bulkMode };
+    if (bulkMode === 'exact') {
+      const crashAt = parseFloat(bulkCrashAt);
+      if (isNaN(crashAt) || crashAt < 1) { setMessage('Crash value must be >= 1'); return; }
+      payload.crashAt = crashAt;
+    } else if (bulkMode === 'range') {
+      const min = parseFloat(bulkMin);
+      const max = parseFloat(bulkMax);
+      if (isNaN(min) || min < 1) { setMessage('Min must be >= 1'); return; }
+      if (isNaN(max) || max < min) { setMessage('Max must be >= Min'); return; }
+      payload.min = min;
+      payload.max = max;
+    }
     setSettingBulk(true); setMessage('');
     try {
-      const res = await adminAPI.setBulkCrash(count, crashAt);
+      const res = await adminAPI.setBulkCrash(payload);
       setBulkCrash(res.data.bulkCrash);
       setMessage(res.data.message);
-      setBulkCount(''); setBulkCrashAt('');
+      setBulkCount(''); setBulkCrashAt(''); setBulkMin(''); setBulkMax('');
     } catch (err) { setMessage(err.response?.data?.message || 'Failed to set bulk crash'); }
     finally { setSettingBulk(false); }
   };
@@ -466,16 +480,20 @@ const Bets = () => {
             </div>
           </div>
 
-          {/* ── Bulk Crash: next N user-bet rounds at same value ── */}
+          {/* ── Bulk Crash: 3 modes ── */}
           {(() => {
             const hasActiveBulk = !!(bulkCrash && bulkCrash.remaining > 0);
             const hasActiveSeq = seqCrashes.length > 0;
+            const bulkModeLabel = bulkCrash?.mode === 'range' ? `${bulkCrash.min}x–${bulkCrash.max}x` : bulkCrash?.mode === 'auto' ? 'Auto Random' : `${bulkCrash?.crashAt}x`;
+            const isSetDisabled = settingBulk || !bulkCount || hasActiveBulk || hasActiveSeq
+              || (bulkMode === 'exact' && !bulkCrashAt)
+              || (bulkMode === 'range' && (!bulkMin || !bulkMax));
             return (
             <>
           <div className={`bg-white rounded-xl shadow-sm border ${hasActiveBulk ? 'border-orange-300' : 'border-gray-200'} p-4`}>
-            <h3 className="font-semibold text-gray-800 mb-2">Bulk Crash (Same Value)</h3>
+            <h3 className="font-semibold text-gray-800 mb-2">Bulk Crash</h3>
             <p className="text-xs text-gray-500 mb-3">
-              Next <strong>N</strong> rounds where users place bets will crash at a fixed multiplier. Empty rounds are skipped.
+              Next <strong>N</strong> rounds where users bet. Choose mode: exact value, random range, or auto balanced.
             </p>
 
             {hasActiveBulk && (
@@ -486,14 +504,13 @@ const Bets = () => {
                       Active: {bulkCrash.remaining} of {bulkCrash.total} rounds remaining
                     </p>
                     <p className="text-orange-700 text-xs mt-0.5">
-                      Crash at <strong>{bulkCrash.crashAt}x</strong> • {bulkCrash.total - bulkCrash.remaining} completed
+                      Mode: <strong>{bulkCrash.mode === 'exact' ? `Fixed ${bulkCrash.crashAt}x` : bulkCrash.mode === 'range' ? `Range ${bulkCrash.min}x–${bulkCrash.max}x` : 'Auto Random'}</strong> • {bulkCrash.total - bulkCrash.remaining} completed
                     </p>
                   </div>
                   <button onClick={handleClearBulkCrash} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
                     Clear
                   </button>
                 </div>
-                {/* Progress bar */}
                 <div className="mt-2 h-2 bg-orange-200 rounded-full overflow-hidden">
                   <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${((bulkCrash.total - bulkCrash.remaining) / bulkCrash.total) * 100}%` }} />
                 </div>
@@ -504,40 +521,96 @@ const Bets = () => {
               <p className="text-xs text-amber-600 mb-3">Clear sequential crashes first to set bulk crash.</p>
             )}
 
-            <div className="flex gap-2">
+            {/* Mode selector */}
+            <div className="flex gap-1 mb-3 bg-gray-100 rounded-lg p-1">
+              {[
+                { key: 'exact', label: 'Exact Value' },
+                { key: 'range', label: 'Range' },
+                { key: 'auto', label: 'Auto Random' },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setBulkMode(key)}
+                  disabled={hasActiveBulk || hasActiveSeq}
+                  className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${bulkMode === key ? 'bg-orange-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200'} disabled:opacity-50`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
               <input
                 type="number"
                 min="1"
                 max="100"
                 value={bulkCount}
                 onChange={(e) => setBulkCount(e.target.value)}
-                placeholder="Rounds (e.g. 5)"
-                className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Rounds (e.g. 50)"
+                className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 disabled={hasActiveBulk || hasActiveSeq}
               />
-              <input
-                type="number"
-                step="0.01"
-                min="1"
-                value={bulkCrashAt}
-                onChange={(e) => setBulkCrashAt(e.target.value)}
-                placeholder="Crash at (e.g. 1.5)"
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                disabled={hasActiveBulk || hasActiveSeq}
-              />
+              {bulkMode === 'exact' && (
+                <input
+                  type="number"
+                  step="0.01"
+                  min="1"
+                  value={bulkCrashAt}
+                  onChange={(e) => setBulkCrashAt(e.target.value)}
+                  placeholder="Crash at (e.g. 1.5)"
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  disabled={hasActiveBulk || hasActiveSeq}
+                />
+              )}
+              {bulkMode === 'range' && (
+                <>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    value={bulkMin}
+                    onChange={(e) => setBulkMin(e.target.value)}
+                    placeholder="Min (e.g. 1)"
+                    className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    disabled={hasActiveBulk || hasActiveSeq}
+                  />
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    value={bulkMax}
+                    onChange={(e) => setBulkMax(e.target.value)}
+                    placeholder="Max (e.g. 3)"
+                    className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    disabled={hasActiveBulk || hasActiveSeq}
+                  />
+                </>
+              )}
               <button
                 onClick={handleSetBulkCrash}
-                disabled={settingBulk || !bulkCount || !bulkCrashAt || hasActiveBulk || hasActiveSeq}
+                disabled={isSetDisabled}
                 className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
               >
                 {settingBulk ? 'Setting…' : 'Set'}
               </button>
             </div>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {[1, 1.5, 2, 3, 5].map((v) => (
-                <button key={v} onClick={() => setBulkCrashAt(String(v))} disabled={hasActiveBulk || hasActiveSeq} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium disabled:opacity-50">{v}x</button>
-              ))}
-            </div>
+            {bulkMode === 'exact' && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {[1, 1.5, 2, 3, 5].map((v) => (
+                  <button key={v} onClick={() => setBulkCrashAt(String(v))} disabled={hasActiveBulk || hasActiveSeq} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium disabled:opacity-50">{v}x</button>
+                ))}
+              </div>
+            )}
+            {bulkMode === 'range' && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {[{l:'1x-2x',min:'1',max:'2'},{l:'1x-3x',min:'1',max:'3'},{l:'2x-5x',min:'2',max:'5'},{l:'1x-8x',min:'1',max:'8'}].map(({l,min,max}) => (
+                  <button key={l} onClick={() => {setBulkMin(min);setBulkMax(max);}} disabled={hasActiveBulk || hasActiveSeq} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium disabled:opacity-50">{l}</button>
+                ))}
+              </div>
+            )}
+            {bulkMode === 'auto' && (
+              <p className="text-xs text-gray-500 mt-2">System will use balanced distribution: 40% below 2x, 10% above 6x (max 8x)</p>
+            )}
           </div>
 
           {/* ── Sequential Crash: different value per round ── */}
