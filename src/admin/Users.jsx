@@ -186,7 +186,10 @@ const Users = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Users</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-gray-800">Users</h1>
+          <span className="bg-primary-100 text-primary-700 text-sm font-bold px-2.5 py-0.5 rounded-full">{users.length}</span>
+        </div>
         {isFullAdmin && <button onClick={() => setShowCreateModal(true)} className="bg-primary-700 text-white px-4 py-2 rounded-lg hover:bg-primary-800">+ Create User</button>}
       </div>
 

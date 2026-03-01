@@ -18,6 +18,8 @@ const TABS = [
   { key: 'spinner', label: 'Spinner',  icon: '🎡' },
 ];
 
+const PAGE_SIZE = 25;
+
 const AdminUserDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ const AdminUserDetail = () => {
   const [earningsEdit, setEarningsEdit] = useState(false);
   const [earningsValue, setEarningsValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     adminAPI.getUserDetail(id)
@@ -35,6 +38,9 @@ const AdminUserDetail = () => {
       .catch(err => setError(err.response?.data?.message || 'Failed to load user details'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Reset page when switching tabs
+  const switchTab = (key) => { setTab(key); setPage(1); };
 
   if (loading) {
     return (
@@ -65,6 +71,20 @@ const AdminUserDetail = () => {
   const totalLudoWins = ludoMatches.filter(
     m => m.status === 'completed' && String(m.winnerId) === String(id)
   ).length;
+
+  // Pagination helper
+  const getTabData = () => {
+    switch (tab) {
+      case 'wallet': return walletRequests;
+      case 'aviator': return aviatorBets;
+      case 'ludo': return ludoMatches;
+      case 'spinner': return spinnerRecords;
+      default: return [];
+    }
+  };
+  const tabData = getTabData();
+  const totalPages = Math.ceil(tabData.length / PAGE_SIZE);
+  const pagedData = tabData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -212,7 +232,7 @@ const AdminUserDetail = () => {
         {TABS.map(t => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => switchTab(t.key)}
             className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
               tab === t.key
                 ? 'bg-primary-700 text-white shadow-sm'
@@ -238,7 +258,7 @@ const AdminUserDetail = () => {
         <div className="space-y-2">
           {walletRequests.length === 0 ? (
             <EmptyState icon="💰" text="No wallet requests" />
-          ) : walletRequests.map(r => (
+          ) : pagedData.map(r => (
             <div key={r._id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-50 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -271,7 +291,7 @@ const AdminUserDetail = () => {
         <div className="space-y-2">
           {aviatorBets.length === 0 ? (
             <EmptyState icon="✈️" text="No Aviator bets" />
-          ) : aviatorBets.map(b => (
+          ) : pagedData.map(b => (
             <div key={b._id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-50 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
@@ -309,7 +329,7 @@ const AdminUserDetail = () => {
         <div className="space-y-2">
           {ludoMatches.length === 0 ? (
             <EmptyState icon="🎲" text="No Ludo matches" />
-          ) : ludoMatches.map(m => {
+          ) : pagedData.map(m => {
             const isWinner = m.winnerId && String(m.winnerId) === String(id);
             const opponent = m.players?.find(p => String(p.userId) !== String(id));
             const myEntry = m.players?.find(p => String(p.userId) === String(id));
@@ -359,7 +379,7 @@ const AdminUserDetail = () => {
         <div className="space-y-2">
           {spinnerRecords.length === 0 ? (
             <EmptyState icon="🎡" text="No Spinner records" />
-          ) : spinnerRecords.map(r => (
+          ) : pagedData.map(r => (
             <div key={r._id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-50 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
@@ -381,6 +401,29 @@ const AdminUserDetail = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 disabled:hover:bg-gray-100 transition-colors"
+          >
+            Prev
+          </button>
+          <span className="text-sm text-gray-500">
+            Page {page} of {totalPages} ({tabData.length} total)
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 disabled:hover:bg-gray-100 transition-colors"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>
