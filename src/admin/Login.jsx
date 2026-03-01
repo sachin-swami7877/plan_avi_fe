@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -9,9 +9,18 @@ const AdminLogin = () => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [otpTimer, setOtpTimer] = useState(0);
 
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const startOtpTimer = useCallback(() => setOtpTimer(120), []);
+
+  useEffect(() => {
+    if (otpTimer <= 0) return;
+    const id = setInterval(() => setOtpTimer((t) => (t <= 1 ? 0 : t - 1)), 1000);
+    return () => clearInterval(id);
+  }, [otpTimer]);
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
@@ -27,6 +36,7 @@ const AdminLogin = () => {
     try {
       await authAPI.sendOTP(trimmedEmail);
       setEmail(trimmedEmail);
+      startOtpTimer();
       setStep('otp');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP');
@@ -77,15 +87,39 @@ const AdminLogin = () => {
             </form>
           ) : (
             <form onSubmit={handleVerifyOTP}>
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Enter 6-digit OTP</label>
                 <input type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Enter OTP"
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-2xl tracking-widest" maxLength={6} />
               </div>
+              <div className="text-center mb-4">
+                {otpTimer > 0 ? (
+                  <p className="text-gray-500 text-sm">OTP expires in <span className="text-amber-600 font-semibold">{Math.floor(otpTimer / 60)}:{String(otpTimer % 60).padStart(2, '0')}</span></p>
+                ) : (
+                  <p className="text-red-500 text-sm font-medium">OTP expired</p>
+                )}
+              </div>
               <button type="submit" disabled={loading} className="w-full bg-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition-colors disabled:opacity-50">
                 {loading ? 'Verifying...' : 'Verify & Login'}
               </button>
-              <button type="button" onClick={() => setStep('email')} className="w-full mt-3 text-gray-600 py-2 font-medium">Change Email</button>
+              <div className="flex items-center justify-between mt-3">
+                <button type="button" onClick={() => { setStep('email'); setOtpTimer(0); setOtp(''); setError(''); }} className="text-gray-600 py-2 font-medium text-sm">Change Email</button>
+                <button
+                  type="button"
+                  disabled={otpTimer > 0}
+                  onClick={async () => {
+                    setError('');
+                    try {
+                      await authAPI.sendOTP(email);
+                      startOtpTimer();
+                      setOtp('');
+                    } catch (err) { setError('Failed to resend OTP'); }
+                  }}
+                  className={`py-2 text-sm font-medium ${otpTimer > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-purple-600 hover:text-purple-800'}`}
+                >
+                  Resend OTP
+                </button>
+              </div>
             </form>
           )}
         </div>

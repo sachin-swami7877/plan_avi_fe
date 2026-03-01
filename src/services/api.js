@@ -81,7 +81,7 @@ export const gameAPI = {
 
 // Spinner API
 export const spinnerAPI = {
-  play: () => api.post('/spinner/play'),
+  play: (spinCost = 50) => api.post('/spinner/play', { spinCost }),
   getHistory: (params) => api.get('/spinner/history', { params }),
 };
 

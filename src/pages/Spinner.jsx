@@ -1,38 +1,54 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { spinnerAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 
-const SEGMENTS = [
-  { id: 0, label: '₹50', type: 'cash', value: 50, color: '#ffffff', textColor: '#047857' },
+// ── ₹50 spin segments (7) ──
+const SEGMENTS_50 = [
+  { id: 0, label: '₹50', type: 'cash', value: 50, color: '#d1fae5', textColor: '#047857' },
   { id: 1, label: 'Thanks', type: 'thanks', color: '#fef9c3', textColor: '#92400e' },
-  { id: 2, label: '₹70', type: 'cash', value: 70, color: '#ffffff', textColor: '#047857' },
-  { id: 3, label: '₹100', type: 'cash', value: 100, color: '#ffffff', textColor: '#047857' },
-  { id: 4, label: '₹120', type: 'cash', value: 120, color: '#ffffff', textColor: '#047857' },
-  { id: 5, label: '₹1000', type: 'cash', value: 1000, color: '#fef3c7', textColor: '#b45309' },
+  { id: 2, label: '₹70', type: 'cash', value: 70, color: '#dbeafe', textColor: '#1d4ed8' },
+  { id: 3, label: '₹100', type: 'cash', value: 100, color: '#ede9fe', textColor: '#7c3aed' },
+  { id: 4, label: '₹120', type: 'cash', value: 120, color: '#fce7f3', textColor: '#db2777' },
+  { id: 5, label: 'iPhone', type: 'prizeImage', imageUrl: '/iphone_16.jpeg', color: '#fef3c7', textColor: '#b45309' },
   { id: 6, label: '₹5000', type: 'cash', value: 5000, color: '#fef3c7', textColor: '#b45309' },
 ];
 
-const NUM_SEGMENTS = SEGMENTS.length;
-const SEGMENT_ANGLE = 360 / NUM_SEGMENTS;
-const THANK_YOU_INDICES = [1];
+// ── ₹100 spin segments (8) — no ₹70, adds ₹170 & ₹200 ──
+const SEGMENTS_100 = [
+  { id: 0, label: '₹50', type: 'cash', value: 50, color: '#d1fae5', textColor: '#047857' },
+  { id: 1, label: 'Thanks', type: 'thanks', color: '#fef9c3', textColor: '#92400e' },
+  { id: 2, label: '₹100', type: 'cash', value: 100, color: '#ede9fe', textColor: '#7c3aed' },
+  { id: 3, label: '₹120', type: 'cash', value: 120, color: '#fce7f3', textColor: '#db2777' },
+  { id: 4, label: '₹170', type: 'cash', value: 170, color: '#cffafe', textColor: '#0e7490' },
+  { id: 5, label: '₹200', type: 'cash', value: 200, color: '#fef3c7', textColor: '#b45309' },
+  { id: 6, label: 'iPhone', type: 'prizeImage', imageUrl: '/iphone_16.jpeg', color: '#fef3c7', textColor: '#b45309' },
+  { id: 7, label: '₹5000', type: 'cash', value: 5000, color: '#fff7ed', textColor: '#c2410c' },
+];
 
-function outcomeToSegmentIndex(outcome) {
+function outcomeToSegmentIndex50(outcome) {
   if (outcome === '50') return 0;
   if (outcome === '70') return 2;
   if (outcome === '100') return 3;
   if (outcome === '120') return 4;
-  if (outcome === 'thank_you') return THANK_YOU_INDICES[Math.floor(Math.random() * THANK_YOU_INDICES.length)];
+  if (outcome === 'thank_you') return 1;
   return 1;
 }
 
-const SPIN_COST = 50;
-const MIN_BALANCE = 50;
+function outcomeToSegmentIndex100(outcome) {
+  if (outcome === '50') return 0;
+  if (outcome === '100') return 2;
+  if (outcome === '120') return 3;
+  if (outcome === '170') return 4;
+  if (outcome === '200') return 5;
+  if (outcome === 'thank_you') return 1;
+  return 1;
+}
+
 const SPIN_DURATION_MS = 5500;
 
-/** Build SVG path for a wedge segment from startDeg to endDeg on a circle of radius r centered at (cx, cy). Angles measured clockwise from 12 o'clock. */
 function wedgePath(cx, cy, r, startDeg, endDeg) {
   const toRad = (d) => (d * Math.PI) / 180;
   const x1 = cx + r * Math.sin(toRad(startDeg));
@@ -45,6 +61,7 @@ function wedgePath(cx, cy, r, startDeg, endDeg) {
 
 export default function Spinner() {
   const { user, updateBalance } = useAuth();
+  const [spinCost, setSpinCost] = useState(50);
   const [spinning, setSpinning] = useState(false);
   const [waitingForApi, setWaitingForApi] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -60,6 +77,9 @@ export default function Spinner() {
   const rotationRef = useRef(0);
 
   const balance = user?.walletBalance ?? 0;
+  const SEGMENTS = spinCost === 100 ? SEGMENTS_100 : SEGMENTS_50;
+  const SEGMENT_ANGLE = 360 / SEGMENTS.length;
+  const outcomeToIndex = spinCost === 100 ? outcomeToSegmentIndex100 : outcomeToSegmentIndex50;
 
   useEffect(() => {
     rotationRef.current = rotation;
@@ -81,7 +101,6 @@ export default function Spinner() {
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  // Countdown 3→2→1 while waiting for API
   useEffect(() => {
     if (!waitingForApi) { setCountdown(0); return; }
     setCountdown(3);
@@ -89,9 +108,8 @@ export default function Spinner() {
     return () => clearInterval(t);
   }, [waitingForApi]);
 
-  const canSpin = balance >= MIN_BALANCE && !spinning && !waitingForApi;
+  const canSpin = balance >= spinCost && !spinning && !waitingForApi;
 
-  // Show result only after wheel has fully stopped
   useEffect(() => {
     const el = wheelRef.current;
     if (!el) return;
@@ -124,17 +142,18 @@ export default function Spinner() {
     setWaitingForApi(true);
 
     try {
-      const res = await spinnerAPI.play();
+      const res = await spinnerAPI.play(spinCost);
       setWaitingForApi(false);
       const { outcome, winAmount, newBalance, message } = res.data;
       updateBalance(newBalance);
 
-      const segmentIndex = outcomeToSegmentIndex(outcome);
+      const segmentIndex = outcomeToIndex(outcome);
       setLandedSegmentIndex(segmentIndex);
       setSpinning(true);
 
+      const segAngle = 360 / (spinCost === 100 ? SEGMENTS_100.length : SEGMENTS_50.length);
       const fullTurns = 360 * 6;
-      const segmentCenterAngle = (segmentIndex + 0.5) * SEGMENT_ANGLE;
+      const segmentCenterAngle = (segmentIndex + 0.5) * segAngle;
       const targetAngle = (360 - segmentCenterAngle) % 360;
       const currentRotation = rotationRef.current;
       const currentAngle = ((currentRotation % 360) + 360) % 360;
@@ -166,21 +185,22 @@ export default function Spinner() {
       setWaitingForApi(false);
       setSpinning(false);
     }
-  }, [canSpin, updateBalance, fetchHistory]);
+  }, [canSpin, spinCost, updateBalance, fetchHistory, outcomeToIndex]);
 
-  // Build conic-gradient with highlight on winning segment
   const showHighlight = result && !spinning && landedSegmentIndex != null;
   const conicStops = SEGMENTS.map((seg, i) => {
     const start = i * SEGMENT_ANGLE;
     const end = (i + 1) * SEGMENT_ANGLE;
     let col;
     if (showHighlight && i === landedSegmentIndex) {
-      col = '#fbbf24'; // gold highlight for winner
+      col = '#fbbf24';
     } else {
       col = i % 2 === 0 ? '#ffffff' : '#f5f5f0';
     }
     return `${col} ${start}deg ${end}deg`;
   }).join(', ');
+
+  const isBusy = spinning || waitingForApi;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] pb-24 w-full max-w-[100vw] overflow-x-hidden box-border">
@@ -204,6 +224,25 @@ export default function Spinner() {
           </div>
 
           <div className="p-4 sm:p-6 flex flex-col items-center w-full min-w-0 overflow-hidden">
+            {/* Spin cost selector */}
+            <div className="flex gap-2 mb-4 w-full max-w-[300px]">
+              {[50, 100].map((cost) => (
+                <button
+                  key={cost}
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => { setSpinCost(cost); setResult(null); setLandedSegmentIndex(null); }}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    spinCost === cost
+                      ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                      : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
+                  } disabled:opacity-60`}
+                >
+                  ₹{cost} Spin
+                </button>
+              ))}
+            </div>
+
             {/* Wheel */}
             <div className="relative w-full max-w-[300px] aspect-square mx-auto flex-shrink-0">
               {/* Pointer */}
@@ -329,7 +368,7 @@ export default function Spinner() {
 
             {/* Price & Balance */}
             <div className="w-full max-w-[300px] mt-4 flex justify-between items-center text-sm">
-              <span className="text-white/70">₹{SPIN_COST} per spin</span>
+              <span className="text-white/70">₹{spinCost} per spin</span>
               <span className="text-emerald-400 font-semibold">Balance: ₹{balance.toFixed(2)}</span>
             </div>
 
@@ -369,41 +408,53 @@ export default function Spinner() {
                 </>
               ) : spinning ? (
                 'Spinning...'
-              ) : balance < MIN_BALANCE ? (
-                `Min ₹${MIN_BALANCE} to spin`
+              ) : balance < spinCost ? (
+                `Min ₹${spinCost} to spin`
               ) : (
-                'Spin for ₹50'
+                `Spin for ₹${spinCost}`
               )}
             </button>
 
             {/* Spin history */}
             <div className="w-full max-w-[300px] mt-6">
-              <h3 className="text-sm font-semibold text-white/90 mb-2">My spin history</h3>
+              <h3 className="text-sm font-semibold text-white/80 mb-3">Recent Spins</h3>
               {historyLoading ? (
-                <p className="text-white/60 text-sm">Loading...</p>
+                <p className="text-white/40 text-sm text-center py-4">Loading...</p>
               ) : !Array.isArray(history) || history.length === 0 ? (
-                <p className="text-white/60 text-sm">No spins yet.</p>
+                <p className="text-white/40 text-sm text-center py-4">No spins yet.</p>
               ) : (
-                <ul className="space-y-2 max-h-48 overflow-y-auto rounded-lg border border-white/10 bg-white/5 p-2">
-                  {history.map((r) => (
-                    <li
-                      key={r._id}
-                      className="flex items-center justify-between gap-2 text-sm py-2 px-3 rounded-lg bg-white/5 border border-white/10"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <span className="text-white/80">
-                          {r.outcome === 'thank_you' ? 'Thank you' : `₹${r.winAmount} won`}
-                        </span>
-                        <span className={r.winAmount > 0 ? 'text-emerald-400 font-medium ml-2' : 'text-white/60 ml-2'}>
-                          {r.winAmount > 0 ? `+₹${r.winAmount}` : '—'}
+                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                  {history.map((r) => {
+                    const isWin = r.winAmount > 0;
+                    const cost = r.spinCost || 50;
+                    return (
+                      <div
+                        key={r._id}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.06] transition-colors"
+                      >
+                        {/* Icon */}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm ${
+                          isWin ? 'bg-emerald-500/15 text-emerald-400' : 'bg-white/5 text-white/30'
+                        }`}>
+                          {isWin ? '₹' : '🙏'}
+                        </div>
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium leading-tight ${isWin ? 'text-white' : 'text-white/50'}`}>
+                            {isWin ? `Won ₹${r.winAmount}` : 'Thank you'}
+                          </p>
+                          <p className="text-[11px] text-white/30 mt-0.5">
+                            ₹{cost} spin &middot; {new Date(r.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        {/* Amount */}
+                        <span className={`text-sm font-bold shrink-0 ${isWin ? 'text-emerald-400' : 'text-white/20'}`}>
+                          {isWin ? `+₹${r.winAmount}` : `-₹${cost}`}
                         </span>
                       </div>
-                      <span className="text-white/50 text-xs shrink-0">
-                        {new Date(r.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>

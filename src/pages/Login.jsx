@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -93,11 +93,21 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pendingData, setPendingData] = useState(null);
+  const [otpTimer, setOtpTimer] = useState(0);
 
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
   const from = location.state?.from || '/dashboard';
+
+  // 2-minute countdown timer for OTP expiry
+  const startOtpTimer = useCallback(() => setOtpTimer(120), []);
+
+  useEffect(() => {
+    if (otpTimer <= 0) return;
+    const id = setInterval(() => setOtpTimer((t) => (t <= 1 ? 0 : t - 1)), 1000);
+    return () => clearInterval(id);
+  }, [otpTimer]);
 
   const isValidPhone = (p) => /^[0-9]{10}$/.test(p.replace(/[^0-9]/g, '').slice(-10));
 
@@ -114,6 +124,7 @@ const Login = () => {
     setMobileNumber(cleanPhone);
     try {
       await authAPI.sendOTPByPhone(cleanPhone);
+      startOtpTimer();
       setStep('otp');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP');
@@ -432,10 +443,20 @@ const Login = () => {
                     )}
                   </span>
                 </button>
+                {/* Timer */}
+                <div className="text-center">
+                  {otpTimer > 0 ? (
+                    <p className="text-white/40 text-sm">
+                      OTP expires in <span className="text-amber-400 font-semibold">{Math.floor(otpTimer / 60)}:{String(otpTimer % 60).padStart(2, '0')}</span>
+                    </p>
+                  ) : (
+                    <p className="text-red-400 text-sm font-medium">OTP expired</p>
+                  )}
+                </div>
                 <div className="flex items-center justify-between">
                   <button
                     type="button"
-                    onClick={() => { setStep('mobile'); setError(''); setOtp(''); }}
+                    onClick={() => { setStep('mobile'); setError(''); setOtp(''); setOtpTimer(0); }}
                     className="text-white/40 hover:text-white/70 text-sm font-medium transition-colors flex items-center gap-1.5"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
@@ -443,15 +464,18 @@ const Login = () => {
                   </button>
                   <button
                     type="button"
+                    disabled={otpTimer > 0}
                     onClick={async () => {
                       setError('');
                       try {
                         await authAPI.sendOTPByPhone(mobileNumber);
+                        startOtpTimer();
+                        setOtp('');
                       } catch (err) { setError('Failed to resend'); }
                     }}
-                    className="text-emerald-400/70 hover:text-emerald-400 text-sm font-medium transition-colors"
+                    className={`text-sm font-medium transition-colors ${otpTimer > 0 ? 'text-white/20 cursor-not-allowed' : 'text-emerald-400/70 hover:text-emerald-400'}`}
                   >
-                    Resend code
+                    Resend OTP
                   </button>
                 </div>
               </form>
