@@ -123,7 +123,7 @@ const Home = () => {
                       <img
                         src={game.image}
                         alt={game.title}
-                        className="w-20 h-20 object-contain rounded-xl bg-white/10"
+                        className="w-20 h-20 object-cover rounded-xl bg-white/10"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           const el = e.target.nextElementSibling;

@@ -64,6 +64,7 @@ export const walletAPI = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   withdraw: (amount) => api.post('/wallet/withdraw', { amount }),
+  getWithdrawalInfo: () => api.get('/wallet/withdrawal-info'),
   getHistory: (params) => api.get('/wallet/history', { params }),
   getTransactions: (params) => api.get('/wallet/transactions', { params }),
 };
@@ -129,8 +130,11 @@ export const adminAPI = {
   getDashboard: (params) => api.get('/admin/dashboard', { params }),
   getUsers: (params) => api.get('/admin/users', { params }),
   createUser: (data) => api.post('/admin/users', data),
+  updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
   updateUserBalance: (id, amount, operation) =>
     api.put(`/admin/users/${id}/balance`, { amount, operation }),
+  updateUserEarnings: (id, earnings) =>
+    api.put(`/admin/users/${id}/earnings`, { earnings }),
   updateUserStatus: (id, status) =>
     api.put(`/admin/users/${id}/status`, { status }),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),

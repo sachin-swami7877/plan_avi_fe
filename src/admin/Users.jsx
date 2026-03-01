@@ -26,7 +26,6 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', phone: '', walletBalance: 0, role: 'user' });
-  const [message, setMessage] = useState({ type: '', text: '' });
   const [balanceModal, setBalanceModal] = useState({ open: false, userId: null, operation: null, userName: '' });
   const [balanceAmount, setBalanceAmount] = useState('');
 
@@ -39,6 +38,12 @@ const Users = () => {
 
   // Delete confirm dialog
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, userId: null, userName: '' });
+  // Edit user modal
+  const [editModal, setEditModal] = useState({ open: false, userId: null, name: '', role: 'user' });
+  // Edit earnings modal
+  const [earningsModal, setEarningsModal] = useState({ open: false, userId: null, userName: '', currentEarnings: 0, walletBalance: 0 });
+  const [earningsAmount, setEarningsAmount] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
   const [period, setPeriod] = useState('all');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -66,22 +71,27 @@ const Users = () => {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    setActionLoading(true);
     try {
       await adminAPI.createUser(newUser);
-      setMessage({ type: 'success', text: 'User created!' });
+      toast.success('User created!');
       setShowCreateModal(false);
       setNewUser({ name: '', email: '', phone: '', walletBalance: 0, role: 'user' });
       fetchUsers();
-    } catch (error) { setMessage({ type: 'error', text: error.response?.data?.message || 'Failed' }); }
+    } catch (error) { toast.error(error.response?.data?.message || 'Failed to create user'); }
+    finally { setActionLoading(false); }
   };
 
   const handleUpdateBalance = async (userId, amount, operation) => {
+    setActionLoading(true);
     try {
       await adminAPI.updateUserBalance(userId, amount, operation);
+      toast.success(`Balance ${operation === 'add' ? 'added' : 'subtracted'} successfully`);
       setBalanceModal({ open: false, userId: null, operation: null, userName: '' });
       setBalanceAmount('');
       fetchUsers();
-    } catch (error) { console.error('Failed:', error); }
+    } catch (error) { toast.error(error.response?.data?.message || 'Failed to update balance'); }
+    finally { setActionLoading(false); }
   };
 
   const openBalanceModal = (user, operation) => {
@@ -105,12 +115,13 @@ const Users = () => {
   };
 
   const confirmStatusChange = async () => {
+    setActionLoading(true);
     try {
       await adminAPI.updateUserStatus(statusConfirm.userId, statusConfirm.newStatus);
-      setMessage({ type: 'success', text: `User ${statusConfirm.action}d successfully` });
+      toast.success(`User ${statusConfirm.action}d successfully`);
       fetchUsers();
-    } catch (error) { setMessage({ type: 'error', text: error.response?.data?.message || 'Failed' }); }
-    finally { setStatusConfirm({ ...statusConfirm, open: false }); }
+    } catch (error) { toast.error(error.response?.data?.message || 'Failed'); }
+    finally { setActionLoading(false); setStatusConfirm({ ...statusConfirm, open: false }); }
   };
 
   const requestDelete = () => {
@@ -119,12 +130,47 @@ const Users = () => {
   };
 
   const confirmDelete = async () => {
+    setActionLoading(true);
     try {
       await adminAPI.deleteUser(deleteConfirm.userId);
-      setMessage({ type: 'success', text: `User "${deleteConfirm.userName}" deleted successfully` });
+      toast.success(`User "${deleteConfirm.userName}" deleted`);
       fetchUsers();
-    } catch (error) { setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to delete user' }); }
-    finally { setDeleteConfirm({ open: false, userId: null, userName: '' }); }
+    } catch (error) { toast.error(error.response?.data?.message || 'Failed to delete user'); }
+    finally { setActionLoading(false); setDeleteConfirm({ open: false, userId: null, userName: '' }); }
+  };
+
+  const openEditModal = (user) => {
+    setEditModal({ open: true, userId: user._id, name: user.name || '', role: user.role || 'user' });
+  };
+
+  const handleEditUser = async () => {
+    setActionLoading(true);
+    try {
+      await adminAPI.updateUser(editModal.userId, { name: editModal.name, role: editModal.role });
+      toast.success('User updated');
+      setEditModal({ open: false, userId: null, name: '', role: 'user' });
+      fetchUsers();
+    } catch (error) { toast.error(error.response?.data?.message || 'Failed to update user'); }
+    finally { setActionLoading(false); }
+  };
+
+  const openEarningsModal = (user) => {
+    const currentEarnings = Math.max(0, (user.walletBalance || 0) - (user.totalDeposited || 0));
+    setEarningsModal({ open: true, userId: user._id, userName: user.name, currentEarnings, walletBalance: user.walletBalance || 0 });
+    setEarningsAmount(String(currentEarnings.toFixed(2)));
+  };
+
+  const handleEditEarnings = async () => {
+    if (!earningsAmount || isNaN(Number(earningsAmount))) return;
+    setActionLoading(true);
+    try {
+      await adminAPI.updateUserEarnings(earningsModal.userId, Number(earningsAmount));
+      toast.success('Earnings updated');
+      setEarningsModal({ open: false, userId: null, userName: '', currentEarnings: 0, walletBalance: 0 });
+      setEarningsAmount('');
+      fetchUsers();
+    } catch (error) { toast.error(error.response?.data?.message || 'Failed to update earnings'); }
+    finally { setActionLoading(false); }
   };
 
   const getStatusBadge = (status) => {
@@ -181,10 +227,6 @@ const Users = () => {
         )}
       </form>
 
-      {message.text && (
-        <div className={`p-3 rounded-lg mb-4 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{message.text}</div>
-      )}
-
       <div className="space-y-3">
         {users.map((user) => {
           const isExpanded = expandedUser === user._id;
@@ -217,10 +259,14 @@ const Users = () => {
               {/* Expanded content */}
               {isExpanded && (
                 <div className="px-4 pb-4 border-t border-gray-100 pt-3">
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-3 gap-3 mb-3">
                     <div className="bg-green-50 rounded-lg p-3">
                       <p className="text-xs text-gray-500">Balance</p>
                       <p className="text-lg font-bold text-green-600">₹{user.walletBalance?.toFixed(2)}</p>
+                    </div>
+                    <div className="bg-emerald-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500">Earnings</p>
+                      <p className="text-lg font-bold text-emerald-600">₹{Math.max(0, (user.walletBalance || 0) - (user.totalDeposited || 0)).toFixed(2)}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <p className="text-xs text-gray-500">Joined</p>
@@ -276,12 +322,33 @@ const Users = () => {
                       <button onClick={() => openBalanceModal(user, 'subtract')} className="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm font-medium">- Subtract</button>
                     </div>
                   )}
-                  {isFullAdmin && !user.isAdmin && user.role !== 'admin' && (
-                    <div className="flex gap-2">
-                      <IconButton size="small" onClick={(e) => openMenu(e, user)}>
-                        <HiOutlineEllipsisVertical />
-                      </IconButton>
-                      <span className="text-xs text-gray-400 self-center">More actions</span>
+                  {isFullAdmin && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => openEditModal(user)}
+                        className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                      >
+                        Edit Name/Role
+                      </button>
+                      <button
+                        onClick={() => openEarningsModal(user)}
+                        className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors"
+                      >
+                        Edit Earnings
+                      </button>
+                      {!user.isAdmin && user.role !== 'admin' && (
+                        <>
+                          <button
+                            onClick={() => { setDeleteConfirm({ open: true, userId: user._id, userName: user.name }); }}
+                            className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors"
+                          >
+                            Delete User
+                          </button>
+                          <IconButton size="small" onClick={(e) => openMenu(e, user)}>
+                            <HiOutlineEllipsisVertical />
+                          </IconButton>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -301,7 +368,7 @@ const Users = () => {
       </Menu>
 
       {/* Status Confirmation Dialog */}
-      <Dialog open={statusConfirm.open} onClose={() => setStatusConfirm({ ...statusConfirm, open: false })}>
+      <Dialog open={statusConfirm.open} onClose={() => !actionLoading && setStatusConfirm({ ...statusConfirm, open: false })}>
         <DialogTitle>Confirm Action</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -309,15 +376,15 @@ const Users = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setStatusConfirm({ ...statusConfirm, open: false })}>Cancel</Button>
-          <Button variant="contained" color={statusConfirm.newStatus === 'active' ? 'success' : 'error'} onClick={confirmStatusChange}>
-            {statusConfirm.action}
+          <Button onClick={() => setStatusConfirm({ ...statusConfirm, open: false })} disabled={actionLoading}>Cancel</Button>
+          <Button variant="contained" color={statusConfirm.newStatus === 'active' ? 'success' : 'error'} onClick={confirmStatusChange} disabled={actionLoading}>
+            {actionLoading ? 'Processing...' : statusConfirm.action}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirm.open} onClose={() => setDeleteConfirm({ ...deleteConfirm, open: false })}>
+      <Dialog open={deleteConfirm.open} onClose={() => !actionLoading && setDeleteConfirm({ ...deleteConfirm, open: false })}>
         <DialogTitle>Delete User</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -327,8 +394,10 @@ const Users = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteConfirm({ ...deleteConfirm, open: false })}>Cancel</Button>
-          <Button variant="contained" color="error" onClick={confirmDelete}>Delete Permanently</Button>
+          <Button onClick={() => setDeleteConfirm({ ...deleteConfirm, open: false })} disabled={actionLoading}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={confirmDelete} disabled={actionLoading}>
+            {actionLoading ? 'Deleting...' : 'Delete Permanently'}
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -338,17 +407,79 @@ const Users = () => {
           <Typography variant="h6" component="h2" gutterBottom>
             {balanceModal.operation === 'add' ? 'Add' : 'Subtract'} balance — {balanceModal.userName}
           </Typography>
-          <TextField fullWidth label="Amount (₹)" type="number" value={balanceAmount} onChange={(e) => setBalanceAmount(e.target.value)} sx={{ mb: 2 }} autoFocus />
+          <TextField fullWidth label="Amount (₹)" type="number" value={balanceAmount} onChange={(e) => setBalanceAmount(e.target.value)} sx={{ mb: 2 }} autoFocus disabled={actionLoading} />
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-            <Button onClick={() => setBalanceModal({ ...balanceModal, open: false })}>Cancel</Button>
-            <Button variant="contained" color={balanceModal.operation === 'add' ? 'success' : 'error'} onClick={submitBalanceModal}>
-              {balanceModal.operation === 'add' ? 'Add' : 'Subtract'}
+            <Button onClick={() => setBalanceModal({ ...balanceModal, open: false })} disabled={actionLoading}>Cancel</Button>
+            <Button variant="contained" color={balanceModal.operation === 'add' ? 'success' : 'error'} onClick={submitBalanceModal} disabled={actionLoading}>
+              {actionLoading ? 'Processing...' : balanceModal.operation === 'add' ? 'Add' : 'Subtract'}
             </Button>
           </Box>
         </Box>
       </Modal>
 
+      {/* Earnings Modal */}
+      <Dialog open={earningsModal.open} onClose={() => !actionLoading && setEarningsModal({ ...earningsModal, open: false })}>
+        <DialogTitle>Edit Earnings — {earningsModal.userName}</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Wallet Balance: <strong>₹{earningsModal.walletBalance.toFixed(2)}</strong><br />
+            Current Earnings: <strong>₹{earningsModal.currentEarnings.toFixed(2)}</strong>
+          </DialogContentText>
+          <TextField
+            fullWidth
+            label="New Earnings (₹)"
+            type="number"
+            value={earningsAmount}
+            onChange={(e) => setEarningsAmount(e.target.value)}
+            inputProps={{ min: 0, max: earningsModal.walletBalance, step: '0.01' }}
+            helperText={`Max: ₹${earningsModal.walletBalance.toFixed(2)} (cannot exceed balance)`}
+            autoFocus
+            disabled={actionLoading}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEarningsModal({ ...earningsModal, open: false })} disabled={actionLoading}>Cancel</Button>
+          <Button variant="contained" color="success" onClick={handleEditEarnings} disabled={actionLoading}>
+            {actionLoading ? 'Saving...' : 'Update Earnings'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Create User Modal */}
+      {/* Edit User Modal */}
+      <Dialog open={editModal.open} onClose={() => !actionLoading && setEditModal({ ...editModal, open: false })}>
+        <DialogTitle>Edit User</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Name"
+            value={editModal.name}
+            onChange={(e) => setEditModal({ ...editModal, name: e.target.value })}
+            sx={{ mt: 1, mb: 2 }}
+            disabled={actionLoading}
+          />
+          <TextField
+            fullWidth
+            select
+            label="Role"
+            value={editModal.role}
+            onChange={(e) => setEditModal({ ...editModal, role: e.target.value })}
+            disabled={actionLoading}
+            SelectProps={{ native: true }}
+          >
+            <option value="user">User</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditModal({ ...editModal, open: false })} disabled={actionLoading}>Cancel</Button>
+          <Button variant="contained" onClick={handleEditUser} disabled={actionLoading}>
+            {actionLoading ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
@@ -379,8 +510,10 @@ const Users = () => {
                 <input type="number" value={newUser.walletBalance} onChange={(e) => setNewUser({ ...newUser, walletBalance: Number(e.target.value) })} className="w-full px-4 py-3 border border-gray-200 rounded-lg" />
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 px-4 py-3 border border-gray-200 rounded-lg">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-3 bg-primary-700 text-white rounded-lg hover:bg-primary-800">Create</button>
+                <button type="button" onClick={() => setShowCreateModal(false)} disabled={actionLoading} className="flex-1 px-4 py-3 border border-gray-200 rounded-lg disabled:opacity-50">Cancel</button>
+                <button type="submit" disabled={actionLoading} className="flex-1 px-4 py-3 bg-primary-700 text-white rounded-lg hover:bg-primary-800 disabled:opacity-50">
+                  {actionLoading ? 'Creating...' : 'Create'}
+                </button>
               </div>
             </form>
           </div>

@@ -44,10 +44,8 @@ const Wallet = () => {
   // T&C popup
   const [tcOpen, setTcOpen] = useState(false);
 
-  useEffect(() => {
-    fetchPaymentInfo();
-    checkFirstDeposit();
-  }, []);
+  // Earnings info for withdrawal
+  const [earningsInfo, setEarningsInfo] = useState({ walletBalance: 0, totalDeposited: 0, earnings: 0 });
 
   useEffect(() => {
     if (user && !user.upiId && !user.upiNumber) {
@@ -77,6 +75,21 @@ const Wallet = () => {
       console.error('Failed to fetch payment info:', error);
     }
   };
+
+  const fetchEarningsInfo = useCallback(async () => {
+    try {
+      const res = await walletAPI.getWithdrawalInfo();
+      setEarningsInfo(res.data);
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => { if (tab === 'withdraw') fetchEarningsInfo(); }, [tab, fetchEarningsInfo]);
+
+  useEffect(() => {
+    fetchPaymentInfo();
+    checkFirstDeposit();
+    fetchEarningsInfo();
+  }, []);
 
   const checkFirstDeposit = async () => {
     try {
@@ -120,13 +133,13 @@ const Wallet = () => {
       return;
     }
     if (!amount || Number(amount) < 100) { setMessage({ type: 'error', text: 'Minimum withdrawal is ₹100' }); return; }
-    if (Number(amount) > user.walletBalance) { setMessage({ type: 'error', text: 'Insufficient balance' }); return; }
+    if (Number(amount) > earningsInfo.earnings) { setMessage({ type: 'error', text: `You can only withdraw earnings. Withdrawable: ₹${earningsInfo.earnings.toFixed(2)}` }); return; }
     setLoading(true);
     try {
       const res = await walletAPI.withdraw(Number(amount));
       updateBalance(res.data.newBalance);
       setMessage({ type: 'success', text: 'Withdrawal request submitted!' });
-      setAmount(''); setHistPage(1); fetchHistory();
+      setAmount(''); setHistPage(1); fetchHistory(); fetchEarningsInfo();
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to submit request' });
     } finally { setLoading(false); }
@@ -191,8 +204,16 @@ const Wallet = () => {
       <div className="max-w-md mx-auto p-4 w-full min-w-0">
         {/* Balance Card */}
         <div className="bg-gradient-to-r from-primary-700 to-primary-800 rounded-xl p-6 text-white mb-4">
-          <p className="text-sm text-primary-200">Available Balance</p>
-          <h2 className="text-3xl font-bold mt-1">₹{user?.walletBalance?.toFixed(2) || '0.00'}</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-primary-200">Total Balance</p>
+              <h2 className="text-3xl font-bold mt-1">₹{user?.walletBalance?.toFixed(2) || '0.00'}</h2>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-primary-200">Withdrawable Earnings</p>
+              <h2 className="text-2xl font-bold mt-1 text-green-300">₹{earningsInfo.earnings.toFixed(2)}</h2>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -312,13 +333,29 @@ const Wallet = () => {
         {/* Withdraw Form */}
         {tab === 'withdraw' && (
           <div className="bg-white rounded-xl p-4 shadow-sm">
+            {/* Earnings breakdown */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-amber-800 font-semibold mb-2">You can only withdraw your earnings from games</p>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Total Balance</span>
+                <span className="font-bold text-gray-800">₹{user?.walletBalance?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Deposited Amount</span>
+                <span className="font-medium text-gray-700">₹{earningsInfo.totalDeposited.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm mt-1 pt-1 border-t border-amber-200">
+                <span className="text-green-700 font-semibold">Withdrawable Earnings</span>
+                <span className="font-bold text-green-700">₹{earningsInfo.earnings.toFixed(2)}</span>
+              </div>
+            </div>
             <form onSubmit={handleWithdraw}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Amount (Min ₹100)</label>
-                <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" max={user?.walletBalance || 0} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500" />
-                <p className="text-xs text-gray-500 mt-1">Available: ₹{user?.walletBalance?.toFixed(2) || '0.00'} | Max 2 requests/day</p>
+                <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" max={earningsInfo.earnings} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                <p className="text-xs text-gray-500 mt-1">Withdrawable: ₹{earningsInfo.earnings.toFixed(2)} | Max 2 requests/day</p>
               </div>
-              <button type="submit" disabled={loading || user?.walletBalance < 100} className="w-full bg-rose-600 text-white py-3 rounded-lg font-medium hover:bg-rose-700 disabled:opacity-50">
+              <button type="submit" disabled={loading || earningsInfo.earnings < 100} className="w-full bg-rose-600 text-white py-3 rounded-lg font-medium hover:bg-rose-700 disabled:opacity-50">
                 {loading ? 'Submitting...' : 'Submit Withdrawal Request'}
               </button>
             </form>

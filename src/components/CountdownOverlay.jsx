@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 const CountdownOverlay = ({ secondsLeft }) => {
   const [progress, setProgress] = useState(100);
   const intervalRef = useRef(null);
-  const maxSecondsRef = useRef(12); // 12-second countdown
+  const maxSecondsRef = useRef(5); // 5-second countdown
 
   useEffect(() => {
     if (secondsLeft == null) return;

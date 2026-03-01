@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
+import toast from 'react-hot-toast';
 
 function fmt(date) {
   if (!date) return '—';
@@ -24,6 +25,9 @@ const AdminUserDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState('wallet');
+  const [earningsEdit, setEarningsEdit] = useState(false);
+  const [earningsValue, setEarningsValue] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     adminAPI.getUserDetail(id)
@@ -111,6 +115,65 @@ const AdminUserDetail = () => {
             <p className="text-xs text-gray-500 mb-0.5">Wallet Balance</p>
             <p className="font-bold text-emerald-600 text-lg">₹{user.walletBalance?.toFixed(2)}</p>
           </div>
+          <div className="bg-teal-50 rounded-xl p-3 text-center relative">
+            <p className="text-xs text-gray-500 mb-0.5">Withdrawable Earnings</p>
+            {earningsEdit ? (
+              <div className="flex items-center gap-1 justify-center mt-1">
+                <input
+                  type="number"
+                  value={earningsValue}
+                  onChange={(e) => setEarningsValue(e.target.value)}
+                  className="w-24 px-2 py-1 text-sm border border-teal-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  min="0"
+                  max={user.walletBalance || 0}
+                  step="0.01"
+                  autoFocus
+                  disabled={saving}
+                />
+                <button
+                  onClick={async () => {
+                    if (!earningsValue || isNaN(Number(earningsValue))) return;
+                    setSaving(true);
+                    try {
+                      await adminAPI.updateUserEarnings(id, Number(earningsValue));
+                      toast.success('Earnings updated');
+                      const res = await adminAPI.getUserDetail(id);
+                      setData(res.data);
+                      setEarningsEdit(false);
+                    } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+                    finally { setSaving(false); }
+                  }}
+                  disabled={saving}
+                  className="px-2 py-1 bg-teal-600 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                >
+                  {saving ? '...' : 'Save'}
+                </button>
+                <button
+                  onClick={() => setEarningsEdit(false)}
+                  disabled={saving}
+                  className="px-2 py-1 bg-gray-200 text-gray-600 rounded-lg text-xs font-medium"
+                >
+                  X
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-1">
+                <p className="font-bold text-teal-600">₹{Math.max(0, (user.walletBalance || 0) - (user.totalDeposited || 0)).toFixed(2)}</p>
+                <button
+                  onClick={() => {
+                    setEarningsValue(String(Math.max(0, (user.walletBalance || 0) - (user.totalDeposited || 0)).toFixed(2)));
+                    setEarningsEdit(true);
+                  }}
+                  className="p-0.5 rounded hover:bg-teal-100 transition-colors"
+                  title="Edit Earnings"
+                >
+                  <svg className="w-3.5 h-3.5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
           <div className="bg-blue-50 rounded-xl p-3 text-center">
             <p className="text-xs text-gray-500 mb-0.5">Total Deposited</p>
             <p className="font-bold text-blue-600">₹{totalDeposited.toFixed(0)}</p>
@@ -119,6 +182,9 @@ const AdminUserDetail = () => {
             <p className="text-xs text-gray-500 mb-0.5">Total Withdrawn</p>
             <p className="font-bold text-red-500">₹{totalWithdrawn.toFixed(0)}</p>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 mt-3">
           <div className="bg-amber-50 rounded-xl p-3 text-center">
             <p className="text-xs text-gray-500 mb-0.5">Aviator Bet Total</p>
             <p className="font-bold text-amber-600">₹{totalAviatorBet.toFixed(0)}</p>
