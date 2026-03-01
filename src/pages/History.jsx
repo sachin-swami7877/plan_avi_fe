@@ -83,13 +83,32 @@ const History = () => {
     }
   }, []);
 
-  useEffect(() => {
+  // Track which tabs have been fetched at least once
+  const [fetched, setFetched] = useState({ aviator: false, ludo: false, spinner: false });
+
+  const fetchTabData = useCallback(async (tabId, page = 1) => {
     setLoading(true);
-    Promise.all([fetchAviator(1), fetchLudo(1), fetchSpinner(1)]).finally(() => setLoading(false));
+    try {
+      if (tabId === 'aviator') await fetchAviator(page);
+      else if (tabId === 'ludo') await fetchLudo(page);
+      else if (tabId === 'spinner') await fetchSpinner(page);
+      setFetched((prev) => ({ ...prev, [tabId]: true }));
+    } finally {
+      setLoading(false);
+    }
   }, [fetchAviator, fetchLudo, fetchSpinner]);
+
+  // Only fetch active tab on mount
+  useEffect(() => {
+    fetchTabData('aviator', 1);
+  }, [fetchTabData]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
+    // Lazy-load: fetch only if not already fetched
+    if (!fetched[tabId]) {
+      fetchTabData(tabId, 1);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -209,7 +228,7 @@ const History = () => {
                       </div>
                     ))}
                   </div>
-                  <Pagination currentPage={aviatorPage} totalPages={aviatorTotal} onPageChange={(p) => { setLoading(true); fetchAviator(p).finally(() => setLoading(false)); }} />
+                  <Pagination currentPage={aviatorPage} totalPages={aviatorTotal} onPageChange={(p) => fetchTabData('aviator', p)} />
                 </>
               )
             )}
@@ -267,7 +286,7 @@ const History = () => {
                       );
                     })}
                   </div>
-                  <Pagination currentPage={ludoPage} totalPages={ludoTotal} onPageChange={(p) => { setLoading(true); fetchLudo(p).finally(() => setLoading(false)); }} />
+                  <Pagination currentPage={ludoPage} totalPages={ludoTotal} onPageChange={(p) => fetchTabData('ludo', p)} />
                 </>
               )
             )}
@@ -289,19 +308,19 @@ const History = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <div>
-                            <p className="text-gray-600 text-sm">Bet Amount</p>
-                            <p className="font-bold text-lg">₹{rec.betAmount || rec.amount || 0}</p>
+                            <p className="text-gray-600 text-sm">Spin Cost</p>
+                            <p className="font-bold text-lg">₹{rec.spinCost}</p>
                           </div>
                           <div className="text-right">
                             {rec.winAmount > 0 ? (
                               <>
-                                <p className="text-gray-600 text-sm">Segment: {rec.segment || rec.result || '—'}</p>
+                                <p className="text-gray-600 text-sm">Won ₹{rec.outcome}</p>
                                 <p className="font-bold text-lg text-green-600">+₹{rec.winAmount}</p>
                               </>
                             ) : (
                               <>
-                                <p className="text-gray-600 text-sm">Better luck next time</p>
-                                <p className="font-bold text-lg text-red-600">-₹{rec.betAmount || rec.amount || 0}</p>
+                                <p className="text-gray-600 text-sm">Thank you</p>
+                                <p className="font-bold text-lg text-red-600">-₹{rec.spinCost}</p>
                               </>
                             )}
                           </div>
@@ -309,7 +328,7 @@ const History = () => {
                       </div>
                     ))}
                   </div>
-                  <Pagination currentPage={spinnerPage} totalPages={spinnerTotal} onPageChange={(p) => { setLoading(true); fetchSpinner(p).finally(() => setLoading(false)); }} />
+                  <Pagination currentPage={spinnerPage} totalPages={spinnerTotal} onPageChange={(p) => fetchTabData('spinner', p)} />
                 </>
               )
             )}
