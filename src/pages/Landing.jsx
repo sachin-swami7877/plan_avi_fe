@@ -718,13 +718,11 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
           </Link>
 
           <nav className="hidden sm:flex items-center gap-6">
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <>
                 <Link to="/dashboard" className="text-sm text-white/70 hover:text-white transition-colors font-medium">Account</Link>
                 <Link to="/profile" className="text-sm text-white/70 hover:text-white transition-colors font-medium">Profile</Link>
               </>
-            ) : (
-              <Link to="/login" className="text-sm text-white/70 hover:text-white transition-colors font-medium">Login</Link>
             )}
             <button onClick={handlePlay} className="px-5 py-2.5 rounded-lg text-sm font-bold bg-violet-600 hover:bg-violet-500 transition-all shadow-lg shadow-violet-600/20">
               Get Started
@@ -742,13 +740,11 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
 
         {menuOpen && (
           <div className="sm:hidden border-t border-white/5 bg-[#0d0d15]/95 backdrop-blur-xl px-4 py-3 space-y-1">
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <>
                 <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Account</Link>
                 <Link to="/profile" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Profile</Link>
               </>
-            ) : (
-              <Link to="/login" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Login</Link>
             )}
             <button onClick={() => { setMenuOpen(false); handlePlay(); }} className="w-full mt-2 px-4 py-3 rounded-lg font-bold bg-violet-600 hover:bg-violet-500 text-center">
               Get Started

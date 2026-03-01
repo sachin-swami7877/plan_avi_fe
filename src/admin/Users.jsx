@@ -13,6 +13,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
+import CircularProgress from '@mui/material/CircularProgress';
 import { adminAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { HiOutlineEllipsisVertical } from 'react-icons/hi2';
@@ -45,6 +46,8 @@ const Users = () => {
   const [earningsAmount, setEarningsAmount] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [period, setPeriod] = useState('all');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [expandedUser, setExpandedUser] = useState(null);
@@ -55,7 +58,12 @@ const Users = () => {
     setLoading(true);
     try {
       const params = {};
-      if (period !== 'all') params.period = period;
+      if (period === 'custom' && customFrom && customTo) {
+        params.from = customFrom;
+        params.to = customTo;
+      } else if (period !== 'all') {
+        params.period = period;
+      }
       if (search.trim()) params.search = search.trim();
       const res = await adminAPI.getUsers(params);
       setUsers(res.data);
@@ -194,7 +202,7 @@ const Users = () => {
       </div>
 
       {/* Period Filter */}
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-3 flex-wrap">
         {[
           { value: 'all', label: 'All Time' },
           { value: 'today', label: 'Today' },
@@ -213,7 +221,45 @@ const Users = () => {
             {p.label}
           </button>
         ))}
+        <button
+          onClick={() => setPeriod('custom')}
+          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            period === 'custom'
+              ? 'bg-primary-600 text-white shadow-sm'
+              : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          Custom
+        </button>
+        {period !== 'all' && (
+          <button
+            onClick={() => { setPeriod('all'); setCustomFrom(''); setCustomTo(''); }}
+            className="px-4 py-1.5 rounded-full text-sm font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+          >
+            Clear
+          </button>
+        )}
       </div>
+
+      {period === 'custom' && (
+        <div className="flex gap-2 mb-3 items-end flex-wrap">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">From</label>
+            <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">To</label>
+            <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          </div>
+          <button
+            onClick={() => { if (customFrom && customTo) fetchUsers(); }}
+            disabled={!customFrom || !customTo}
+            className="px-4 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+          >
+            Apply
+          </button>
+        </div>
+      )}
 
       {/* Search */}
       <form onSubmit={handleSearch} className="flex gap-2 mb-4">
@@ -413,7 +459,7 @@ const Users = () => {
           <TextField fullWidth label="Amount (₹)" type="number" value={balanceAmount} onChange={(e) => setBalanceAmount(e.target.value)} sx={{ mb: 2 }} autoFocus disabled={actionLoading} />
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
             <Button onClick={() => setBalanceModal({ ...balanceModal, open: false })} disabled={actionLoading}>Cancel</Button>
-            <Button variant="contained" color={balanceModal.operation === 'add' ? 'success' : 'error'} onClick={submitBalanceModal} disabled={actionLoading}>
+            <Button variant="contained" color={balanceModal.operation === 'add' ? 'success' : 'error'} onClick={submitBalanceModal} disabled={actionLoading} startIcon={actionLoading ? <CircularProgress size={18} color="inherit" /> : null}>
               {actionLoading ? 'Processing...' : balanceModal.operation === 'add' ? 'Add' : 'Subtract'}
             </Button>
           </Box>

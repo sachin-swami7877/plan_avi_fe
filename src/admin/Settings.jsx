@@ -29,6 +29,12 @@ const Settings = () => {
   const [ludoCommTier2Pct, setLudoCommTier2Pct] = useState(8);
   const [ludoCommTier3Pct, setLudoCommTier3Pct] = useState(5);
   const [userWarning, setUserWarning] = useState('');
+  const [withdrawalsEnabled, setWithdrawalsEnabled] = useState(true);
+  const [withdrawalDisableReason, setWithdrawalDisableReason] = useState('');
+  // Ludo toggle & warning
+  const [ludoEnabled, setLudoEnabled] = useState(true);
+  const [ludoDisableReason, setLudoDisableReason] = useState('');
+  const [ludoWarning, setLudoWarning] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [qrFile, setQrFile] = useState(null);
   const [qrUploading, setQrUploading] = useState(false);
@@ -63,6 +69,11 @@ const Settings = () => {
       setLudoCommTier2Pct(d.ludoCommTier2Pct ?? 8);
       setLudoCommTier3Pct(d.ludoCommTier3Pct ?? 5);
       setUserWarning(d.userWarning || '');
+      setWithdrawalsEnabled(d.withdrawalsEnabled ?? true);
+      setWithdrawalDisableReason(d.withdrawalDisableReason || '');
+      setLudoEnabled(d.ludoEnabled ?? true);
+      setLudoDisableReason(d.ludoDisableReason || '');
+      setLudoWarning(d.ludoWarning || '');
       setQrCodeUrl(d.qrCodeUrl || null);
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to load settings' });
@@ -195,6 +206,59 @@ const Settings = () => {
         </button>
       </Section>
 
+      {/* Withdrawals Toggle */}
+      <Section title="Withdrawals" desc={withdrawalsEnabled ? 'Users can submit withdrawal requests.' : 'Withdrawals are disabled — users cannot request withdrawals.'}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-medium text-gray-700">Allow Withdrawals</p>
+          <button
+            onClick={async () => {
+              const newValue = !withdrawalsEnabled;
+              const oldValue = withdrawalsEnabled;
+              setWithdrawalsEnabled(newValue);
+              setSaving(true);
+              try {
+                await adminAPI.updateSettings({ withdrawalsEnabled: newValue });
+                toast.success(`Withdrawals ${newValue ? 'enabled' : 'disabled'} successfully`);
+              } catch {
+                toast.error('Failed to update withdrawal setting');
+                setWithdrawalsEnabled(oldValue);
+              }
+              finally { setSaving(false); }
+            }}
+            disabled={saving}
+            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${withdrawalsEnabled ? 'bg-emerald-600' : 'bg-gray-300'} ${saving ? 'opacity-50' : ''}`}
+          >
+            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${withdrawalsEnabled ? 'translate-x-8' : 'translate-x-1'}`} />
+          </button>
+        </div>
+        {!withdrawalsEnabled && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Reason shown to users</label>
+            <textarea
+              rows={2}
+              value={withdrawalDisableReason}
+              onChange={(e) => setWithdrawalDisableReason(e.target.value)}
+              placeholder="e.g. Withdrawals are temporarily paused for maintenance"
+              className="w-full px-3 py-2 border rounded-lg text-sm"
+            />
+            <button
+              onClick={async () => {
+                setSaving(true);
+                try {
+                  await adminAPI.updateSettings({ withdrawalDisableReason });
+                  toast.success('Reason saved');
+                } catch { toast.error('Failed to save reason'); }
+                finally { setSaving(false); }
+              }}
+              disabled={saving}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+            >
+              Save Reason
+            </button>
+          </div>
+        )}
+      </Section>
+
       {/* Payment QR & UPI */}
       <Section title="Payment QR & UPI" desc="QR code and UPI details shown on user deposit page.">
         <div className="space-y-3">
@@ -323,8 +387,105 @@ const Settings = () => {
               </div>
             </div>
           </div>
+          <button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await adminAPI.updateSettings({
+                  ludoCommTier1Max: Number(ludoCommTier1Max),
+                  ludoCommTier1Pct: Number(ludoCommTier1Pct),
+                  ludoCommTier2Max: Number(ludoCommTier2Max),
+                  ludoCommTier2Pct: Number(ludoCommTier2Pct),
+                  ludoCommTier3Pct: Number(ludoCommTier3Pct),
+                });
+                toast.success('Commission tiers saved');
+              } catch { toast.error('Failed to save commission tiers'); }
+              finally { setSaving(false); }
+            }}
+            disabled={saving}
+            className="mt-3 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+          >
+            Save Commission
+          </button>
         </div>
         <p className="text-xs text-gray-500 mt-2">Duration: minutes from game start to expiry. Dummy battles: user app shows this many fake running battles (random 10–N). Names/amounts refresh every 15 min.</p>
+      </Section>
+
+      {/* Ludo Toggle */}
+      <Section title="Ludo Matches" desc={ludoEnabled ? 'Users can create & join Ludo matches.' : 'Ludo matches are disabled — users cannot create or join.'}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-medium text-gray-700">Allow Ludo Matches</p>
+          <button
+            onClick={async () => {
+              const newValue = !ludoEnabled;
+              const oldValue = ludoEnabled;
+              setLudoEnabled(newValue);
+              setSaving(true);
+              try {
+                await adminAPI.updateSettings({ ludoEnabled: newValue });
+                toast.success(`Ludo ${newValue ? 'enabled' : 'disabled'} successfully`);
+              } catch {
+                toast.error('Failed to update Ludo setting');
+                setLudoEnabled(oldValue);
+              }
+              finally { setSaving(false); }
+            }}
+            disabled={saving}
+            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${ludoEnabled ? 'bg-emerald-600' : 'bg-gray-300'} ${saving ? 'opacity-50' : ''}`}
+          >
+            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${ludoEnabled ? 'translate-x-8' : 'translate-x-1'}`} />
+          </button>
+        </div>
+        {!ludoEnabled && (
+          <div className="space-y-2 mb-4">
+            <label className="block text-sm font-medium text-gray-700">Reason shown to users</label>
+            <textarea
+              rows={2}
+              value={ludoDisableReason}
+              onChange={(e) => setLudoDisableReason(e.target.value)}
+              placeholder="e.g. Ludo matches are temporarily paused for maintenance"
+              className="w-full px-3 py-2 border rounded-lg text-sm"
+            />
+            <button
+              onClick={async () => {
+                setSaving(true);
+                try {
+                  await adminAPI.updateSettings({ ludoDisableReason });
+                  toast.success('Reason saved');
+                } catch { toast.error('Failed to save reason'); }
+                finally { setSaving(false); }
+              }}
+              disabled={saving}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+            >
+              Save Reason
+            </button>
+          </div>
+        )}
+        <div className="border-t border-gray-200 pt-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Ludo Warning (shown on Ludo page)</label>
+          <textarea
+            rows={2}
+            value={ludoWarning}
+            onChange={(e) => setLudoWarning(e.target.value)}
+            placeholder="Enter warning message (leave empty to hide)"
+            className="w-full px-3 py-2 border rounded-lg text-sm"
+          />
+          <button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await adminAPI.updateSettings({ ludoWarning });
+                toast.success('Ludo warning saved');
+              } catch { toast.error('Failed to save warning'); }
+              finally { setSaving(false); }
+            }}
+            disabled={saving}
+            className="mt-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+          >
+            Save Warning
+          </button>
+        </div>
       </Section>
 
       {/* Terms & Conditions */}

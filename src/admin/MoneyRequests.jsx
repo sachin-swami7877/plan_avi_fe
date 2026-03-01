@@ -14,6 +14,8 @@ const MoneyRequests = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [expandedId, setExpandedId] = useState(null);
+  const [editAmounts, setEditAmounts] = useState({});
+  const [processing, setProcessing] = useState(null);
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -42,11 +44,17 @@ const MoneyRequests = () => {
   }, [fetchRequests]);
 
   const handleProcess = async (id, action) => {
+    setProcessing(`${id}-${action}`);
     try {
-      await adminAPI.processWalletRequest(id, action);
+      const edited = editAmounts[id];
+      await adminAPI.processWalletRequest(id, action, edited !== undefined ? Number(edited) : undefined);
+      toast.success(`Request ${action}d successfully`);
+      setEditAmounts((prev) => { const copy = { ...prev }; delete copy[id]; return copy; });
       fetchRequests();
     } catch (error) {
-      console.error('Failed to process request:', error);
+      toast.error(error.response?.data?.message || 'Failed to process request');
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -138,7 +146,7 @@ const MoneyRequests = () => {
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className={`text-xl font-bold ${tab === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                        ₹{request.amount}
+                        ₹{editAmounts[request._id] !== undefined ? editAmounts[request._id] : request.amount}
                       </p>
                       <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${
                         request.status === 'pending' ? (tab === 'deposit' ? 'bg-yellow-200 text-yellow-800' : 'bg-orange-200 text-orange-800') :
@@ -238,19 +246,55 @@ const MoneyRequests = () => {
                 )}
 
                 {request.status === 'pending' && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleProcess(request._id, 'approve')}
-                      className="flex-1 bg-green-500 text-white py-3 rounded-lg font-medium text-sm"
-                    >
-                      {tab === 'deposit' ? 'Approve' : 'Mark as Paid'}
-                    </button>
-                    <button
-                      onClick={() => handleProcess(request._id, 'reject')}
-                      className="flex-1 bg-red-500 text-white py-3 rounded-lg font-medium text-sm"
-                    >
-                      {tab === 'deposit' ? 'Reject' : 'Reject & Refund'}
-                    </button>
+                  <div>
+                    {/* Editable amount for deposit requests */}
+                    {tab === 'deposit' && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                        <label className="block text-xs text-amber-800 font-semibold mb-1.5">Edit Amount (if different)</label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500 font-bold">₹</span>
+                          <input
+                            type="number"
+                            value={editAmounts[request._id] !== undefined ? editAmounts[request._id] : request.amount}
+                            onChange={(e) => setEditAmounts((prev) => ({ ...prev, [request._id]: e.target.value }))}
+                            className="flex-1 px-3 py-2 border border-amber-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                            min="1"
+                          />
+                          {editAmounts[request._id] !== undefined && Number(editAmounts[request._id]) !== request.amount && (
+                            <button
+                              onClick={() => setEditAmounts((prev) => { const copy = { ...prev }; delete copy[request._id]; return copy; })}
+                              className="text-xs text-gray-500 hover:text-gray-700 underline"
+                            >
+                              Reset
+                            </button>
+                          )}
+                        </div>
+                        {editAmounts[request._id] !== undefined && Number(editAmounts[request._id]) !== request.amount && (
+                          <p className="text-xs text-amber-700 mt-1">Original: ₹{request.amount} → Edited: ₹{editAmounts[request._id]}</p>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleProcess(request._id, 'approve')}
+                        disabled={processing === `${request._id}-approve`}
+                        className="flex-1 bg-green-500 text-white py-3 rounded-lg font-medium text-sm disabled:opacity-60 flex items-center justify-center gap-2"
+                      >
+                        {processing === `${request._id}-approve` ? (
+                          <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Processing...</>
+                        ) : (tab === 'deposit' ? 'Approve' : 'Mark as Paid')}
+                      </button>
+                      <button
+                        onClick={() => handleProcess(request._id, 'reject')}
+                        disabled={processing === `${request._id}-reject`}
+                        className="flex-1 bg-red-500 text-white py-3 rounded-lg font-medium text-sm disabled:opacity-60 flex items-center justify-center gap-2"
+                      >
+                        {processing === `${request._id}-reject` ? (
+                          <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Processing...</>
+                        ) : (tab === 'deposit' ? 'Reject' : 'Reject & Refund')}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

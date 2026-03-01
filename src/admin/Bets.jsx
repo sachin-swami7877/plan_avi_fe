@@ -1,13 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
+import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { adminAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import GameGraph from '../components/GameGraph';
+
+const PER_PAGE = 25;
+const PERIODS = [
+  { value: 'all', label: 'All Time' },
+  { value: 'today', label: 'Today' },
+  { value: '7days', label: 'Last 7 Days' },
+];
 
 const Bets = () => {
   const [bets, setBets] = useState([]);
@@ -19,6 +27,7 @@ const Bets = () => {
   const [message, setMessage] = useState('');
   const [crashConfirm, setCrashConfirm] = useState({ open: false, betId: null, userName: '' });
   const [betsEnabled, setBetsEnabled] = useState(true);
+  const [betsPausedDismissed, setBetsPausedDismissed] = useState(false);
   const { socket, gameState } = useSocket();
 
   // Next-crash admin control
@@ -26,9 +35,44 @@ const Bets = () => {
   const [adminNextCrash, setAdminNextCrash] = useState(null);
   const [settingCrash, setSettingCrash] = useState(false);
 
+  // Bulk crash: next N user-bet rounds at same value
+  const [bulkCount, setBulkCount] = useState('');
+  const [bulkCrashAt, setBulkCrashAt] = useState('');
+  const [bulkCrash, setBulkCrash] = useState(null); // { crashAt, total, remaining }
+  const [settingBulk, setSettingBulk] = useState(false);
+
+  // Sequential crash: array of specific values
+  const [seqCount, setSeqCount] = useState('');
+  const [seqInputs, setSeqInputs] = useState([]); // array of input strings
+  const [seqCrashes, setSeqCrashes] = useState([]); // active queue from server
+  const [settingSeq, setSettingSeq] = useState(false);
+  const [seqReady, setSeqReady] = useState(false); // true once user enters count
+
+  // History pagination & date filter
+  const [histPage, setHistPage] = useState(1);
+  const [histTotalPages, setHistTotalPages] = useState(1);
+  const [histTotalCount, setHistTotalCount] = useState(0);
+  const [histPeriod, setHistPeriod] = useState('all');
+  const [histCustomFrom, setHistCustomFrom] = useState('');
+  const [histCustomTo, setHistCustomTo] = useState('');
+  const [histSearch, setHistSearch] = useState('');
+  const [searchDebounce, setSearchDebounce] = useState('');
+
+  // Multi-select delete
+  const [selectedBets, setSelectedBets] = useState([]);
+  const [selectMode, setSelectMode] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => { setSearchDebounce(histSearch); setHistPage(1); }, 400);
+    return () => clearTimeout(t);
+  }, [histSearch]);
+
   useEffect(() => {
     fetchBets();
-  }, [filter]);
+  }, [filter, histPage, histPeriod, searchDebounce]);
 
   // Fetch settings and listen for changes
   useEffect(() => {
@@ -58,10 +102,10 @@ const Bets = () => {
     try {
       const res = await adminAPI.getCurrentRoundWithBets();
       setCurrentRoundData(res.data);
-      // Also capture admin next crash from state
-      if (res.data.state?.adminNextCrash !== undefined) {
-        setAdminNextCrash(res.data.state.adminNextCrash);
-      }
+      const st = res.data.state;
+      if (st?.adminNextCrash !== undefined) setAdminNextCrash(st.adminNextCrash);
+      if (st?.bulkCrash !== undefined) setBulkCrash(st.bulkCrash);
+      if (st?.sequentialCrashes !== undefined) setSeqCrashes(st.sequentialCrashes || []);
     } catch (err) {
       // ignore
     }
@@ -73,17 +117,66 @@ const Bets = () => {
     return () => clearInterval(interval);
   }, [gameState?.roundId]);
 
+  // Listen for real-time crash queue updates
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (data) => {
+      if (data.bulkCrash !== undefined) setBulkCrash(data.bulkCrash);
+      if (data.sequentialCrashes !== undefined) setSeqCrashes(data.sequentialCrashes || []);
+      if (data.adminNextCrash !== undefined) setAdminNextCrash(data.adminNextCrash);
+    };
+    socket.on('admin:crash-queue-update', handler);
+    return () => socket.off('admin:crash-queue-update', handler);
+  }, [socket]);
+
   const fetchBets = async () => {
     try {
-      const res = await adminAPI.getBets({ status: filter || undefined });
-      // Handle pagination response structure
-      const betsData = res.data?.data || res.data || [];
-      setBets(Array.isArray(betsData) ? betsData : []);
+      const params = { page: histPage, limit: PER_PAGE };
+      if (filter) params.status = filter;
+      if (searchDebounce) params.search = searchDebounce;
+      if (histPeriod === 'custom' && histCustomFrom && histCustomTo) {
+        params.from = histCustomFrom;
+        params.to = histCustomTo;
+      } else if (histPeriod !== 'all') {
+        params.period = histPeriod;
+      }
+      const res = await adminAPI.getBets(params);
+      const data = res.data;
+      setBets(data?.data || []);
+      setHistTotalPages(data?.totalPages || 1);
+      setHistTotalCount(data?.totalCount || 0);
     } catch (error) {
       console.error('Failed to fetch bets:', error);
       setBets([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleSelectBet = (id) => {
+    setSelectedBets((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedBets.length === bets.length) {
+      setSelectedBets([]);
+    } else {
+      setSelectedBets(bets.map((b) => b._id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    setDeleteConfirm(false);
+    setDeleting(true);
+    try {
+      await adminAPI.deleteBets(selectedBets);
+      setSelectedBets([]);
+      setSelectMode(false);
+      fetchBets();
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Failed to delete bets');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -152,6 +245,69 @@ const Bets = () => {
     }
   };
 
+  // ── Bulk crash handlers ──
+  const handleSetBulkCrash = async () => {
+    const count = parseInt(bulkCount);
+    const crashAt = parseFloat(bulkCrashAt);
+    if (isNaN(count) || count < 1) { setMessage('Enter valid bet count'); return; }
+    if (isNaN(crashAt) || crashAt < 1) { setMessage('Crash value must be >= 1'); return; }
+    setSettingBulk(true); setMessage('');
+    try {
+      const res = await adminAPI.setBulkCrash(count, crashAt);
+      setBulkCrash(res.data.bulkCrash);
+      setMessage(res.data.message);
+      setBulkCount(''); setBulkCrashAt('');
+    } catch (err) { setMessage(err.response?.data?.message || 'Failed to set bulk crash'); }
+    finally { setSettingBulk(false); }
+  };
+
+  const handleClearBulkCrash = async () => {
+    try {
+      await adminAPI.clearBulkCrash();
+      setBulkCrash(null);
+      setMessage('Bulk crash cleared');
+    } catch (err) { setMessage(err.response?.data?.message || 'Failed'); }
+  };
+
+  // ── Sequential crash handlers ──
+  const handleSeqCountSubmit = () => {
+    const n = parseInt(seqCount);
+    if (isNaN(n) || n < 1 || n > 100) { setMessage('Enter 1-100'); return; }
+    setSeqInputs(Array(n).fill(''));
+    setSeqReady(true);
+  };
+
+  const updateSeqInput = (idx, val) => {
+    setSeqInputs((prev) => { const copy = [...prev]; copy[idx] = val; return copy; });
+  };
+
+  const handleSetSequentialCrashes = async () => {
+    const values = seqInputs.map((v) => parseFloat(v));
+    for (let i = 0; i < values.length; i++) {
+      if (isNaN(values[i]) || values[i] < 1) { setMessage(`Round ${i + 1} value must be >= 1`); return; }
+    }
+    setSettingSeq(true); setMessage('');
+    try {
+      const res = await adminAPI.setSequentialCrashes(values);
+      setSeqCrashes(res.data.sequentialCrashes);
+      setMessage(res.data.message);
+      setSeqInputs([]); setSeqCount(''); setSeqReady(false);
+    } catch (err) { setMessage(err.response?.data?.message || 'Failed to set sequential crashes'); }
+    finally { setSettingSeq(false); }
+  };
+
+  const handleClearSequentialCrashes = async () => {
+    try {
+      await adminAPI.clearSequentialCrashes();
+      setSeqCrashes([]);
+      setMessage('Sequential crashes cleared');
+    } catch (err) { setMessage(err.response?.data?.message || 'Failed'); }
+  };
+
+  const handleResetSeqForm = () => {
+    setSeqInputs([]); setSeqCount(''); setSeqReady(false);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'won': return 'bg-green-500';
@@ -169,30 +325,33 @@ const Bets = () => {
 
   return (
     <div>
-      {/* Bets Paused Modal */}
-      {!betsEnabled && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-lg max-w-sm w-full mx-4 p-6">
-            <div className="text-center">
-              <div className="mb-4">
-                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
-                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Bets Are Paused</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Please wait for bets to resume or contact support for assistance
-              </p>
-              <button
-                onClick={() => window.location.href = '/admin/settings'}
-                className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors"
-              >
-                Go to Settings
-              </button>
-            </div>
+      {/* Bets Paused Banner */}
+      {!betsEnabled && !betsPausedDismissed && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex items-center gap-3">
+          <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
           </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-yellow-800">Bets Are Paused</h3>
+            <p className="text-xs text-yellow-700">Users cannot place bets right now.</p>
+          </div>
+          <button
+            onClick={() => window.location.href = '/admin/settings'}
+            className="px-3 py-1.5 bg-yellow-200 text-yellow-900 rounded-lg text-xs font-medium hover:bg-yellow-300 transition-colors flex-shrink-0"
+          >
+            Settings
+          </button>
+          <button
+            onClick={() => setBetsPausedDismissed(true)}
+            className="p-1 text-yellow-600 hover:text-yellow-800 transition-colors flex-shrink-0"
+            aria-label="Dismiss"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -307,6 +466,183 @@ const Bets = () => {
             </div>
           </div>
 
+          {/* ── Bulk Crash: next N user-bet rounds at same value ── */}
+          {(() => {
+            const hasActiveBulk = !!(bulkCrash && bulkCrash.remaining > 0);
+            const hasActiveSeq = seqCrashes.length > 0;
+            return (
+            <>
+          <div className={`bg-white rounded-xl shadow-sm border ${hasActiveBulk ? 'border-orange-300' : 'border-gray-200'} p-4`}>
+            <h3 className="font-semibold text-gray-800 mb-2">Bulk Crash (Same Value)</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Next <strong>N</strong> rounds where users place bets will crash at a fixed multiplier. Empty rounds are skipped.
+            </p>
+
+            {hasActiveBulk && (
+              <div className="mb-3 bg-orange-50 border border-orange-300 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-800 font-semibold text-sm">
+                      Active: {bulkCrash.remaining} of {bulkCrash.total} rounds remaining
+                    </p>
+                    <p className="text-orange-700 text-xs mt-0.5">
+                      Crash at <strong>{bulkCrash.crashAt}x</strong> • {bulkCrash.total - bulkCrash.remaining} completed
+                    </p>
+                  </div>
+                  <button onClick={handleClearBulkCrash} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
+                    Clear
+                  </button>
+                </div>
+                {/* Progress bar */}
+                <div className="mt-2 h-2 bg-orange-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${((bulkCrash.total - bulkCrash.remaining) / bulkCrash.total) * 100}%` }} />
+                </div>
+              </div>
+            )}
+
+            {hasActiveSeq && !hasActiveBulk && (
+              <p className="text-xs text-amber-600 mb-3">Clear sequential crashes first to set bulk crash.</p>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={bulkCount}
+                onChange={(e) => setBulkCount(e.target.value)}
+                placeholder="Rounds (e.g. 5)"
+                className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                disabled={hasActiveBulk || hasActiveSeq}
+              />
+              <input
+                type="number"
+                step="0.01"
+                min="1"
+                value={bulkCrashAt}
+                onChange={(e) => setBulkCrashAt(e.target.value)}
+                placeholder="Crash at (e.g. 1.5)"
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                disabled={hasActiveBulk || hasActiveSeq}
+              />
+              <button
+                onClick={handleSetBulkCrash}
+                disabled={settingBulk || !bulkCount || !bulkCrashAt || hasActiveBulk || hasActiveSeq}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+              >
+                {settingBulk ? 'Setting…' : 'Set'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {[1, 1.5, 2, 3, 5].map((v) => (
+                <button key={v} onClick={() => setBulkCrashAt(String(v))} disabled={hasActiveBulk || hasActiveSeq} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium disabled:opacity-50">{v}x</button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Sequential Crash: different value per round ── */}
+          <div className={`bg-white rounded-xl shadow-sm border ${hasActiveSeq ? 'border-purple-300' : 'border-gray-200'} p-4`}>
+            <h3 className="font-semibold text-gray-800 mb-2">Sequential Crash (Per-Round Values)</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Set specific crash values for each of the next N user-bet rounds. Empty rounds are skipped.
+            </p>
+
+            {hasActiveSeq && (
+              <div className="mb-3 bg-purple-50 border border-purple-300 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <div>
+                    <p className="text-purple-800 font-semibold text-sm">Active: {seqCrashes.length} rounds remaining</p>
+                  </div>
+                  <button onClick={handleClearSequentialCrashes} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
+                    Clear
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {seqCrashes.map((v, i) => (
+                    <span key={i} className="bg-purple-100 text-purple-800 text-xs font-mono px-2 py-0.5 rounded">
+                      #{i + 1}: {v}x
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!hasActiveSeq && !seqReady && (
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={seqCount}
+                  onChange={(e) => setSeqCount(e.target.value)}
+                  placeholder="How many rounds?"
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <button
+                  onClick={handleSeqCountSubmit}
+                  disabled={!seqCount}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+
+            {seqReady && !hasActiveSeq && (
+              <div>
+                <div className="space-y-2 mb-3 max-h-60 overflow-y-auto">
+                  {seqInputs.map((val, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500 w-10">#{idx + 1}</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="1"
+                        value={val}
+                        onChange={(e) => updateSeqInput(idx, e.target.value)}
+                        placeholder="e.g. 1.5"
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+                {hasActiveBulk && (
+                  <p className="text-xs text-amber-600 mb-2">Clear bulk crash first to set sequential crashes.</p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleResetSeqForm}
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSetSequentialCrashes}
+                    disabled={settingSeq || hasActiveBulk || seqInputs.some((v) => !v || isNaN(parseFloat(v)) || parseFloat(v) < 1)}
+                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                  >
+                    {settingSeq ? 'Setting…' : `Set ${seqInputs.length} Crashes`}
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <p className="text-xs text-gray-400 w-full">Quick fill all:</p>
+                  {[1, 1.2, 1.5, 2, 3].map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setSeqInputs(seqInputs.map(() => String(v)))}
+                      className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium"
+                    >
+                      All {v}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+            </>
+            );
+          })()}
+
           {message && (
             <div className={`px-4 py-2 rounded-lg text-sm ${message.includes('Failed') || message.includes('must be') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
               {message}
@@ -385,27 +721,134 @@ const Bets = () => {
 
       {tab === 'history' && (
         <div>
-          <div className="mb-4">
+          {/* Filters row: period + status + search all in one row */}
+          <div className="flex gap-2 mb-3 items-center flex-wrap">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => { setHistPeriod(p.value); setHistPage(1); }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  histPeriod === p.value
+                    ? 'bg-primary-600 text-white shadow-sm'
+                    : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+            <button
+              onClick={() => setHistPeriod('custom')}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                histPeriod === 'custom'
+                  ? 'bg-primary-600 text-white shadow-sm'
+                  : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              Custom
+            </button>
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              onChange={(e) => { setFilter(e.target.value); setHistPage(1); }}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="">All Bets</option>
+              <option value="">All</option>
               <option value="won">Won</option>
               <option value="lost">Lost</option>
-              <option value="active">Active</option>
             </select>
+            <input
+              type="text"
+              value={histSearch}
+              onChange={(e) => setHistSearch(e.target.value)}
+              placeholder="Search name or phone..."
+              className="flex-1 min-w-[140px] px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            {(histPeriod !== 'all' || filter || histSearch) && (
+              <button
+                onClick={() => { setHistPeriod('all'); setFilter(''); setHistSearch(''); setHistCustomFrom(''); setHistCustomTo(''); setHistPage(1); }}
+                className="px-3 py-1.5 rounded-full text-xs font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {histPeriod === 'custom' && (
+            <div className="flex gap-2 mb-3 items-end flex-wrap">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">From</label>
+                <input type="date" value={histCustomFrom} onChange={(e) => setHistCustomFrom(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">To</label>
+                <input type="date" value={histCustomTo} onChange={(e) => setHistCustomTo(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              </div>
+              <button
+                onClick={() => { if (histCustomFrom && histCustomTo) { setHistPage(1); fetchBets(); } }}
+                disabled={!histCustomFrom || !histCustomTo}
+                className="px-4 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+              >
+                Apply
+              </button>
+            </div>
+          )}
+
+          {/* Count + select/delete toolbar */}
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-gray-500">{histTotalCount} total bets</p>
+            <div className="flex items-center gap-2">
+              {selectMode && selectedBets.length > 0 && (
+                <button
+                  onClick={() => setDeleteConfirm(true)}
+                  disabled={deleting}
+                  className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : `Delete (${selectedBets.length})`}
+                </button>
+              )}
+              {selectMode && bets.length > 0 && (
+                <button
+                  onClick={toggleSelectAll}
+                  className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-medium"
+                >
+                  {selectedBets.length === bets.length ? 'Deselect All' : 'Select All'}
+                </button>
+              )}
+              <button
+                onClick={() => { setSelectMode(!selectMode); setSelectedBets([]); }}
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  selectMode ? 'bg-primary-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+              >
+                {selectMode ? 'Cancel' : 'Select'}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-3">
             {Array.isArray(bets) && bets.length > 0 ? (
               bets.map((bet) => (
-                <div key={bet._id} className="bg-white rounded-xl p-4 shadow-sm">
+                <div
+                  key={bet._id}
+                  onClick={() => selectMode && toggleSelectBet(bet._id)}
+                  className={`bg-white rounded-xl p-4 shadow-sm ${selectMode ? 'cursor-pointer' : ''} ${
+                    selectedBets.includes(bet._id) ? 'ring-2 ring-primary-500 bg-primary-50' : ''
+                  }`}
+                >
                   <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-bold text-gray-800">{bet.userId?.name}</h3>
-                      <p className="text-xs text-gray-500">{bet.userId?.phone}</p>
+                    <div className="flex items-center gap-2">
+                      {selectMode && (
+                        <input
+                          type="checkbox"
+                          checked={selectedBets.includes(bet._id)}
+                          onChange={() => toggleSelectBet(bet._id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                      )}
+                      <div>
+                        <h3 className="font-bold text-gray-800">{bet.userId?.name}</h3>
+                        <p className="text-xs text-gray-500">{bet.userId?.phone}</p>
+                      </div>
                     </div>
                     <span className={`${getStatusColor(bet.status)} text-white px-2 py-1 rounded-full text-xs capitalize`}>
                       {bet.status}
@@ -443,6 +886,51 @@ const Bets = () => {
               <div className="text-center py-8 text-gray-400">No bets found</div>
             )}
           </div>
+
+          {/* Pagination */}
+          {histTotalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 bg-white rounded-xl px-4 py-3 shadow-sm">
+              <p className="text-xs text-gray-500">{histTotalCount} total</p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setHistPage((p) => Math.max(1, p - 1))}
+                  disabled={histPage <= 1}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <IoChevronBack className="w-4 h-4" /> Prev
+                </button>
+                <span className="text-sm font-medium text-gray-700">{histPage} / {histTotalPages}</span>
+                <button
+                  onClick={() => setHistPage((p) => Math.min(histTotalPages, p + 1))}
+                  disabled={histPage >= histTotalPages}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next <IoChevronForward className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Delete confirmation dialog */}
+          <Dialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)}>
+            <DialogTitle>Delete Bets</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Are you sure you want to delete {selectedBets.length} bet{selectedBets.length > 1 ? 's' : ''}? This action cannot be undone.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDeleteConfirm(false)} disabled={deleting}>Cancel</Button>
+              <Button variant="contained" color="error" onClick={handleDeleteSelected} disabled={deleting}>
+                {deleting ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                    Deleting...
+                  </span>
+                ) : 'Delete'}
+              </Button>
+            </DialogActions>
+          </Dialog>
         </div>
       )}
     </div>

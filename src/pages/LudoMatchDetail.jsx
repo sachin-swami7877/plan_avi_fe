@@ -138,6 +138,32 @@ export default function LudoMatchDetail() {
   const gameActuallyStarted = _hasRoomCode && !!match?.gameActualStartAt;
   const elapsedTimer = useElapsedTimer(gameActuallyStarted ? match?.gameActualStartAt : null);
 
+  // When room code countdown hits 0:00, call backend to expire the match immediately
+  useEffect(() => {
+    if (!roomCodeCountdown.expired || !isLive || _hasRoomCode) return;
+    let cancelled = false;
+
+    const triggerExpiry = async () => {
+      try {
+        const res = await ludoAPI.checkExpiry(id);
+        if (res.data?.expired) {
+          // Match was cancelled — reload to show cancelled state
+          await loadMatch();
+          await refreshUser();
+        } else if (!cancelled) {
+          // Not expired yet (edge case) — retry in 3s
+          setTimeout(triggerExpiry, 3000);
+        }
+      } catch {
+        // On error, fallback to polling loadMatch
+        if (!cancelled) setTimeout(() => loadMatch(), 3000);
+      }
+    };
+
+    triggerExpiry();
+    return () => { cancelled = true; };
+  }, [roomCodeCountdown.expired, isLive, _hasRoomCode]);
+
   // ── Handlers ──
   const handleCancel = async () => {
     if (!match?._id) return;
@@ -260,8 +286,8 @@ export default function LudoMatchDetail() {
 
   const RoomCodeDisplay = () => (
     <div className="flex items-center gap-2 mb-2">
-      <span className="flex-1 font-mono text-lg bg-gray-100 px-3 py-2 rounded-lg">{match.roomCode}</span>
-      <button onClick={copyRoomCode} className="p-2 rounded-lg bg-primary-100 text-primary-700 hover:bg-primary-200" title="Copy">
+      <span className="flex-1 font-mono text-2xl font-bold tracking-widest bg-blue-50 border-2 border-blue-500 text-gray-900 px-4 py-3 rounded-xl text-center">{match.roomCode}</span>
+      <button onClick={copyRoomCode} className="p-3 rounded-xl bg-primary-100 text-primary-700 hover:bg-primary-200" title="Copy">
         <CopyIcon />
       </button>
     </div>
@@ -394,16 +420,16 @@ export default function LudoMatchDetail() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Room Code"
+                    placeholder="Enter Room Code"
                     value={roomCodeInput}
                     onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                     maxLength={10}
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono uppercase"
+                    className="flex-1 border-2 border-blue-500 rounded-xl px-4 py-3 text-lg font-mono font-bold uppercase tracking-widest text-center placeholder:text-gray-400 placeholder:text-base placeholder:tracking-normal placeholder:font-normal"
                   />
                   <button
                     onClick={handleSubmitRoomCode}
                     disabled={submittingRoomCode || !roomCodeInput.trim()}
-                    className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                    className="bg-primary-600 text-white px-5 py-3 rounded-xl text-base font-bold disabled:opacity-50"
                   >
                     {submittingRoomCode ? '...' : 'Set'}
                   </button>
@@ -414,7 +440,7 @@ export default function LudoMatchDetail() {
             {/* ── LIVE: Opponent, waiting for room code ── */}
             {isLive && !isCreator && !hasRoomCode && (
               <div>
-                <p className="text-sm font-semibold text-gray-800 mb-2">Room code</p>
+                <p className="text-base font-bold text-gray-800 mb-2">Room Code</p>
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 mb-3">
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-amber-500 border-t-transparent flex-shrink-0" />
                   <p className="text-sm text-amber-700">Waiting for creator to share the room code...</p>
@@ -437,7 +463,7 @@ export default function LudoMatchDetail() {
             {/* ── LIVE: Game started (room code set) — show room code + elapsed timer ── */}
             {isLive && gameActuallyStarted && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Room code</p>
+                <p className="text-base font-bold text-gray-800 mb-1">Room Code</p>
                 <RoomCodeDisplay />
 
                 {resultRequest && !isResolved ? (
@@ -489,8 +515,8 @@ export default function LudoMatchDetail() {
             {/* ── Completed / cancelled — room code display ── */}
             {!isWaiting && !isLive && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Room code</p>
-                <span className="font-mono text-lg bg-gray-100 px-3 py-2 rounded-lg inline-block">{match.roomCode || '—'}</span>
+                <p className="text-base font-bold text-gray-800 mb-1">Room Code</p>
+                <span className="font-mono text-2xl font-bold tracking-widest bg-blue-50 border-2 border-blue-500 text-gray-900 px-4 py-3 rounded-xl inline-block">{match.roomCode || '—'}</span>
               </div>
             )}
 

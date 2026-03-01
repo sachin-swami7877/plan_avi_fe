@@ -74,7 +74,7 @@ export const gameAPI = {
   getState: () => api.get('/game/state'),
   placeBet: (amount) => api.post('/game/bet', { amount }),
   cashOut: () => api.post('/game/cashout'),
-  getHistory: () => api.get('/game/history'),
+  getHistory: (params) => api.get('/game/history', { params }),
   getRounds: () => api.get('/game/rounds'),
   getCurrentBets: () => api.get('/game/current-bets'),
 };
@@ -87,7 +87,7 @@ export const spinnerAPI = {
 
 // Notification API
 export const notificationAPI = {
-  getAll: () => api.get('/notifications'),
+  getAll: (params) => api.get('/notifications', { params }),
   getUnreadCount: () => api.get('/notifications/unread-count'),
   markAsRead: (id) => api.put(`/notifications/${id}/read`),
   markAllAsRead: () => api.put('/notifications/read-all'),
@@ -120,6 +120,7 @@ export const ludoAPI = {
     api.post('/ludo/submit-result', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   submitLoss: (matchId) => api.post('/ludo/submit-loss', { matchId }),
   cancelAsLoss: (matchId) => api.post('/ludo/cancel-as-loss', { matchId }),
+  checkExpiry: (matchId) => api.post('/ludo/check-expiry', { matchId }),
   getWaitingList: () => api.get('/ludo/waiting-list'),
   getRunningBattles: () => api.get('/ludo/running-battles'),
   getSettings: () => api.get('/ludo/settings'),
@@ -140,15 +141,21 @@ export const adminAPI = {
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   getUserDetail: (id) => api.get(`/admin/users/${id}/detail`),
   getWalletRequests: (params) => api.get('/admin/wallet-requests', { params }),
-  processWalletRequest: (id, action) =>
-    api.put(`/admin/wallet-requests/${id}`, { action }),
+  processWalletRequest: (id, action, editedAmount) =>
+    api.put(`/admin/wallet-requests/${id}`, { action, ...(editedAmount !== undefined && { editedAmount }) }),
   getBets: (params) => api.get('/admin/bets', { params }),
+  deleteBets: (ids) => api.post('/admin/bets/delete', { ids }),
   getLiveBets: () => api.get('/admin/bets/live'),
   forceCrashBet: (id) => api.post(`/admin/bets/${id}/force-crash`),
   getCurrentRoundWithBets: () => api.get('/admin/game/current-round'),
   forceCrashRound: () => api.post('/admin/game/force-crash-round'),
   setNextCrash: (crashAt) => api.post('/admin/game/set-next-crash', { crashAt }),
   clearNextCrash: () => api.post('/admin/game/clear-next-crash'),
+  setBulkCrash: (count, crashAt) => api.post('/admin/game/set-bulk-crash', { count, crashAt }),
+  clearBulkCrash: () => api.post('/admin/game/clear-bulk-crash'),
+  setSequentialCrashes: (values) => api.post('/admin/game/set-sequential-crashes', { values }),
+  clearSequentialCrashes: () => api.post('/admin/game/clear-sequential-crashes'),
+  getCrashQueue: () => api.get('/admin/game/crash-queue'),
   getWinningBets: (params) => api.get('/admin/wins-bets', { params }),
   getNotifications: () => api.get('/admin/notifications'),
   getSpinnerRecords: (params) => api.get('/admin/spinner-records', { params }),
@@ -166,6 +173,7 @@ export const adminAPI = {
   getLudoResultRequests: (params) => api.get('/admin/ludo/result-requests', { params }),
   approveLudoResultRequest: (id, winnerId, note) => api.put(`/admin/ludo/result-requests/${id}/approve`, { winnerId, note }),
   rejectLudoResultRequest: (id, note) => api.put(`/admin/ludo/result-requests/${id}/reject`, { note }),
+  deleteLudoMatches: (ids) => api.post('/admin/ludo/matches/bulk-delete', { ids }),
 };
 
 export default api;

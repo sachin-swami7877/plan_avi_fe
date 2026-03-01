@@ -6,7 +6,7 @@ import { HiOutlineBars3, HiOutlineWallet } from 'react-icons/hi2';
 import SideDrawer from './SideDrawer';
 
 const Header = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isSubAdmin } = useAuth();
   const { connected } = useSocket();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const Header = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            {isAdmin ? (
+            {(isAdmin || isSubAdmin) ? (
               <Link
                 to="/admin"
                 className="p-1.5 text-amber-400 hover:text-amber-300 transition-transform hover:scale-110"

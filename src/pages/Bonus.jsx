@@ -54,21 +54,21 @@ const Bonus = () => {
         <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-5 text-white mb-4">
           <h2 className="text-lg font-bold mb-1">Current Offer</h2>
           <p className="text-sm opacity-90">
-            Place ₹{data?.threshold || 1000} in cumulative bets and get ₹{data?.cashback || 100} cashback!
+            Deposit ₹{data?.threshold || 1000} today and get ₹{data?.cashback || 100} cashback!
           </p>
         </div>
 
         {/* Progress */}
         <div className="bg-white rounded-xl p-5 shadow-sm mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-600">Your Progress</span>
+            <span className="text-gray-600">Today's Progress</span>
             <span className="font-bold text-gray-800">₹{data?.progressToNext || 0} / ₹{data?.threshold || 1000}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
             <div className="bg-amber-500 h-3 rounded-full transition-all" style={{ width: `${progress}%` }} />
           </div>
           <p className="text-xs text-gray-500">
-            Total Bets: ₹{data?.totalBets || 0} | Milestones Crossed: {data?.milestonesCrossed || 0} | Claimed: ₹{data?.claimed || 0}
+            Today's Deposit: ₹{data?.todayDeposit || data?.totalBets || 0} | Milestones: {data?.milestonesCrossed || 0} | Claimed Today: ₹{data?.claimed || 0}
           </p>
         </div>
 
@@ -98,7 +98,7 @@ const Bonus = () => {
                     <p className="text-xs text-gray-400">{new Date(rec.createdAt).toLocaleDateString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500">At ₹{rec.totalBetsAtClaim} total bets</p>
+                    <p className="text-xs text-gray-500">Deposit: ₹{rec.totalBetsAtClaim}</p>
                   </div>
                 </div>
               ))}

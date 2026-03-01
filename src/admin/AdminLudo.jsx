@@ -39,7 +39,7 @@ const TABS = [
 ];
 
 export default function AdminLudo() {
-  const [activeTab, setActiveTab] = useState('records');
+  const [activeTab, setActiveTab] = useState('requests');
   const [records, setRecords] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -56,6 +56,8 @@ export default function AdminLudo() {
   const [openBattles, setOpenBattles] = useState([]);
   const [runningBattles, setRunningBattles] = useState([]);
   const [cancellingId, setCancellingId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setTick(Date.now()), 1000);
@@ -195,6 +197,39 @@ export default function AdminLudo() {
     }
   };
 
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllDeletable = () => {
+    const deletable = records.filter((m) => m.status === 'cancelled' || ((m.cancelReason || '').toLowerCase().includes('expired')));
+    if (deletable.length === selectedIds.size && deletable.every((m) => selectedIds.has(m._id))) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(deletable.map((m) => m._id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    try {
+      await adminAPI.deleteLudoMatches([...selectedIds]);
+      toast.success(`${selectedIds.size} matches deleted`);
+      setSelectedIds(new Set());
+      fetchRecords();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const totalPages = Math.ceil(totalCount / 25);
   const detailCountdown = useCountdown(
     detailMatch?.status === 'waiting' ? detailMatch.joinExpiryAt : null
@@ -204,7 +239,7 @@ export default function AdminLudo() {
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-4">Ludo</h1>
 
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex justify-between mb-4 flex-wrap">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -296,27 +331,54 @@ export default function AdminLudo() {
 
       {/* Status filter for All Records */}
       {activeTab === 'records' && (
-        <div className="mb-4 flex gap-2 flex-wrap">
-          {[
-            { value: '', label: 'All' },
-            { value: 'waiting', label: 'Waiting' },
-            { value: 'live', label: 'Live' },
-            { value: 'requested', label: 'Requested' },
-            { value: 'completed', label: 'Completed' },
-            { value: 'cancelled', label: 'Cancelled' },
-          ].map((f) => (
-            <button
-              key={f.value}
-              onClick={() => { setStatusFilter(f.value); setPage(1); }}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                statusFilter === f.value
-                  ? 'bg-primary-600 text-white shadow-sm'
-                  : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="mb-4">
+          <div className="flex gap-2 flex-wrap mb-2">
+            {[
+              { value: '', label: 'All' },
+              { value: 'waiting', label: 'Waiting' },
+              { value: 'live', label: 'Live' },
+              { value: 'requested', label: 'Requested' },
+              { value: 'completed', label: 'Completed' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ].map((f) => (
+              <button
+                key={f.value}
+                onClick={() => { setStatusFilter(f.value); setPage(1); setSelectedIds(new Set()); }}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  statusFilter === f.value
+                    ? 'bg-primary-600 text-white shadow-sm'
+                    : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+            {statusFilter && (
+              <button
+                onClick={() => { setStatusFilter(''); setPage(1); setSelectedIds(new Set()); }}
+                className="px-4 py-1.5 rounded-full text-sm font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+              >
+                Clear Filter
+              </button>
+            )}
+          </div>
+          {/* Bulk delete bar */}
+          {records.some((m) => m.status === 'cancelled') && (
+            <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
+              <button onClick={selectAllDeletable} className="text-xs font-medium text-primary-600 hover:underline">
+                {selectedIds.size > 0 ? 'Deselect All' : 'Select All Expired/Cancelled'}
+              </button>
+              {selectedIds.size > 0 && (
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={deleting}
+                  className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : `Delete ${selectedIds.size} selected`}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -339,11 +401,21 @@ export default function AdminLudo() {
                 const isLive = m.status === 'live';
                 const isCompleted = m.status === 'completed';
 
+                const isDeletable = m.status === 'cancelled';
+
                 return (
                   <div key={m._id} className={`rounded-lg px-3 py-2.5 border ${statusInfo.bg}`}>
                     {/* Row 1: Status + Amount/Prize + Buttons */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {isDeletable && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(m._id)}
+                            onChange={() => toggleSelect(m._id)}
+                            className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 flex-shrink-0"
+                          />
+                        )}
                         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusInfo.dot}`} />
                         <span className="font-semibold text-gray-800 text-sm">{statusInfo.label}</span>
                         <span className="text-gray-400 text-xs">|</span>
@@ -441,7 +513,7 @@ export default function AdminLudo() {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {players.length ? players.map((p) => (
                         <button
                           key={p.userId}

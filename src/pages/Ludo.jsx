@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 const ENTRY_MIN = 50;
 const WAITING_EXPIRY_MIN = 10;
-const ENTRY_OPTIONS = [50, 100, 200, 500];
+
 
 function formatTime12hr(date) {
   if (!date) return '—';
@@ -39,6 +39,23 @@ const INDIAN_MALE_NAMES = ['Rahul', 'Amit', 'Vikram', 'Arjun', 'Rohan', 'Suresh'
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
+const AVATAR_GRADIENTS = [
+  'from-orange-400 to-red-500',
+  'from-blue-500 to-indigo-600',
+  'from-emerald-400 to-green-600',
+  'from-purple-500 to-pink-500',
+  'from-yellow-400 to-orange-500',
+  'from-teal-400 to-cyan-600',
+  'from-rose-500 to-red-600',
+  'from-violet-500 to-purple-700',
+  'from-sky-400 to-blue-600',
+  'from-fuchsia-500 to-pink-600',
+];
+function getAvatarGradient(name, offset = 0) {
+  const code = (name || 'A').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+  return AVATAR_GRADIENTS[(code + offset) % AVATAR_GRADIENTS.length];
+}
+
 function calcPrizeFrontend(entry, tiers) {
   const pool = entry * 2;
   let commission;
@@ -50,6 +67,61 @@ function calcPrizeFrontend(entry, tiers) {
     commission = Math.round((pool * (tiers?.tier3Pct ?? 5)) / 100);
   }
   return pool - commission;
+}
+
+// Play a loud celebratory win/cashback sound when opponent accepts the bet
+function playMatchAcceptSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Fanfare melody — C5 E5 G5 C6 (rising triumph)
+    const notes = [
+      { freq: 523.25, start: 0,    dur: 0.15 },  // C5
+      { freq: 659.25, start: 0.12, dur: 0.15 },  // E5
+      { freq: 783.99, start: 0.24, dur: 0.15 },  // G5
+      { freq: 1046.5, start: 0.36, dur: 0.35 },  // C6 (held longer)
+    ];
+
+    notes.forEach(({ freq, start, dur }) => {
+      // Main tone (triangle for warmth)
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.35, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.05);
+
+      // Bright overtone (square, quieter) for richness
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.type = 'square';
+      osc2.frequency.value = freq * 2; // octave up
+      gain2.gain.setValueAtTime(0.08, ctx.currentTime + start);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur * 0.6);
+      osc2.start(ctx.currentTime + start);
+      osc2.stop(ctx.currentTime + start + dur + 0.05);
+    });
+
+    // Final shimmer chord (C6+E6+G6 together)
+    [1046.5, 1318.5, 1568.0].forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.12, ctx.currentTime + 0.55);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.1);
+      osc.start(ctx.currentTime + 0.55);
+      osc.stop(ctx.currentTime + 1.15);
+    });
+  } catch (e) { /* ignore audio errors */ }
 }
 
 function generateDummyBattles(countFromSettings, tiers) {
@@ -81,7 +153,7 @@ export default function Ludo() {
   const { user, refreshUser } = useAuth();
   const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState('play');
-  const [myWaiting, setMyWaiting] = useState(null);
+  const [myWaitingList, setMyWaitingList] = useState([]);
   const [myLive, setMyLive] = useState([]);
   const [myRequested, setMyRequested] = useState([]);
   const [history, setHistory] = useState([]);
@@ -90,7 +162,7 @@ export default function Ludo() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
-  const [entryAmount, setEntryAmount] = useState(50);
+  const [entryAmount] = useState(50);
   const [customAmount, setCustomAmount] = useState('');
   const [cancelling, setCancelling] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(null);
@@ -98,10 +170,14 @@ export default function Ludo() {
   const [ludoGameDurationMinutes, setLudoGameDurationMinutes] = useState(30);
   const [ludoDummyRunningBattles, setLudoDummyRunningBattles] = useState(15);
   const [commTiers, setCommTiers] = useState({ tier1Max: 250, tier1Pct: 10, tier2Max: 600, tier2Pct: 8, tier3Pct: 5 });
+  const [ludoEnabled, setLudoEnabled] = useState(true);
+  const [ludoDisableReason, setLudoDisableReason] = useState('');
+  const [ludoWarning, setLudoWarning] = useState('');
   const [dummyBattles, setDummyBattles] = useState([]);
   const [exitingIds, setExitingIds] = useState(new Set());
   const [enteringIds, setEnteringIds] = useState(new Set());
   const dummyBattlesRef = useRef([]);
+  const myWaitingRef = useRef(null);
   const [tick, setTick] = useState(() => Date.now());
   const [rulesOpen, setRulesOpen] = useState(false);
 
@@ -110,8 +186,9 @@ export default function Ludo() {
     return () => clearInterval(t);
   }, []);
 
-  // Keep ref in sync for animation interval (avoids stale closure)
+  // Keep refs in sync (avoids stale closure)
   useEffect(() => { dummyBattlesRef.current = dummyBattles; }, [dummyBattles]);
+  useEffect(() => { myWaitingRef.current = myWaitingList; }, [myWaitingList]);
 
   // Generate dummy running battles; roll 5 out / 5 in every 30 sec with animation
   useEffect(() => {
@@ -154,7 +231,7 @@ export default function Ludo() {
   }, [ludoDummyRunningBattles, commTiers]);
 
   const effectiveAmount = customAmount.trim() !== '' && !isNaN(Number(customAmount))
-    ? Math.max(ENTRY_MIN, Number(customAmount))
+    ? Number(customAmount)
     : entryAmount;
 
   const fetchMyMatches = useCallback(async () => {
@@ -165,17 +242,17 @@ export default function Ludo() {
         ludoAPI.getMyMatches({ status: 'requested' }),
         ludoAPI.getMyMatches({ status: 'history' }),
       ]);
-      const waitList = Array.isArray(waitRes.data) ? waitRes.data : [];
-      const liveList = Array.isArray(liveRes.data) ? liveRes.data : [];
-      const reqList = Array.isArray(reqRes.data) ? reqRes.data : [];
-      const histList = Array.isArray(histRes.data) ? histRes.data : [];
-      setMyWaiting(waitList[0] || null);
+      const waitList = waitRes.data?.records || (Array.isArray(waitRes.data) ? waitRes.data : []);
+      const liveList = liveRes.data?.records || (Array.isArray(liveRes.data) ? liveRes.data : []);
+      const reqList = reqRes.data?.records || (Array.isArray(reqRes.data) ? reqRes.data : []);
+      const histList = histRes.data?.records || (Array.isArray(histRes.data) ? histRes.data : []);
+      setMyWaitingList(waitList);
       setMyLive(liveList);
       setMyRequested(reqList);
       setHistory(histList);
     } catch (err) {
       if (err.response?.status !== 401) toast.error(err.response?.data?.message || 'Failed to load matches');
-      setMyWaiting(null);
+      setMyWaitingList([]);
       setMyLive([]);
       setMyRequested([]);
       setHistory([]);
@@ -217,6 +294,9 @@ export default function Ludo() {
           tier2Pct: d.ludoCommTier2Pct ?? 8,
           tier3Pct: d.ludoCommTier3Pct ?? 5,
         });
+        setLudoEnabled(d.ludoEnabled ?? true);
+        setLudoDisableReason(d.ludoDisableReason || '');
+        setLudoWarning(d.ludoWarning || '');
       }).catch(() => {}),
     ]);
     setLoading(false);
@@ -229,6 +309,7 @@ export default function Ludo() {
   useEffect(() => {
     if (!socket) return;
     socket.on('ludo:match-live', () => {
+      if (myWaitingRef.current?.length > 0) playMatchAcceptSound();
       fetchMyMatches();
       fetchWaitingList();
       fetchRunningBattles();
@@ -244,11 +325,9 @@ export default function Ludo() {
     };
   }, [socket, fetchMyMatches, fetchWaitingList, fetchRunningBattles]);
 
-  const hasActiveMatch = !!(myWaiting || myLive.length > 0);
-
   const handleCreateClick = () => {
-    if (hasActiveMatch) {
-      toast.error('You already have an active match. Finish it before creating a new one.');
+    if (!ludoEnabled) {
+      toast.error(ludoDisableReason || 'Ludo matches are currently disabled');
       return;
     }
     if (effectiveAmount < ENTRY_MIN) {
@@ -277,11 +356,11 @@ export default function Ludo() {
     }
   };
 
-  const handleCancel = async () => {
-    if (!myWaiting?._id) return;
+  const handleCancel = async (matchId) => {
+    if (!matchId) return;
     setCancelling(true);
     try {
-      await ludoAPI.cancelMatch(myWaiting._id);
+      await ludoAPI.cancelMatch(matchId);
       toast.success('Match cancelled. Refunded.');
       await refreshUser();
       await loadAll();
@@ -293,8 +372,8 @@ export default function Ludo() {
   };
 
   const openConfirmJoin = (m) => {
-    if (hasActiveMatch) {
-      toast.error('You already have an active match. Finish it before joining a new one.');
+    if (!ludoEnabled) {
+      toast.error(ludoDisableReason || 'Ludo matches are currently disabled');
       return;
     }
     setConfirmJoinMatch(m);
@@ -342,6 +421,21 @@ export default function Ludo() {
 
         {activeTab === 'play' && (
           <div className="space-y-5">
+            {/* Ludo Warning Banner */}
+            {ludoWarning && (
+              <div className="bg-white border-2 border-red-500 rounded-xl p-3 text-base font-semibold text-gray-900">
+                {ludoWarning}
+              </div>
+            )}
+
+            {/* Ludo Disabled Banner */}
+            {!ludoEnabled && (
+              <div className="bg-red-50 border border-red-300 rounded-xl p-4 text-center">
+                <p className="text-red-700 font-semibold mb-1">Ludo matches are currently disabled</p>
+                {ludoDisableReason && <p className="text-sm text-red-600">{ludoDisableReason}</p>}
+              </div>
+            )}
+
             {/* Rules button */}
             {/* <button
               type="button"
@@ -354,41 +448,51 @@ export default function Ludo() {
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button> */}
 
-            {/* Create a battle — hidden if user already has an active match */}
-            {!hasActiveMatch && (
+            {/* Create a battle */}
+            {ludoEnabled && (
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <h2 className="text-lg font-bold text-gray-800 mb-3">Create a battle</h2>
-                <p className="text-sm text-gray-700 mb-2">Set your entry amount. After an opponent joins, you'll add the Ludo King room code.</p>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {ENTRY_OPTIONS.map((amt) => (
-                    <button key={amt} onClick={() => { setEntryAmount(amt); setCustomAmount(''); }} className={`px-4 py-2 rounded-lg font-medium ${effectiveAmount === amt && !customAmount.trim() ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700'}`}>₹{amt}</button>
-                  ))}
+                <div className="flex gap-2">
+                  <input type="number" min={ENTRY_MIN} placeholder="Enter amount (min ₹50)" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                  <button onClick={handleCreateClick} disabled={creating || !customAmount.trim() || effectiveAmount < ENTRY_MIN || (user?.walletBalance ?? 0) < effectiveAmount} className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50">
+                    {creating ? '...' : `SET`}
+                  </button>
                 </div>
-                <input type="number" min={ENTRY_MIN} placeholder="Or enter amount" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3" />
-                <button onClick={handleCreateClick} disabled={creating || (user?.walletBalance ?? 0) < effectiveAmount || effectiveAmount < ENTRY_MIN} className="w-full bg-primary-600 text-white py-3 rounded-xl font-medium disabled:opacity-50">
-                  {creating ? 'Creating...' : `SET (₹${effectiveAmount})`}
-                </button>
               </div>
             )}
 
-            {/* Your battle — waiting or live */}
-            {(myWaiting || myLive.length > 0) && (
+            {/* Your battles — waiting or live */}
+            {(myWaitingList.length > 0 || myLive.length > 0) && (
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <h3 className="font-semibold text-gray-800 mb-3">Your battle</h3>
-                {myWaiting && (
-                  <div className="rounded-xl p-3 border-l-4 border-amber-500 bg-amber-50 mb-3">
-                    <p className="text-amber-800 font-semibold">Waiting for opponent</p>
-                    <p className="text-sm text-gray-700">Amount ₹{myWaiting.entryAmount} • Expires in: <span className="font-mono font-semibold text-red-600">{getRemainingDisplay(myWaiting.joinExpiryAt, tick) ?? '0:00'} min</span></p>
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={() => navigate(`/ludo/match/${myWaiting._id}`)} className="text-sm font-semibold text-primary-600">View</button>
-                      <button onClick={handleCancel} disabled={cancelling} className="text-sm font-semibold text-red-600">{cancelling ? '...' : 'Cancel'}</button>
+                <h3 className="font-semibold text-gray-800 mb-3">Your battles</h3>
+                {myWaitingList.map((w) => (
+                  <div key={w._id} className="relative rounded-2xl overflow-hidden border border-gray-200 mb-3">
+                    <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
+                    <div className="absolute inset-0 bg-black/40" />
+                    <div className="relative px-3 py-2">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <p className="text-sm text-gray-200">Waiting for opponent</p>
+                        <span className="text-amber-300 font-mono font-semibold text-xs">{getRemainingDisplay(w.joinExpiryAt, tick) ?? '0:00'} min</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-[11px] text-gray-300">Entry Fee</p>
+                          <p className="text-white font-extrabold text-base flex items-center gap-1"><span className="text-yellow-400">₹</span> {w.entryAmount}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => navigate(`/ludo/match/${w._id}`)} className="bg-blue-500 hover:bg-blue-400 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg transition-colors">View</button>
+                          <button onClick={() => handleCancel(w._id)} disabled={cancelling} className="bg-red-500 hover:bg-red-400 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg transition-colors">{cancelling ? '...' : 'Cancel'}</button>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[11px] text-gray-300">Prize</p>
+                          <p className="text-white font-extrabold text-base flex items-center justify-end gap-1"><span className="text-green-400">₹</span> {calcPrizeFrontend(w.entryAmount, commTiers)}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
+                ))}
                 {myLive.map((m) => {
-                  // Game actually started = room code has been set + gameActualStartAt exists
                   const gameActuallyStarted = m.roomCode && m.roomCode.trim() !== '' && !!m.gameActualStartAt;
-                  // Count-up elapsed time
                   const elapsedDisplay = (() => {
                     if (!gameActuallyStarted) return null;
                     const ms = tick - new Date(m.gameActualStartAt).getTime();
@@ -399,22 +503,38 @@ export default function Ludo() {
                     const sec = totalSec % 60;
                     return `${h}:${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
                   })();
+                  const livePrize = calcPrizeFrontend(m.entryAmount, commTiers);
+                  const lp1 = m.players?.[0]?.userName || '—';
+                  const lp2 = m.players?.[1]?.userName || '—';
                   return (
-                    <div key={m._id} className="rounded-xl p-3 border-l-4 border-green-500 bg-green-50 mb-3">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <p className="text-green-800 font-semibold text-sm">🟢 Live</p>
-                        {elapsedDisplay != null && (
-                          <span className="font-mono font-bold text-blue-700 text-sm bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200">
-                            ⏱ {elapsedDisplay}
-                          </span>
+                    <div key={m._id} className="relative rounded-2xl overflow-hidden border border-gray-200 mb-3">
+                      <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
+                      <div className="absolute inset-0 bg-black/40" />
+                      <div className="relative px-3 py-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm text-green-400 font-semibold flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> Live — {lp1} vs {lp2}
+                          </p>
+                          {elapsedDisplay != null && (
+                            <span className="font-mono font-bold text-sky-300 text-xs bg-white/10 px-2 py-0.5 rounded-lg">
+                              {elapsedDisplay}
+                            </span>
+                          )}
+                        </div>
+                        {!gameActuallyStarted && (
+                          <p className="text-xs text-amber-300 mb-1">Waiting for room code...</p>
                         )}
-                      </div>
-                      <p className="text-sm text-gray-700">₹{m.entryAmount} • {m.players?.map((p) => p.userName).join(', ')}</p>
-                      {!gameActuallyStarted && (
-                        <p className="text-xs text-amber-600 mt-1">⏳ Waiting for room code...</p>
-                      )}
-                      <div className="flex gap-2 mt-2">
-                        <button onClick={() => navigate(`/ludo/match/${m._id}`)} className="text-sm font-semibold text-primary-600">View →</button>
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-[11px] text-gray-300">Entry Fee</p>
+                            <p className="text-white font-extrabold text-base flex items-center gap-1"><span className="text-yellow-400">₹</span> {m.entryAmount}</p>
+                          </div>
+                          <button onClick={() => navigate(`/ludo/match/${m._id}`)} className="bg-blue-500 hover:bg-blue-400 text-white px-5 py-1.5 rounded-full text-sm font-bold shadow-lg transition-colors">View</button>
+                          <div className="text-right">
+                            <p className="text-[11px] text-gray-300">Prize</p>
+                            <p className="text-white font-extrabold text-base flex items-center justify-end gap-1"><span className="text-green-400">₹</span> {livePrize}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -461,9 +581,9 @@ export default function Ludo() {
                       const remaining = getRemainingDisplay(m.joinExpiryAt);
                       const prize = calcPrizeFrontend(m.entryAmount, commTiers);
                       return (
-                        <div key={m._id} className="relative rounded-xl overflow-hidden border border-white/10">
-                          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/bgludo.jpg)' }} />
-                          <div className="absolute inset-0 bg-black/60" />
+                        <div key={m._id} className="relative rounded-2xl overflow-hidden border border-gray-200">
+                          <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
+                          <div className="absolute inset-0 bg-black/40" />
                           <div className="relative px-3 py-2">
                             <p className="text-sm text-gray-200 mb-0.5">Challange From <span className="font-bold text-white italic">{m.creatorName || 'Player'}</span></p>
                             <div className="flex items-center justify-between gap-2">
@@ -506,7 +626,7 @@ export default function Ludo() {
                 ) : (runningBattles.length === 0 && dummyBattles.length === 0) ? (
                   <p className="text-gray-400 text-sm py-3">No running battles.</p>
                 ) : (
-                  <div className="bg-gray-300 rounded-xl overflow-hidden flex flex-col gap-[8px] p-[6px]">
+                  <div className="bg-gray-300 rounded-xl overflow-hidden flex flex-col gap-3 p-2">
                     {[...runningBattles, ...dummyBattles].map((b) => {
                       const isDummy = b._id.startsWith('dummy-');
                       const amIIn = !isDummy && myLive.some((m) => m._id === b._id);
@@ -515,6 +635,8 @@ export default function Ludo() {
                       const p2 = b.players?.[1]?.userName || '—';
                       const p1Initial = p1.charAt(0).toUpperCase();
                       const p2Initial = p2.charAt(0).toUpperCase();
+                      const p1Gradient = getAvatarGradient(p1, 0);
+                      const p2Gradient = getAvatarGradient(p2, 5);
                       const animStyle = isDummy
                         ? exitingIds.has(b._id)
                           ? { animation: 'dummySlideOut 0.4s ease forwards' }
@@ -523,29 +645,31 @@ export default function Ludo() {
                             : undefined
                         : undefined;
                       return (
-                        <div key={b._id} className="relative overflow-hidden rounded-lg" style={animStyle}>
-                          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/bgludo.jpg)' }} />
-                          <div className="absolute inset-0 bg-black/60" />
-                          <div className="relative px-3 py-2">
+                        <div key={b._id} className="relative overflow-hidden rounded-2xl" style={animStyle}>
+                          <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
+                          <div className="absolute inset-0 bg-black/40" />
+                          <div className="relative px-4 py-3">
+                            {/* Playing For / Prize top row */}
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-sm text-gray-200 font-medium">Playing For <span className="text-white font-extrabold text-base"><span className="text-yellow-400">₹</span> {amount}</span></p>
+                              <p className="text-sm text-gray-200 font-medium">Prize <span className="text-white font-extrabold text-base"><span className="text-green-400">₹</span> {b.prize}</span></p>
+                            </div>
                             {/* Players row */}
                             <div className="flex items-center justify-between gap-1">
-                              <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">{p1Initial}</span>
-                                <span className="text-sm font-bold text-white truncate max-w-[80px]" title={p1}>{p1}</span>
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className={`w-10 h-10 rounded-full bg-gradient-to-br ${p1Gradient} text-white flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-lg ring-2 ring-white/40`}>{p1Initial}</span>
+                                <span className="text-base font-bold text-white truncate max-w-[85px]" title={p1}>{p1}</span>
                               </div>
-                              <span className="bg-gradient-to-r from-red-500 to-amber-500 text-white font-black text-[10px] px-2 py-1 rounded-md flex-shrink-0">VS</span>
-                              <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
-                                <span className="text-sm font-bold text-white truncate max-w-[80px]" title={p2}>{p2}</span>
-                                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">{p2Initial}</span>
+                              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-black flex items-center justify-center shadow-xl">
+                                <span className="text-lg font-black bg-gradient-to-b from-orange-400 to-red-600 bg-clip-text text-transparent" style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VS</span>
                               </div>
-                            </div>
-                            {/* Playing For / Prize row */}
-                            <div className="flex items-center justify-between mt-1.5">
-                              <p className="text-xs text-gray-200">Playing For <span className="text-white font-extrabold text-sm"><span className="text-yellow-400">₹</span>{amount}</span></p>
-                              <p className="text-xs text-gray-200">Prize <span className="text-white font-extrabold text-sm"><span className="text-green-400">₹</span>{b.prize}</span></p>
+                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                                <span className="text-base font-bold text-white truncate max-w-[85px]" title={p2}>{p2}</span>
+                                <span className={`w-10 h-10 rounded-full bg-gradient-to-br ${p2Gradient} text-white flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-lg ring-2 ring-white/40`}>{p2Initial}</span>
+                              </div>
                             </div>
                             {amIIn && (
-                              <button onClick={() => navigate(`/ludo/match/${b._id}`)} className="w-full mt-1.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold shadow">View</button>
+                              <button onClick={() => navigate(`/ludo/match/${b._id}`)} className="w-full mt-2 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold shadow">View</button>
                             )}
                           </div>
                         </div>

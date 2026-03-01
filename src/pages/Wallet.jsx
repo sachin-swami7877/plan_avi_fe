@@ -49,7 +49,12 @@ const Wallet = () => {
 
   useEffect(() => {
     if (user && !user.upiId && !user.upiNumber) {
-      setUpiPopupOpen(true);
+      const isFirstVisit = !localStorage.getItem('upiModalSeen');
+      const hasZeroBalance = (user.walletBalance || 0) === 0;
+      if (isFirstVisit || hasZeroBalance) {
+        setUpiPopupOpen(true);
+        localStorage.setItem('upiModalSeen', '1');
+      }
     }
   }, [user]);
 
@@ -333,6 +338,16 @@ const Wallet = () => {
         {/* Withdraw Form */}
         {tab === 'withdraw' && (
           <div className="bg-white rounded-xl p-4 shadow-sm">
+            {/* Withdrawals disabled banner */}
+            {earningsInfo.withdrawalsEnabled === false && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+                <IoWarningOutline className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Withdrawals Disabled</p>
+                  <p className="text-xs text-red-700 mt-1">{earningsInfo.withdrawalDisableReason || 'Withdrawals are currently not available. Please try again later.'}</p>
+                </div>
+              </div>
+            )}
             {/* Earnings breakdown */}
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
               <p className="text-xs text-amber-800 font-semibold mb-2">You can only withdraw your earnings from games</p>
@@ -349,16 +364,18 @@ const Wallet = () => {
                 <span className="font-bold text-green-700">₹{earningsInfo.earnings.toFixed(2)}</span>
               </div>
             </div>
-            <form onSubmit={handleWithdraw}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Amount (Min ₹100)</label>
-                <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" max={earningsInfo.earnings} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500" />
-                <p className="text-xs text-gray-500 mt-1">Withdrawable: ₹{earningsInfo.earnings.toFixed(2)} | Max 2 requests/day</p>
-              </div>
-              <button type="submit" disabled={loading || earningsInfo.earnings < 100} className="w-full bg-rose-600 text-white py-3 rounded-lg font-medium hover:bg-rose-700 disabled:opacity-50">
-                {loading ? 'Submitting...' : 'Submit Withdrawal Request'}
-              </button>
-            </form>
+            {earningsInfo.withdrawalsEnabled !== false && (
+              <form onSubmit={handleWithdraw}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Amount (Min ₹100)</label>
+                  <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" max={earningsInfo.earnings} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                  <p className="text-xs text-gray-500 mt-1">Withdrawable: ₹{earningsInfo.earnings.toFixed(2)} | Max 2 requests/day</p>
+                </div>
+                <button type="submit" disabled={loading || earningsInfo.earnings < 100} className="w-full bg-rose-600 text-white py-3 rounded-lg font-medium hover:bg-rose-700 disabled:opacity-50">
+                  {loading ? 'Submitting...' : 'Submit Withdrawal Request'}
+                </button>
+              </form>
+            )}
           </div>
         )}
 
@@ -373,7 +390,7 @@ const Wallet = () => {
                 <div key={item._id} className="bg-white rounded-xl p-3.5 flex justify-between items-center shadow-sm">
                   <div>
                     <p className="font-medium capitalize text-gray-800">{item.type}</p>
-                    <p className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
                   </div>
                   <div className="text-right">
                     <p className={`font-semibold ${item.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
@@ -429,7 +446,7 @@ const Wallet = () => {
                     type="text"
                     value={upiForm.upiId}
                     onChange={(e) => { setUpiForm({ ...upiForm, upiId: e.target.value }); setUpiErrors({}); }}
-                    placeholder="yourname@upi"
+                    placeholder="enter your upi"
                     className={`w-full pl-8 pr-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
                       upiErrors.upiId
                         ? 'border-red-300 focus:ring-red-400 bg-red-50'
@@ -454,7 +471,7 @@ const Wallet = () => {
                     type="tel"
                     value={upiForm.upiNumber}
                     onChange={(e) => { setUpiForm({ ...upiForm, upiNumber: e.target.value.replace(/\D/g, '') }); setUpiErrors({}); }}
-                    placeholder="9876543210"
+                    placeholder="enter 10 digit upi number"
                     maxLength={12}
                     className={`w-full pl-9 pr-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
                       upiErrors.upiNumber
