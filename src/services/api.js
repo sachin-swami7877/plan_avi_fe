@@ -56,6 +56,33 @@ export const authAPI = {
   findEmail: (phone) => api.post('/auth/find-email', { phone: String(phone || '').trim() }),
 };
 
+// Admin Auth API (dedicated admin login endpoints)
+export const adminAuthAPI = {
+  sendOTP: (phone) => api.post('/auth/admin/send-otp', {
+    phone: String(phone || '').trim(),
+  }),
+  verifyOTP: (phone, otp) => api.post('/auth/admin/verify-otp', {
+    phone: String(phone || '').trim(),
+    otp: String(otp || '').trim(),
+  }),
+  passwordLogin: (phone, password) => api.post('/auth/admin/password-login', {
+    phone: String(phone || '').trim(),
+    password,
+  }),
+  forgotPasswordSendOTP: (phone) => api.post('/auth/admin/forgot-password/send-otp', {
+    phone: String(phone || '').trim(),
+  }),
+  forgotPasswordVerifyOTP: (phone, otp) => api.post('/auth/admin/forgot-password/verify-otp', {
+    phone: String(phone || '').trim(),
+    otp: String(otp || '').trim(),
+  }),
+  resetPassword: (resetToken, newPassword, confirmPassword) => api.post('/auth/admin/reset-password', {
+    resetToken,
+    newPassword,
+    confirmPassword,
+  }),
+};
+
 // Wallet API
 export const walletAPI = {
   getPaymentInfo: () => api.get('/wallet/payment-info'),

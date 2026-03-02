@@ -682,11 +682,13 @@ const Landing = () => {
 /* ────────── Shayri Landing Page ────────── */
 const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpen }) => {
   const quotes = [
-    { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
-    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
-    { text: "रौशनी तेरी ढूँढती है अँधेरा अपना, तू रहा खामोश सितारों की तरह।", author: "John Elia" },
-    { text: "दिल की बात कहने का सलीका नहीं आता, सोचता रहता हूँ तुझे क्या कहूँ।", author: "John Elia" },
-    { text: "ज़िंदगी यूँ ही गुज़र जाएगी अगर तू नहीं, तेरी यादों में खोकर जी लूँगा मैं।", author: "John Elia" },
+    { text: "रौशनी तेरी ढूँढती है अँधेरा अपना, तू रहा खामोश सितारों की तरह।", author: "Jaun Elia" },
+    { text: "दिल की बात कहने का सलीका नहीं आता, सोचता रहता हूँ तुझे क्या कहूँ।", author: "Jaun Elia" },
+    { text: "ज़िंदगी यूँ ही गुज़र जाएगी अगर तू नहीं, तेरी यादों में खोकर जी लूँगा मैं।", author: "Jaun Elia" },
+    { text: "मैं ने उस से कहा मैं तुम्हारे बिना मर जाऊँगा, उस ने कहा ये तो सब कहते हैं।", author: "Jaun Elia" },
+    { text: "तुम मेरे पास होते हो गोया, जब कोई दूसरा नहीं होता।", author: "Jaun Elia" },
+    { text: "हज़ारों ख़्वाहिशें ऐसी कि हर ख़्वाहिश पे दम निकले, बहुत निकले मेरे अरमान लेकिन फिर भी कम निकले।", author: "Mirza Ghalib" },
+    { text: "मुझसे पहली सी मोहब्बत मेरे महबूब ना माँग।", author: "Faiz Ahmed Faiz" },
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -729,28 +731,7 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
             </button>
           </nav>
 
-          <button type="button" onClick={() => setMenuOpen(!menuOpen)} className="sm:hidden p-2 rounded-lg hover:bg-white/10 transition-colors">
-            {menuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-            )}
-          </button>
         </div>
-
-        {menuOpen && (
-          <div className="sm:hidden border-t border-white/5 bg-[#0d0d15]/95 backdrop-blur-xl px-4 py-3 space-y-1">
-            {isAuthenticated && (
-              <>
-                <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Account</Link>
-                <Link to="/profile" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Profile</Link>
-              </>
-            )}
-            <button onClick={() => { setMenuOpen(false); handlePlay(); }} className="w-full mt-2 px-4 py-3 rounded-lg font-bold bg-violet-600 hover:bg-violet-500 text-center">
-              Get Started
-            </button>
-          </div>
-        )}
       </header>
 
       {/* Hero Section */}
@@ -778,7 +759,7 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <button
+            {/* <button
               onClick={handlePlay}
               className="group relative px-10 py-5 rounded-2xl font-bold text-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-2xl shadow-violet-600/30 hover:shadow-violet-500/50 transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
             >
@@ -787,7 +768,7 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            </button>
+            </button> */}
           </div>
 
           {/* Shayri Section */}
@@ -840,45 +821,185 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Jaun Elia Collection */}
       <section className="relative z-10 px-4 sm:px-6 py-16 sm:py-24">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="p-12 rounded-3xl bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 border border-violet-500/20">
-            <h2 className="text-4xl sm:text-5xl font-black mb-6">
-              Ready to <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Explore</span>?
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-black mb-4">
+              <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Jaun Elia</span> Ki Shayri
             </h2>
-            <p className="text-white/70 text-xl mb-8 max-w-2xl mx-auto">
-              Join thousands of readers. Create your account and discover beautiful shayari.
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Urdu adab ke azeem shayar — Jaun Elia ki unmatchable shayari
             </p>
-            <button
-              onClick={handlePlay}
-              className="group relative px-12 py-6 rounded-2xl font-black text-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-2xl shadow-violet-600/30 hover:shadow-violet-500/50 transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center justify-center gap-3">
-                Get Started
-                <svg className="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            </button>
+          </div>
 
-            {/* Share & Invite */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(`Join me on ${document.title || 'our platform'}! Play Ludo, Aviator & more. ${window.location.origin}`)}`}
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-500 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                Share on WhatsApp
-              </a>
-              <button
-                onClick={() => { navigator.clipboard.writeText(window.location.origin); }}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white/80 bg-white/10 hover:bg-white/20 border border-white/10 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                Copy Link
-              </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              { text: "मैं ने उस से कहा मैं तुम्हारे बिना मर जाऊँगा, उस ने कहा ये तो सब कहते हैं।", author: "Jaun Elia" },
+              { text: "तुम मेरे पास होते हो गोया, जब कोई दूसरा नहीं होता।", author: "Jaun Elia" },
+              { text: "बहुत दिनों से मैंने चाँद नहीं देखा है, बहुत दिनों से मैंने तुमको नहीं देखा है।", author: "Jaun Elia" },
+              { text: "वो मेरी ज़िंदगी से चले गए, अब मौसम भी बदलते नहीं लगते।", author: "Jaun Elia" },
+              { text: "कुछ लोग बहुत याद आते हैं, कुछ लोग भुलाए नहीं जाते।", author: "Jaun Elia" },
+              { text: "इश्क़ में ग़ैरत-ए-जज़्बात ने रोका वरना, हम भी आँखों से कई बार कहा चाहते थे।", author: "Jaun Elia" },
+            ].map((s, i) => (
+              <div key={i} className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-violet-500/30 transition-all duration-300">
+                <div className="text-4xl font-black text-white/[0.06] mb-2">"</div>
+                <p className="text-lg text-white/85 leading-relaxed mb-3">{s.text}</p>
+                <p className="text-violet-400 text-sm font-medium">— {s.author}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Shayar Kaise Bane */}
+      <section className="relative z-10 px-4 sm:px-6 py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-black mb-4">
+              <span className="bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">Shayar</span> Kaise Bane?
+            </h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Shayari likhne ka hunar — dil se alfaaz tak ka safar
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[
+              { step: '01', title: 'Padhen Bahut Zyada', desc: 'Mirza Ghalib, Faiz Ahmed Faiz, Jaun Elia, Ahmed Faraz — in sab ko padhein. Jitna padhenge, utna aapki soch aur alfaaz mein gehrai aayegi.' },
+              { step: '02', title: 'Mehsoos Karein', desc: 'Shayari dil se nikalti hai. Apne jazbaat ko samjhein — pyaar, dard, khushi, tanhai. Jo mehsoos karein, wahi likhein.' },
+              { step: '03', title: 'Roz Likhein', desc: 'Rozana 2-4 sher likhne ki aadat banayein. Pehle achha nahi lagega, lekin waqt ke saath aapki writing behtar hogi.' },
+              { step: '04', title: 'Beher aur Qaafiya Seekhein', desc: 'Urdu shayari mein beher (meter) aur qaafiya (rhyme) bahut zaroori hai. YouTube se tutorials dekhein aur mashq karein.' },
+            ].map((item, i) => (
+              <div key={i} className="p-8 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-pink-500/30 hover:bg-white/[0.06] transition-all duration-300">
+                <div className="text-5xl font-black text-pink-500/20 mb-3">{item.step}</div>
+                <h3 className="font-bold text-xl mb-3 text-white">{item.title}</h3>
+                <p className="text-white/50 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Motivation Speaker Kaise Bane */}
+      <section className="relative z-10 px-4 sm:px-6 py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-black mb-4">
+              <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Motivation Speaker</span> Kaise Bane?
+            </h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Logon ko inspire karna ek kala hai — seekhein kaise
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: '🎤', title: 'Bolna Seekhein', desc: 'Apni awaaz par control rakhein. Roz aaine ke saamne bolne ki practice karein. Confidence sabse zaroori hai.' },
+              { icon: '📚', title: 'Knowledge Badhayein', desc: 'Kitaabein padhein — "Think and Grow Rich", "The Power of Habit". Jitna gyaan hoga, utna achha bol paayenge.' },
+              { icon: '🎯', title: 'Apni Kahani Sunayein', desc: 'Logon ko apni real life ki stories sunayein. Authenticity sabse powerful tool hai ek speaker ke liye.' },
+              { icon: '📹', title: 'Videos Banayein', desc: 'YouTube par apne thoughts share karein. Chhoti videos se shuru karein. Consistency rakhein — roz ek video.' },
+              { icon: '🤝', title: 'Network Banayein', desc: 'Events mein jaayein, logon se milein. Jitne zyada log aapko sunenge, utna aapka confidence badhega.' },
+              { icon: '💡', title: 'Unique Bano', desc: 'Sabse alag kuch kahein. Apna style develop karein. Copy mat karo — inspire ho aur apna raasta banao.' },
+            ].map((f, i) => (
+              <div key={i} className="group p-8 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-white/[0.06] transition-all duration-300">
+                <div className="text-5xl mb-4">{f.icon}</div>
+                <h3 className="font-bold text-xl mb-3">{f.title}</h3>
+                <p className="text-white/50 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Arijit Singh Section */}
+      <section className="relative z-10 px-4 sm:px-6 py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-black mb-4">
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Arijit Singh</span> — The Soulful Voice
+            </h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Bollywood ke sabse dil ko chhoone wali awaaz
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center mb-12">
+            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden border-4 border-violet-500/30 shadow-2xl shadow-violet-500/20 mb-6">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Arijit_Singh_at_the_screening_of_Kalank.jpg/440px-Arijit_Singh_at_the_screening_of_Kalank.jpg"
+                alt="Arijit Singh"
+                className="w-full h-full object-cover"
+              />
             </div>
+            <h3 className="text-2xl font-bold text-white mb-2">Arijit Singh</h3>
+            <p className="text-white/50 text-center max-w-2xl">
+              Indian music industry ke sabse iconic singers mein se ek. Unki awaaz mein woh dard aur sukoon hai jo seedha dil ko chhoota hai.
+            </p>
+          </div>
+
+          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-violet-500/10 border border-blue-500/20 mb-8">
+            <h3 className="text-2xl font-bold text-center mb-8 text-white">
+              🎵 Channa Mereya — Ae Dil Hai Mushkil
+            </h3>
+            <div className="space-y-6 text-center">
+              <div className="p-4 rounded-xl bg-white/[0.03]">
+                <p className="text-xl text-white/90 leading-relaxed italic">"Achha chalta hoon duaaon mein yaad rakhna,</p>
+                <p className="text-xl text-white/90 leading-relaxed italic">Mere zikr ka zubaan pe swaad rakhna..."</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/[0.03]">
+                <p className="text-xl text-white/90 leading-relaxed italic">"Channa mereya mereya, channa mereya mereya,</p>
+                <p className="text-xl text-white/90 leading-relaxed italic">Channa mereya mereya belliya..."</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/[0.03]">
+                <p className="text-xl text-white/90 leading-relaxed italic">"Maahi ve, tu jo mileya, sab mileya,</p>
+                <p className="text-xl text-white/90 leading-relaxed italic">Meherbaani, phir kisi cheez ki kami nahi..."</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/[0.03]">
+                <p className="text-xl text-white/90 leading-relaxed italic">"Haan ranjha tu, yahan ranjha mein,</p>
+                <p className="text-xl text-white/90 leading-relaxed italic">Tere ishq pe hoon qurbaan mein..."</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
+              <h4 className="font-bold text-lg mb-3 text-cyan-400">🎵 Tum Hi Ho</h4>
+              <p className="text-white/70 italic leading-relaxed">"Tum hi ho, ab tum hi ho, zindagi ab tum hi ho. Chain bhi, mera dard bhi, meri aashiqui tum hi ho..."</p>
+            </div>
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
+              <h4 className="font-bold text-lg mb-3 text-cyan-400">🎵 Raabta</h4>
+              <p className="text-white/70 italic leading-relaxed">"Kuch toh hai tujhse raabta, kuch toh hai tujhse raabta. Lagta hai ki tera mujhse hai koi rishta purana..."</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* More Shayri Collection */}
+      <section className="relative z-10 px-4 sm:px-6 py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-black mb-4">
+              Dil Ki <span className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent">Baatein</span>
+            </h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Mashoor shayaron ki dilkash shayari
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              { text: "हज़ारों ख़्वाहिशें ऐसी कि हर ख़्वाहिश पे दम निकले, बहुत निकले मेरे अरमान लेकिन फिर भी कम निकले।", author: "Mirza Ghalib" },
+              { text: "मुझसे पहली सी मोहब्बत मेरे महबूब ना माँग, मैंने समझा था कि तू है तो दरख्शाँ है हयात।", author: "Faiz Ahmed Faiz" },
+              { text: "ज़िंदगी में कुछ ऐसे लम्हे आते हैं, आँखें भर आती हैं और होंठ मुस्कुराते हैं।", author: "Ahmed Faraz" },
+              { text: "इक फ़क़ीर है ख़ाली हाथ, फिर भी दुनिया माँगता है। दिल माँगता है तुझे बस, बाकी कुछ नहीं चाहता है।", author: "Jaun Elia" },
+            ].map((s, i) => (
+              <div key={i} className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-rose-500/30 transition-all duration-300">
+                <div className="text-4xl font-black text-white/[0.06] mb-2">"</div>
+                <p className="text-lg text-white/85 leading-relaxed mb-3">{s.text}</p>
+                <p className="text-rose-400 text-sm font-medium">— {s.author}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -894,8 +1015,7 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
               <span className="font-extrabold">Shayri<span className="text-violet-400">.com</span></span>
             </div>
             <div className="flex items-center gap-6 text-sm text-white/40">
-              <Link to="/terms" className="hover:text-white/70 transition-colors">Terms</Link>
-              <Link to="/support" className="hover:text-white/70 transition-colors">Support</Link>
+              <span className="text-white/30">Shayri.com</span>
             </div>
           </div>
         </div>
