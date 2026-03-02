@@ -21,6 +21,7 @@ export default function SpinnerRecords() {
   const [startDate, setStartDate] = useState(getToday());
   const [endDate, setEndDate] = useState(getToday());
   const [username, setUsername] = useState('');
+  const [resultFilter, setResultFilter] = useState(''); // '' | 'won' | 'lost'
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   // Pagination
@@ -36,6 +37,7 @@ export default function SpinnerRecords() {
       if (endDate) params.endDate = endDate;
       if (!startDate && !endDate) params.all = true;
       if (username.trim()) params.username = username.trim();
+      if (resultFilter) params.result = resultFilter;
       const res = await adminAPI.getSpinnerRecords(params);
       setRecords(res.data.records || []);
       setProfit(res.data.profit ?? 0);
@@ -50,7 +52,7 @@ export default function SpinnerRecords() {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, username, page]);
+  }, [startDate, endDate, username, resultFilter, page]);
 
   useEffect(() => {
     fetchRecords();
@@ -113,13 +115,37 @@ export default function SpinnerRecords() {
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent"
             />
           </div>
+          <div className="flex items-end gap-2">
+            {[
+              { value: '', label: 'All' },
+              { value: 'won', label: 'Won' },
+              { value: 'lost', label: 'Lost' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => { setResultFilter(opt.value); setPage(1); }}
+                className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-colors ${
+                  resultFilter === opt.value
+                    ? opt.value === 'won'
+                      ? 'bg-emerald-600 text-white'
+                      : opt.value === 'lost'
+                        ? 'bg-red-600 text-white'
+                        : 'bg-violet-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
           <div className="flex items-end">
             <button
               type="button"
-              onClick={() => { setStartDate(null); setEndDate(null); setPage(1); }}
+              onClick={() => { setStartDate(null); setEndDate(null); setResultFilter(''); setPage(1); }}
               className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200"
             >
-              Show All
+              Reset All
             </button>
           </div>
         </div>

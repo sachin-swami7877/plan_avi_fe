@@ -429,6 +429,61 @@ const Bets = () => {
             )}
           </div>
 
+          {/* Current round bets table */}
+          <div className="bg-white rounded-xl shadow overflow-hidden">
+            <h2 className="px-4 py-3 font-semibold text-gray-800 border-b">
+              Bets in this round ({roundBets?.length ?? 0})
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-left">
+                    <th className="px-4 py-2 font-medium text-gray-600">User</th>
+                    <th className="px-4 py-2 font-medium text-gray-600">Phone</th>
+                    <th className="px-4 py-2 font-medium text-gray-600">Bet (₹)</th>
+                    <th className="px-4 py-2 font-medium text-gray-600">Status</th>
+                    <th className="px-4 py-2 font-medium text-gray-600">Cash out</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!roundBets?.length ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                        No round or no bets yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    roundBets.map((bet) => (
+                      <tr key={bet._id} className="border-t border-gray-100">
+                        <td className="px-4 py-2 font-medium">{bet.userId?.name || '-'}</td>
+                        <td className="px-4 py-2 text-gray-600">{bet.userId?.phone || '-'}</td>
+                        <td className="px-4 py-2">{bet.amount?.toFixed(2)}</td>
+                        <td className="px-4 py-2">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              bet.status === 'active'
+                                ? 'bg-amber-100 text-amber-800'
+                                : bet.status === 'won'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {bet.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2">
+                          {bet.status === 'won'
+                            ? `${bet.cashOutMultiplier?.toFixed(2)}x (₹${bet.profit?.toFixed(2)})`
+                            : '-'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           {/* ── Set Next Round Crash ── */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="font-semibold text-gray-800 mb-2">Set Next Round Crash</h3>
@@ -722,60 +777,6 @@ const Bets = () => {
             </div>
           )}
 
-          {/* Current round bets table */}
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <h2 className="px-4 py-3 font-semibold text-gray-800 border-b">
-              Bets in this round ({roundBets?.length ?? 0})
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 text-left">
-                    <th className="px-4 py-2 font-medium text-gray-600">User</th>
-                    <th className="px-4 py-2 font-medium text-gray-600">Phone</th>
-                    <th className="px-4 py-2 font-medium text-gray-600">Bet (₹)</th>
-                    <th className="px-4 py-2 font-medium text-gray-600">Status</th>
-                    <th className="px-4 py-2 font-medium text-gray-600">Cash out</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {!roundBets?.length ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                        No round or no bets yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    roundBets.map((bet) => (
-                      <tr key={bet._id} className="border-t border-gray-100">
-                        <td className="px-4 py-2 font-medium">{bet.userId?.name || '-'}</td>
-                        <td className="px-4 py-2 text-gray-600">{bet.userId?.phone || '-'}</td>
-                        <td className="px-4 py-2">{bet.amount?.toFixed(2)}</td>
-                        <td className="px-4 py-2">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${
-                              bet.status === 'active'
-                                ? 'bg-amber-100 text-amber-800'
-                                : bet.status === 'won'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {bet.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          {bet.status === 'won'
-                            ? `${bet.cashOutMultiplier?.toFixed(2)}x (₹${bet.profit?.toFixed(2)})`
-                            : '-'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       )}
 
