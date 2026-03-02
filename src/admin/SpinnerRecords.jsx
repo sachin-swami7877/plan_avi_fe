@@ -90,64 +90,60 @@ export default function SpinnerRecords() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-600 mb-1">Date Range</label>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[160px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Date Range</label>
             <button
               type="button"
               onClick={() => setDatePickerOpen(true)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-left flex items-center justify-between hover:bg-gray-50"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-gray-700 text-left text-sm flex items-center justify-between hover:bg-gray-50"
             >
               <span>{getRangeLabel()}</span>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
           </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-600 mb-1">Filter by user name</label>
+          <div className="flex-1 min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">User</label>
             <input
               type="text"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setPage(1); }}
               placeholder="Search by name..."
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-gray-800 text-sm placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent"
             />
           </div>
-          <div className="flex items-end gap-2">
-            {[
-              { value: '', label: 'All' },
-              { value: 'won', label: 'Won' },
-              { value: 'lost', label: 'Lost' },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => { setResultFilter(opt.value); setPage(1); }}
-                className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-colors ${
-                  resultFilter === opt.value
-                    ? opt.value === 'won'
-                      ? 'bg-emerald-600 text-white'
-                      : opt.value === 'lost'
-                        ? 'bg-red-600 text-white'
-                        : 'bg-violet-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-end">
+          {[
+            { value: '', label: 'All' },
+            { value: 'won', label: 'Won' },
+            { value: 'lost', label: 'Lost' },
+          ].map((opt) => (
             <button
+              key={opt.value}
               type="button"
-              onClick={() => { setStartDate(null); setEndDate(null); setResultFilter(''); setPage(1); }}
-              className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200"
+              onClick={() => { setResultFilter(opt.value); setPage(1); }}
+              className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+                resultFilter === opt.value
+                  ? opt.value === 'won'
+                    ? 'bg-emerald-600 text-white'
+                    : opt.value === 'lost'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-violet-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
-              Reset All
+              {opt.label}
             </button>
-          </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => { setStartDate(null); setEndDate(null); setResultFilter(''); setUsername(''); setPage(1); }}
+            className="px-3 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200"
+          >
+            Reset
+          </button>
         </div>
       </div>
 
@@ -195,6 +191,7 @@ export default function SpinnerRecords() {
                   <tr>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase bg-gray-50">User</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase bg-gray-50">Email</th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase bg-gray-50">Bet</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase bg-gray-50">Outcome</th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase bg-gray-50">Win</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase bg-gray-50">Time</th>
@@ -205,9 +202,10 @@ export default function SpinnerRecords() {
                     <tr key={r._id} className="hover:bg-gray-50/50">
                       <td className="py-3 px-4 text-gray-800 font-medium">{r.userId?.name ?? '—'}</td>
                       <td className="py-3 px-4 text-gray-600 text-sm">{r.userId?.email ?? '—'}</td>
+                      <td className="py-3 px-4 text-right font-medium text-gray-800">₹{r.spinCost ?? 50}</td>
                       <td className="py-3 px-4">
-                        <span className={r.outcome === 'thank_you' ? 'text-gray-500' : 'text-emerald-600'}>
-                          {r.outcome === 'thank_you' ? 'Thank you' : `₹${r.winAmount}`}
+                        <span className={r.outcome === 'thank_you' ? 'text-red-500 font-medium' : 'text-emerald-600 font-medium'}>
+                          {r.outcome === 'thank_you' ? 'Lost' : 'Won'}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right font-medium">{r.winAmount > 0 ? `+₹${r.winAmount}` : '—'}</td>
@@ -227,9 +225,12 @@ export default function SpinnerRecords() {
                       <p className="font-medium text-gray-800">{r.userId?.name ?? '—'}</p>
                       <p className="text-sm text-gray-500">{r.userId?.email ?? '—'}</p>
                     </div>
-                    <span className={r.winAmount > 0 ? 'text-emerald-600 font-semibold' : 'text-gray-500'}>
-                      {r.winAmount > 0 ? `+₹${r.winAmount}` : 'Thank you'}
-                    </span>
+                    <div className="text-right">
+                      <span className={r.outcome === 'thank_you' ? 'text-red-500 font-semibold' : 'text-emerald-600 font-semibold'}>
+                        {r.outcome === 'thank_you' ? 'Lost' : `+₹${r.winAmount}`}
+                      </span>
+                      <p className="text-xs text-gray-500">Bet: ₹{r.spinCost ?? 50}</p>
+                    </div>
                   </div>
                   <p className="text-xs text-gray-400 mt-1">{formatDateTime(r.createdAt)}</p>
                 </div>
