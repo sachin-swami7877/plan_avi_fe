@@ -821,6 +821,69 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
         </div>
       </section>
 
+      {/* Arijit Singh Section */}
+      <section className="relative z-10 px-4 sm:px-6 py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-black mb-4">
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Arijit Singh</span> — The Soulful Voice
+            </h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Bollywood ke sabse dil ko chhoone wali awaaz
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center mb-12">
+            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden border-4 border-violet-500/30 shadow-2xl shadow-violet-500/20 mb-6">
+              <img
+                src="/arijit.jpeg"
+                alt="Arijit Singh"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">Arijit Singh</h3>
+            <p className="text-white/50 text-center max-w-2xl">
+              Indian music industry ke sabse iconic singers mein se ek. Unki awaaz mein woh dard aur sukoon hai jo seedha dil ko chhoota hai.
+            </p>
+          </div>
+
+          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-violet-500/10 border border-blue-500/20 mb-8">
+            <h3 className="text-2xl font-bold text-center mb-8 text-white">
+              Channa Mereya — Ae Dil Hai Mushkil
+            </h3>
+            <div className="space-y-6 text-center">
+              <div className="p-4 rounded-xl bg-white/[0.03]">
+                <p className="text-xl text-white/90 leading-relaxed italic">"Achha chalta hoon duaaon mein yaad rakhna,</p>
+                <p className="text-xl text-white/90 leading-relaxed italic">Mere zikr ka zubaan pe swaad rakhna..."</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/[0.03]">
+                <p className="text-xl text-white/90 leading-relaxed italic">"Channa mereya mereya, channa mereya mereya,</p>
+                <p className="text-xl text-white/90 leading-relaxed italic">Channa mereya mereya belliya..."</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/[0.03]">
+                <p className="text-xl text-white/90 leading-relaxed italic">"Maahi ve, tu jo mileya, sab mileya,</p>
+                <p className="text-xl text-white/90 leading-relaxed italic">Meherbaani, phir kisi cheez ki kami nahi..."</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/[0.03]">
+                <p className="text-xl text-white/90 leading-relaxed italic">"Haan ranjha tu, yahan ranjha mein,</p>
+                <p className="text-xl text-white/90 leading-relaxed italic">Tere ishq pe hoon qurbaan mein..."</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
+              <h4 className="font-bold text-lg mb-3 text-cyan-400">Tum Hi Ho</h4>
+              <p className="text-white/70 italic leading-relaxed">"Tum hi ho, ab tum hi ho, zindagi ab tum hi ho. Chain bhi, mera dard bhi, meri aashiqui tum hi ho..."</p>
+            </div>
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
+              <h4 className="font-bold text-lg mb-3 text-cyan-400">Raabta</h4>
+              <p className="text-white/70 italic leading-relaxed">"Kuch toh hai tujhse raabta, kuch toh hai tujhse raabta. Lagta hai ki tera mujhse hai koi rishta purana..."</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Jaun Elia Collection */}
       <section className="relative z-10 px-4 sm:px-6 py-16 sm:py-24">
         <div className="max-w-5xl mx-auto">
@@ -908,69 +971,6 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
                 <p className="text-white/50 leading-relaxed">{f.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Arijit Singh Section */}
-      <section className="relative z-10 px-4 sm:px-6 py-16 sm:py-24">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-black mb-4">
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Arijit Singh</span> — The Soulful Voice
-            </h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">
-              Bollywood ke sabse dil ko chhoone wali awaaz
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center mb-12">
-            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden border-4 border-violet-500/30 shadow-2xl shadow-violet-500/20 mb-6">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Arijit_Singh_at_the_screening_of_Kalank.jpg/440px-Arijit_Singh_at_the_screening_of_Kalank.jpg"
-                alt="Arijit Singh"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-2">Arijit Singh</h3>
-            <p className="text-white/50 text-center max-w-2xl">
-              Indian music industry ke sabse iconic singers mein se ek. Unki awaaz mein woh dard aur sukoon hai jo seedha dil ko chhoota hai.
-            </p>
-          </div>
-
-          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-violet-500/10 border border-blue-500/20 mb-8">
-            <h3 className="text-2xl font-bold text-center mb-8 text-white">
-              🎵 Channa Mereya — Ae Dil Hai Mushkil
-            </h3>
-            <div className="space-y-6 text-center">
-              <div className="p-4 rounded-xl bg-white/[0.03]">
-                <p className="text-xl text-white/90 leading-relaxed italic">"Achha chalta hoon duaaon mein yaad rakhna,</p>
-                <p className="text-xl text-white/90 leading-relaxed italic">Mere zikr ka zubaan pe swaad rakhna..."</p>
-              </div>
-              <div className="p-4 rounded-xl bg-white/[0.03]">
-                <p className="text-xl text-white/90 leading-relaxed italic">"Channa mereya mereya, channa mereya mereya,</p>
-                <p className="text-xl text-white/90 leading-relaxed italic">Channa mereya mereya belliya..."</p>
-              </div>
-              <div className="p-4 rounded-xl bg-white/[0.03]">
-                <p className="text-xl text-white/90 leading-relaxed italic">"Maahi ve, tu jo mileya, sab mileya,</p>
-                <p className="text-xl text-white/90 leading-relaxed italic">Meherbaani, phir kisi cheez ki kami nahi..."</p>
-              </div>
-              <div className="p-4 rounded-xl bg-white/[0.03]">
-                <p className="text-xl text-white/90 leading-relaxed italic">"Haan ranjha tu, yahan ranjha mein,</p>
-                <p className="text-xl text-white/90 leading-relaxed italic">Tere ishq pe hoon qurbaan mein..."</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
-              <h4 className="font-bold text-lg mb-3 text-cyan-400">🎵 Tum Hi Ho</h4>
-              <p className="text-white/70 italic leading-relaxed">"Tum hi ho, ab tum hi ho, zindagi ab tum hi ho. Chain bhi, mera dard bhi, meri aashiqui tum hi ho..."</p>
-            </div>
-            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
-              <h4 className="font-bold text-lg mb-3 text-cyan-400">🎵 Raabta</h4>
-              <p className="text-white/70 italic leading-relaxed">"Kuch toh hai tujhse raabta, kuch toh hai tujhse raabta. Lagta hai ki tera mujhse hai koi rishta purana..."</p>
-            </div>
           </div>
         </div>
       </section>
