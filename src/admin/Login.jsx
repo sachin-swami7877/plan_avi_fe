@@ -127,13 +127,13 @@ const AdminLogin = () => {
     setPassword(''); setNewPassword(''); setConfirmPassword(''); setResetToken('');
   };
 
-  const PhoneInput = ({ autoFocus }) => (
+  const phoneInputJSX = (
     <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
       <span className="px-3 text-gray-400 text-sm bg-gray-50">+91</span>
       <input type="tel" value={phone}
         onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
-        placeholder="Enter 10-digit number" maxLength={10} inputMode="numeric" autoFocus={autoFocus}
-        className="flex-1 px-3 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800" />
+        placeholder="Enter 10-digit number" maxLength={10} inputMode="numeric"
+        className="flex-1 px-3 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800" />
     </div>
   );
 
@@ -152,15 +152,19 @@ const AdminLogin = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-800 to-gray-900 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-gray-100 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">&#x1F451;</div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
-          <p className="text-gray-400">Aviator Game Management</p>
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome Back</h1>
+          <p className="text-gray-500 text-sm">Sign in to your account</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-xl">
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
           {error && <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
           {success && <div className="bg-green-50 text-green-600 px-4 py-3 rounded-lg mb-4 text-sm">{success}</div>}
 
@@ -186,10 +190,10 @@ const AdminLogin = () => {
                 <form onSubmit={handleSendOTP}>
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number</label>
-                    <PhoneInput autoFocus />
+                    {phoneInputJSX}
                   </div>
                   <button type="submit" disabled={loading}
-                    className="w-full bg-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition-colors disabled:opacity-50">
+                    className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50">
                     {loading ? 'Sending OTP...' : 'Send OTP'}
                   </button>
                 </form>
@@ -199,14 +203,14 @@ const AdminLogin = () => {
                 <form onSubmit={handlePasswordLogin}>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number</label>
-                    <PhoneInput autoFocus />
+                    {phoneInputJSX}
                   </div>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                     <div className="relative">
                       <input type={showPassword ? 'text' : 'password'} value={password}
                         onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 pr-12" />
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 pr-12" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg">
                         {showPassword ? '\u{1F648}' : '\u{1F441}\uFE0F'}
@@ -214,12 +218,12 @@ const AdminLogin = () => {
                     </div>
                   </div>
                   <button type="submit" disabled={loading}
-                    className="w-full bg-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition-colors disabled:opacity-50">
+                    className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50">
                     {loading ? 'Logging in...' : 'Login'}
                   </button>
                   <div className="text-center mt-3">
                     <button type="button" onClick={() => { setView('forgot-phone'); setError(''); }}
-                      className="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                      className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
                       Forgot Password?
                     </button>
                   </div>
@@ -237,11 +241,11 @@ const AdminLogin = () => {
                 <input type="text" value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   placeholder="Enter OTP" maxLength={4} inputMode="numeric" autoFocus
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-2xl tracking-widest text-gray-800" />
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-center text-2xl tracking-widest text-gray-800" />
               </div>
               <OtpTimerDisplay />
               <button type="submit" disabled={loading}
-                className="w-full bg-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition-colors disabled:opacity-50">
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50">
                 {loading ? 'Verifying...' : 'Verify & Login'}
               </button>
               <div className="flex items-center justify-between mt-3">
@@ -252,7 +256,7 @@ const AdminLogin = () => {
                     try { await adminAuthAPI.sendOTP(phone); startOtpTimer(); setOtp(''); }
                     catch (err) { setError('Failed to resend OTP'); }
                   }}
-                  className={`py-2 text-sm font-medium ${otpTimer > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-purple-600 hover:text-purple-800'}`}
+                  className={`py-2 text-sm font-medium ${otpTimer > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-indigo-600 hover:text-indigo-800'}`}
                 >Resend OTP</button>
               </div>
             </form>
@@ -265,10 +269,10 @@ const AdminLogin = () => {
               <p className="text-gray-500 text-sm text-center mb-6">Enter your registered mobile number to receive an OTP</p>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number</label>
-                <PhoneInput autoFocus />
+                {phoneInputJSX}
               </div>
               <button type="submit" disabled={loading}
-                className="w-full bg-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition-colors disabled:opacity-50">
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50">
                 {loading ? 'Sending OTP...' : 'Send OTP'}
               </button>
               <div className="text-center mt-3">
@@ -286,11 +290,11 @@ const AdminLogin = () => {
                 <input type="text" value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   placeholder="Enter OTP" maxLength={4} inputMode="numeric" autoFocus
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-2xl tracking-widest text-gray-800" />
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-center text-2xl tracking-widest text-gray-800" />
               </div>
               <OtpTimerDisplay />
               <button type="submit" disabled={loading}
-                className="w-full bg-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition-colors disabled:opacity-50">
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50">
                 {loading ? 'Verifying...' : 'Verify OTP'}
               </button>
               <div className="flex items-center justify-between mt-3">
@@ -301,7 +305,7 @@ const AdminLogin = () => {
                     try { await adminAuthAPI.forgotPasswordSendOTP(phone); startOtpTimer(); setOtp(''); }
                     catch (err) { setError('Failed to resend OTP'); }
                   }}
-                  className={`py-2 text-sm font-medium ${otpTimer > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-purple-600 hover:text-purple-800'}`}
+                  className={`py-2 text-sm font-medium ${otpTimer > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-indigo-600 hover:text-indigo-800'}`}
                 >Resend OTP</button>
               </div>
             </form>
@@ -311,13 +315,13 @@ const AdminLogin = () => {
           {view === 'forgot-reset' && (
             <form onSubmit={handleResetPassword}>
               <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">Set New Password</h2>
-              <p className="text-gray-500 text-sm text-center mb-6">Create a new password for your admin account</p>
+              <p className="text-gray-500 text-sm text-center mb-6">Create a new password for your account</p>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                 <div className="relative">
                   <input type={showNewPassword ? 'text' : 'password'} value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 6 characters" autoFocus
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 pr-12" />
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 pr-12" />
                   <button type="button" onClick={() => setShowNewPassword(!showNewPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg">
                     {showNewPassword ? '\u{1F648}' : '\u{1F441}\uFE0F'}
@@ -329,7 +333,7 @@ const AdminLogin = () => {
                 <div className="relative">
                   <input type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 pr-12" />
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 pr-12" />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg">
                     {showConfirmPassword ? '\u{1F648}' : '\u{1F441}\uFE0F'}
@@ -337,7 +341,7 @@ const AdminLogin = () => {
                 </div>
               </div>
               <button type="submit" disabled={loading}
-                className="w-full bg-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition-colors disabled:opacity-50">
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50">
                 {loading ? 'Resetting...' : 'Reset Password'}
               </button>
               <div className="text-center mt-3">
@@ -347,9 +351,7 @@ const AdminLogin = () => {
           )}
         </div>
 
-        <div className="text-center mt-6">
-          <a href="/" className="text-gray-400 hover:text-white text-sm">&larr; Back to User App</a>
-        </div>
+        <p className="text-center mt-6 text-gray-400 text-xs">&copy; 2026 All rights reserved.</p>
       </div>
     </div>
   );

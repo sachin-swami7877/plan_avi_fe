@@ -100,7 +100,7 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout(); navigate('/'); };
 
   const openEdit = () => {
     setEditForm({

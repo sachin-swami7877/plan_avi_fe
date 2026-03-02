@@ -27,8 +27,7 @@ api.interceptors.response.use(
       removeToken();
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      const isAdmin = window.location.pathname.startsWith('/admin');
-      window.location.href = isAdmin ? '/admin/login' : '/login';
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }

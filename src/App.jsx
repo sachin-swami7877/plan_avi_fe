@@ -52,11 +52,11 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={adminOnly ? "/admin/login" : "/login"} replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (adminOnly && !isAdmin && !isSubAdmin) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
