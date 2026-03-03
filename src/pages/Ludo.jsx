@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { ludoAPI } from '../services/api';
+import { playWinSound } from '../utils/audioSounds';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
@@ -35,7 +36,7 @@ function getRemainingDisplay(expiryDate, nowMs = Date.now()) {
 }
 
 // Indian male names + game-style usernames for dummy running battles
-const INDIAN_MALE_NAMES = ['Rahul', 'Amit', 'Vikram', 'Arjun', 'Rohan', 'Suresh', 'Rajesh', 'Karan', 'Anil', 'Deepak', 'Sachin', 'Ravi', 'Sanjay', 'Vijay', 'Manish', 'Pradeep', 'Nitin', 'Gaurav', 'Akash', 'Rishabh', 'Kunal', 'Yash', 'Aditya', 'Varun', 'Abhishek'];
+const INDIAN_MALE_NAMES = ['Rahul', 'Amit', 'Vikram', 'Arjun', 'Rohan', 'Suresh', 'Rajesh', 'Karan', 'Anil', 'Deepak', 'Sachin', 'Ravi', 'Sanjay', 'Vijay', 'Manish', 'Pradeep', 'Nitin', 'Gaurav', 'Akash', 'Rishabh', 'Kunal', 'Yash', 'Aditya', 'Varun', 'Abhishek', 'danglegame123', 'boss123', 'ludoking11', 'khiladi123', 'gamerking11', 'Harsh', 'Mohit', 'Tushar', 'Pawan', 'Dinesh', 'Naveen', 'Rakesh', 'Hitesh', 'Jatin', 'Ankit', 'Sumit', 'Lalit', 'Tarun', 'Bharat', 'Yogesh'];
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
@@ -69,60 +70,6 @@ function calcPrizeFrontend(entry, tiers) {
   return pool - commission;
 }
 
-// Play a loud celebratory win/cashback sound when opponent accepts the bet
-function playMatchAcceptSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Fanfare melody — C5 E5 G5 C6 (rising triumph)
-    const notes = [
-      { freq: 523.25, start: 0,    dur: 0.15 },  // C5
-      { freq: 659.25, start: 0.12, dur: 0.15 },  // E5
-      { freq: 783.99, start: 0.24, dur: 0.15 },  // G5
-      { freq: 1046.5, start: 0.36, dur: 0.35 },  // C6 (held longer)
-    ];
-
-    notes.forEach(({ freq, start, dur }) => {
-      // Main tone (triangle for warmth)
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'triangle';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.35, ctx.currentTime + start);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + dur + 0.05);
-
-      // Bright overtone (square, quieter) for richness
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.type = 'square';
-      osc2.frequency.value = freq * 2; // octave up
-      gain2.gain.setValueAtTime(0.08, ctx.currentTime + start);
-      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur * 0.6);
-      osc2.start(ctx.currentTime + start);
-      osc2.stop(ctx.currentTime + start + dur + 0.05);
-    });
-
-    // Final shimmer chord (C6+E6+G6 together)
-    [1046.5, 1318.5, 1568.0].forEach((freq) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.12, ctx.currentTime + 0.55);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.1);
-      osc.start(ctx.currentTime + 0.55);
-      osc.stop(ctx.currentTime + 1.15);
-    });
-  } catch (e) { /* ignore audio errors */ }
-}
 
 function generateDummyBattles(countFromSettings, tiers) {
   if (countFromSettings <= 0) return [];
@@ -167,7 +114,6 @@ export default function Ludo() {
   const [cancelling, setCancelling] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(null);
   const [confirmJoinMatch, setConfirmJoinMatch] = useState(null);
-  const [ludoGameDurationMinutes, setLudoGameDurationMinutes] = useState(30);
   const [ludoDummyRunningBattles, setLudoDummyRunningBattles] = useState(15);
   const [commTiers, setCommTiers] = useState({ tier1Max: 250, tier1Pct: 10, tier2Max: 600, tier2Pct: 8, tier3Pct: 5 });
   const [ludoEnabled, setLudoEnabled] = useState(true);
@@ -285,7 +231,6 @@ export default function Ludo() {
       fetchRunningBattles(),
       ludoAPI.getSettings().then((r) => {
         const d = r.data || {};
-        setLudoGameDurationMinutes(d.ludoGameDurationMinutes ?? 30);
         setLudoDummyRunningBattles(d.ludoDummyRunningBattles ?? 15);
         setCommTiers({
           tier1Max: d.ludoCommTier1Max ?? 250,
@@ -309,7 +254,7 @@ export default function Ludo() {
   useEffect(() => {
     if (!socket) return;
     socket.on('ludo:match-live', () => {
-      if (myWaitingRef.current?.length > 0) playMatchAcceptSound();
+      if (myWaitingRef.current?.length > 0) playWinSound();
       fetchMyMatches();
       fetchWaitingList();
       fetchRunningBattles();

@@ -10,6 +10,7 @@ import { IoNotificationsOutline, IoNotifications } from 'react-icons/io5';
 import { HiOutlineBars3 } from 'react-icons/hi2';
 import AdminSideDrawer from './AdminSideDrawer';
 import toast from 'react-hot-toast';
+import { playNotificationSound } from '../utils/audioSounds';
 
 const AdminLayout = () => {
   const { user, logout, isAdmin, isSubAdmin, role } = useAuth();
@@ -56,12 +57,15 @@ const AdminLayout = () => {
     if (!socket) return;
     socket.on('admin:wallet-request', () => {
       setPendingCount(prev => ({ ...prev, deposits: prev.deposits + 1 }));
+      playNotificationSound();
     });
     socket.on('admin:withdrawal-request', () => {
       setPendingCount(prev => ({ ...prev, withdrawals: prev.withdrawals + 1 }));
+      playNotificationSound();
     });
     socket.on('admin:ludo-result-request', (data) => {
       toast(`Ludo result submitted by ${data?.userName || 'a player'}`, { icon: '🎲', duration: 5000 });
+      playNotificationSound();
     });
     return () => {
       socket.off('admin:wallet-request');

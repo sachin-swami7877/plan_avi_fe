@@ -17,6 +17,26 @@ const FAKE_POOL = [
   { name: 'n***l', avatar: '🦊' },
   { name: 'm***v', avatar: '🐻' },
   { name: 'k***p', avatar: '🎮' },
+  { name: 's***h', avatar: '🏏' },
+  { name: 'v***j', avatar: '🎲' },
+  { name: 'r***n', avatar: '🐯' },
+  { name: 'g***r', avatar: '🔥' },
+  { name: 'a***k', avatar: '⚡' },
+  { name: 'b***3', avatar: '💰' },
+  { name: 'l***1', avatar: '🎰' },
+  { name: 'k***i', avatar: '🏆' },
+  { name: 'j***t', avatar: '🎪' },
+  { name: 'h***a', avatar: '🐉' },
+  { name: 'y***h', avatar: '🦁' },
+  { name: 'p***l', avatar: '🌟' },
+  { name: 'n***j', avatar: '🎯' },
+  { name: 'i***r', avatar: '🐺' },
+  { name: 'c***7', avatar: '🃏' },
+  { name: 'f***2', avatar: '🎳' },
+  { name: 'e***4', avatar: '🦈' },
+  { name: 'u***6', avatar: '🍀' },
+  { name: 'z***3', avatar: '🐲' },
+  { name: 'w***8', avatar: '🎯' },
 ];
 
 const BET_AMOUNTS = [50, 100, 150, 200, 300, 500, 750, 1000];
@@ -82,7 +102,9 @@ const LiveBets = () => {
     // Only generate once per round when game starts running
     if (roundId && hasGeneratedForRound.current !== roundId && status === 'running') {
       hasGeneratedForRound.current = roundId;
-      const fakes = generateFakeUsers(dummyUserCount);
+      const minCount = Math.max(1, Math.ceil(dummyUserCount * 0.75));
+      const randomCount = dummyUserCount <= 0 ? 0 : minCount + Math.floor(Math.random() * (dummyUserCount - minCount + 1));
+      const fakes = generateFakeUsers(randomCount);
       setFakeUsers(fakes);
       cashoutTimersRef.current.forEach(clearTimeout);
       cashoutTimersRef.current = [];

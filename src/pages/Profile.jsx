@@ -22,11 +22,20 @@ const Profile = () => {
   const [editForm, setEditForm] = useState({ name: '', phone: '', upiId: '', upiNumber: '' });
   const [editLoading, setEditLoading] = useState(false);
   const [editMsg, setEditMsg] = useState('');
+  const [balanceDetails, setBalanceDetails] = useState({ depositBalance: 0, earningsBalance: 0 });
 
   useEffect(() => {
     fetchStats();
     fetchSupport();
+    fetchBalanceDetails();
   }, []);
+
+  const fetchBalanceDetails = async () => {
+    try {
+      const res = await walletAPI.getBalance();
+      setBalanceDetails({ depositBalance: res.data.depositBalance || 0, earningsBalance: res.data.earningsBalance || 0 });
+    } catch { /* silent */ }
+  };
 
   const fetchStats = async () => {
     try {
@@ -276,38 +285,19 @@ const Profile = () => {
         </div>
 
         {/* Balance Card */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-5 mb-4 text-white overflow-hidden">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-5 mb-6 text-white overflow-hidden">
           <div className="flex justify-between items-start gap-3 min-w-0">
             <div className="min-w-0 flex-1">
               <p className="text-sm opacity-80">Wallet Balance</p>
               <p className="text-2xl sm:text-3xl font-bold mt-1 truncate">₹{user?.walletBalance?.toFixed(2) || '0.00'}</p>
               <p className="text-sm opacity-80 mt-1">Today's Earnings: ₹{stats.todayEarnings.toFixed(2)}</p>
               <p className="text-xs opacity-70 mt-0.5">(Aviator: ₹{(stats.todayEarnings - stats.spinnerEarnings - stats.ludoEarnings).toFixed(2)} | Spinner: ₹{stats.spinnerEarnings.toFixed(2)} | Ludo: ₹{stats.ludoEarnings.toFixed(2)})</p>
-            </div>
-            <button onClick={() => navigate('/wallet')} className="flex-shrink-0 bg-white bg-opacity-20 px-4 py-2 rounded-lg text-sm font-medium">Detail</button>
-          </div>
-        </div>
-
-        {/* Withdrawal Card */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-4 mb-4 text-white overflow-hidden">
-          <div className="flex justify-between items-center gap-3 min-w-0">
-            <div className="min-w-0 flex-1">
-              <h3 className="font-bold">Withdrawal</h3>
-              <div className="flex gap-4 sm:gap-6 mt-2">
-                <div><p className="text-xl sm:text-2xl font-bold">0</p><p className="text-xs opacity-80">In transaction</p></div>
-                <div><p className="text-xl sm:text-2xl font-bold">0</p><p className="text-xs opacity-80">Today withdraw</p></div>
+              <div className="flex gap-4 mt-2 pt-2 border-t border-white/20">
+                <div><p className="text-xs opacity-70">Deposit</p><p className="text-sm font-bold">₹{balanceDetails.depositBalance.toFixed(2)}</p></div>
+                <div><p className="text-xs opacity-70">Earnings</p><p className="text-sm font-bold">₹{balanceDetails.earningsBalance.toFixed(2)}</p></div>
               </div>
             </div>
-            <button onClick={() => navigate('/wallet')} className="flex-shrink-0 bg-white bg-opacity-20 px-4 py-2 rounded-lg text-sm font-medium">Manage</button>
-          </div>
-        </div>
-
-        {/* Deposit Card */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 mb-6 text-white">
-          <h3 className="font-bold mb-2">Deposit (Add Money)</h3>
-          <div className="flex gap-6">
-            <div><p className="text-2xl font-bold">{stats.totalBets}</p><p className="text-xs opacity-80">Total Bets</p></div>
-            <div><p className="text-2xl font-bold">{stats.totalWins}</p><p className="text-xs opacity-80">Total Wins</p></div>
+            <button onClick={() => navigate('/wallet')} className="flex-shrink-0 bg-white bg-opacity-20 px-4 py-2 rounded-lg text-sm font-medium">Detail</button>
           </div>
         </div>
 

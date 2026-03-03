@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import { gameAPI } from '../services/api';
+import { playCrashSound, playWinSound, playPlaneRunSound, stopPlaneRunSound } from '../utils/audioSounds';
 
 const QUICK_AMOUNTS = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
 
@@ -16,6 +17,7 @@ const BetPanel = () => {
   const prevRoundRef = useRef(null);
   const restoredForRound = useRef(null);
   const runningStartTimeRef = useRef(null);
+  const prevStatusRef = useRef(null);
 
   const { gameState } = useSocket();
   const { user, updateBalance } = useAuth();
@@ -47,6 +49,21 @@ const BetPanel = () => {
       prevRoundRef.current = gameState.roundId;
     }
   }, [gameState.status, gameState.roundId]);
+
+  // Play plane run sound when game starts (only if user has bet), stop on crash
+  useEffect(() => {
+    if (prevStatusRef.current !== 'running' && gameState.status === 'running' && hasBet) {
+      playPlaneRunSound();
+    }
+    if (prevStatusRef.current === 'running' && gameState.status === 'crashed') {
+      stopPlaneRunSound();
+      if (hasBet) playCrashSound();
+    }
+    if (gameState.status !== 'running') {
+      stopPlaneRunSound();
+    }
+    prevStatusRef.current = gameState.status;
+  }, [gameState.status, hasBet]);
 
   // Restore bet state on mount / refresh — check if user has active bet in current round
   useEffect(() => {
@@ -105,6 +122,7 @@ const BetPanel = () => {
       setCurrentBet(null);
       updateBalance(res.data.newBalance);
       setMessage(`Won ₹${res.data.profit.toFixed(2)} @ ${res.data.cashOutMultiplier}x`);
+      playWinSound();
     } catch (error) {
       setMessage(error.response?.data?.message || 'Failed to cash out');
     } finally {

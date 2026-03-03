@@ -156,6 +156,7 @@ export const ludoAPI = {
 export const adminAPI = {
   getDashboard: (params) => api.get('/admin/dashboard', { params }),
   getUsers: (params) => api.get('/admin/users', { params }),
+  getActiveUsers: () => api.get('/admin/active-users'),
   createUser: (data) => api.post('/admin/users', data),
   updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
   updateUserBalance: (id, amount, operation) =>

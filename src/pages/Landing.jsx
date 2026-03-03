@@ -161,6 +161,8 @@ const Landing = () => {
   const handleGameClick = (path) => {
     if (isAuthenticated) {
       navigate(path);
+    } else if (path === '/aviator') {
+      navigate('/aviator-public');
     } else {
       navigate('/login', { state: { from: path } });
     }

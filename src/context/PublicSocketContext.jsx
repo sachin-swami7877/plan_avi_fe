@@ -1,21 +1,9 @@
-import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
-import { useAuth } from './AuthContext';
+import { SocketContext } from './SocketContext';
 import { gameAPI } from '../services/api';
-import { getToken } from '../utils/cookies';
-import { playNotificationSound } from '../utils/audioSounds';
 
-export const SocketContext = createContext();
-
-export const useSocket = () => {
-  const context = useContext(SocketContext);
-  if (!context) {
-    throw new Error('useSocket must be used within SocketProvider');
-  }
-  return context;
-};
-
-export const SocketProvider = ({ children }) => {
+export const PublicSocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
   const [gameState, setGameState] = useState({
@@ -26,17 +14,10 @@ export const SocketProvider = ({ children }) => {
     showGo: false,
     betsEnabled: true,
   });
-  const [newNotification, setNewNotification] = useState(null);
-  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [activeUserCount, setActiveUserCount] = useState(0);
-  const { user, updateBalance } = useAuth();
   const goTimeoutRef = useRef(null);
-  const updateBalanceRef = useRef(updateBalance);
-  updateBalanceRef.current = updateBalance;
 
-  const clearNotification = useCallback(() => setNewNotification(null), []);
-
-  // Fetch initial game state via API (includes betsEnabled)
+  // Fetch initial game state via public API
   useEffect(() => {
     const fetchInitialState = async () => {
       try {
@@ -47,9 +28,9 @@ export const SocketProvider = ({ children }) => {
             ...(res.data.status && {
               status: res.data.status,
               multiplier: res.data.multiplier ?? 1.0,
-              roundId: res.data.round?.roundId ?? null
+              roundId: res.data.round?.roundId ?? null,
             }),
-            betsEnabled: res.data.betsEnabled !== false
+            betsEnabled: res.data.betsEnabled !== false,
           }));
         }
       } catch (error) {
@@ -60,27 +41,20 @@ export const SocketProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const token = getToken() || localStorage.getItem('token');
-
     const socketUrl = import.meta.env.VITE_APP_ENVIRONMENT === 'production'
       ? import.meta.env.VITE_APP_PRODUCTION_API_URL
       : import.meta.env.VITE_APP_LOCAL_API_URL;
-    const newSocket = io(socketUrl, {
-      auth: { token }
-    });
+
+    // Connect WITHOUT auth token
+    const newSocket = io(socketUrl, { auth: {} });
 
     newSocket.on('connect', () => {
-      console.log('Socket connected');
       setConnected(true);
       newSocket.emit('game:subscribe');
     });
+    newSocket.on('disconnect', () => setConnected(false));
 
-    newSocket.on('disconnect', () => {
-      console.log('Socket disconnected');
-      setConnected(false);
-    });
-
-    // Game events — always spread prev to preserve betsEnabled and other fields
+    // Game events (same as SocketContext)
     newSocket.on('game:waiting', (data) => {
       if (goTimeoutRef.current) clearTimeout(goTimeoutRef.current);
       setGameState((prev) => ({
@@ -106,10 +80,7 @@ export const SocketProvider = ({ children }) => {
     });
 
     newSocket.on('game:tick', (data) => {
-      setGameState((prev) => ({
-        ...prev,
-        multiplier: data.multiplier,
-      }));
+      setGameState((prev) => ({ ...prev, multiplier: data.multiplier }));
     });
 
     newSocket.on('game:crash', (data) => {
@@ -127,13 +98,6 @@ export const SocketProvider = ({ children }) => {
       setGameState((prev) => ({ ...prev, countdown: data.secondsLeft }));
     });
 
-    // Real-time notification
-    newSocket.on('notification:new', (data) => {
-      setNewNotification(data);
-      setUnreadNotifCount((c) => c + 1);
-      playNotificationSound();
-    });
-
     newSocket.on('settings:bets-enabled', (data) => {
       setGameState((prev) => {
         const next = { ...prev, betsEnabled: data.enabled };
@@ -149,16 +113,8 @@ export const SocketProvider = ({ children }) => {
       });
     });
 
-    // Real-time active user count
     newSocket.on('app:active-users', (data) => {
       setActiveUserCount(data.count);
-    });
-
-    // Real-time wallet balance update (admin approved/adjusted balance)
-    newSocket.on('wallet:balance-updated', (data) => {
-      if (data?.walletBalance != null) {
-        updateBalanceRef.current(data.walletBalance);
-      }
     });
 
     setSocket(newSocket);
@@ -167,10 +123,22 @@ export const SocketProvider = ({ children }) => {
       if (goTimeoutRef.current) clearTimeout(goTimeoutRef.current);
       newSocket.disconnect();
     };
-  }, [user]);
+  }, []);
 
+  // Provide through the same SocketContext so useSocket() works in child components
   return (
-    <SocketContext.Provider value={{ socket, connected, gameState, newNotification, clearNotification, unreadNotifCount, setUnreadNotifCount, activeUserCount }}>
+    <SocketContext.Provider
+      value={{
+        socket,
+        connected,
+        gameState,
+        activeUserCount,
+        newNotification: null,
+        clearNotification: () => {},
+        unreadNotifCount: 0,
+        setUnreadNotifCount: () => {},
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );

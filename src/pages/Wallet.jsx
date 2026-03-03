@@ -219,6 +219,16 @@ const Wallet = () => {
               <h2 className="text-2xl font-bold mt-1 text-green-300">₹{earningsInfo.earnings.toFixed(2)}</h2>
             </div>
           </div>
+          <div className="flex gap-4 mt-3 pt-3 border-t border-white/20">
+            <div>
+              <p className="text-xs text-primary-200">Remaining Deposit</p>
+              <p className="text-sm font-bold">₹{(earningsInfo.depositBalance || 0).toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-primary-200">Earnings</p>
+              <p className="text-sm font-bold">₹{(earningsInfo.earningsBalance || 0).toFixed(2)}</p>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}

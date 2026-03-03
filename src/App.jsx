@@ -22,6 +22,7 @@ import Terms from './pages/Terms';
 import Bonus from './pages/Bonus';
 import PaymentInfo from './pages/PaymentInfo';
 import WalletRecords from './pages/WalletRecords';
+import AviatorPublic from './pages/AviatorPublic';
 
 // Admin Pages
 import AdminLogin from './admin/Login';
@@ -116,6 +117,25 @@ const LandingRoute = ({ children }) => {
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-700"></div>
       </div>
     );
+  }
+
+  return children;
+};
+
+// Public Game Route — redirect authenticated users to the real game page
+const PublicGameRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-700"></div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/aviator" replace />;
   }
 
   return children;
@@ -221,6 +241,11 @@ function AppRoutes() {
           </SubAdminBlock>
         } />
       </Route>
+
+      {/* Public Aviator (view-only for unauthenticated users) */}
+      <Route path="/aviator-public" element={
+        <PublicGameRoute><AviatorPublic /></PublicGameRoute>
+      } />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

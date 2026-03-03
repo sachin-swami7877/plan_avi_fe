@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DatePickerModal from '../components/DatePickerModal';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -16,12 +17,15 @@ import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
 import { adminAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { HiOutlineEllipsisVertical } from 'react-icons/hi2';
+import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
 const Users = () => {
   const navigate = useNavigate();
   const { role: myRole } = useAuth();
+  const { socket } = useSocket();
   const isFullAdmin = myRole === 'admin';
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,36 +49,95 @@ const Users = () => {
   const [earningsModal, setEarningsModal] = useState({ open: false, userId: null, userName: '', currentEarnings: 0, walletBalance: 0 });
   const [earningsAmount, setEarningsAmount] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const [period, setPeriod] = useState('all');
-  const [customFrom, setCustomFrom] = useState('');
-  const [customTo, setCustomTo] = useState('');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [expandedUser, setExpandedUser] = useState(null);
 
-  useEffect(() => { fetchUsers(); }, [period, search]);
+  // Tabs & pagination
+  const [statusTab, setStatusTab] = useState('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Filters
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [activeOnly, setActiveOnly] = useState(false);
+
+  // Active user IDs (online tracking)
+  const [activeUserIds, setActiveUserIds] = useState(new Set());
+  const fetchIdRef = useRef(0);
+
+  // Fetch active user IDs
+  useEffect(() => {
+    adminAPI.getActiveUsers().then(res => {
+      setActiveUserIds(new Set(res.data.ids));
+    }).catch(() => {});
+  }, []);
+
+  // Listen for real-time active user updates
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (data) => setActiveUserIds(new Set(data.ids));
+    socket.on('app:active-user-ids', handler);
+    return () => socket.off('app:active-user-ids', handler);
+  }, [socket]);
+
+  useEffect(() => { fetchUsers(); }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly]);
 
   const fetchUsers = async () => {
+    const thisId = ++fetchIdRef.current;
     setLoading(true);
     try {
-      const params = {};
-      if (period === 'custom' && customFrom && customTo) {
-        params.from = customFrom;
-        params.to = customTo;
-      } else if (period !== 'all') {
-        params.period = period;
-      }
+      const params = { page, limit: 30 };
+      if (startDate) params.from = startDate;
+      if (endDate) params.to = endDate;
+      if (statusTab === 'deactivated') params.status = 'inactive';
+      else if (statusTab === 'blocked') params.status = 'blocked';
+      else if (statusTab === 'online') params.status = 'active';
+      if (roleFilter !== 'all') params.role = roleFilter;
       if (search.trim()) params.search = search.trim();
       const res = await adminAPI.getUsers(params);
-      setUsers(res.data);
+      if (thisId !== fetchIdRef.current) return; // ignore stale response
+      const data = res.data;
+      let userList = data.users || data;
+      // For "online" tab or activeOnly toggle, filter to only currently connected users
+      if (statusTab === 'online' || activeOnly) {
+        userList = userList.filter(u => activeUserIds.has(u._id));
+      }
+      setUsers(userList);
+      setTotalPages(data.totalPages || 1);
+      setTotalCount(data.totalCount || userList.length);
     }
-    catch (error) { console.error('Failed to fetch users:', error); }
-    finally { setLoading(false); }
+    catch (error) { if (thisId === fetchIdRef.current) console.error('Failed to fetch users:', error); }
+    finally { if (thisId === fetchIdRef.current) setLoading(false); }
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
     setSearch(searchInput);
+  };
+
+  const handleDateApply = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+    setPage(1);
+    setDatePickerOpen(false);
+  };
+
+  const getDateRangeLabel = () => {
+    if (!startDate && !endDate) return 'All Time';
+    const today = new Date().toISOString().slice(0, 10);
+    if (startDate === today && endDate === today) return 'Today';
+    if (startDate && endDate && startDate !== endDate) {
+      return `${new Date(startDate + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – ${new Date(endDate + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    }
+    if (startDate) {
+      return new Date(startDate + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    return 'Select date range';
   };
 
   const handleCreateUser = async (e) => {
@@ -196,70 +259,98 @@ const Users = () => {
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-gray-800">Users</h1>
-          <span className="bg-primary-100 text-primary-700 text-sm font-bold px-2.5 py-0.5 rounded-full">{users.length}</span>
+          <span className="bg-primary-100 text-primary-700 text-sm font-bold px-2.5 py-0.5 rounded-full">{totalCount}</span>
         </div>
         {isFullAdmin && <button onClick={() => setShowCreateModal(true)} className="bg-primary-700 text-white px-4 py-2 rounded-lg hover:bg-primary-800">+ Create User</button>}
       </div>
 
-      {/* Period Filter */}
-      <div className="flex gap-2 mb-3 flex-wrap">
+      {/* Status Tabs */}
+      <div className="flex gap-1 mb-3 bg-white rounded-xl p-1 shadow-sm overflow-x-auto">
         {[
-          { value: 'all', label: 'All Time' },
-          { value: 'today', label: 'Today' },
-          { value: '7days', label: 'Last 7 Days' },
-          { value: '30days', label: 'Last 1 Month' },
-        ].map((p) => (
+          { value: 'all', label: 'All' },
+          { value: 'online', label: 'Online', dot: true },
+          { value: 'deactivated', label: 'Deactivated' },
+          { value: 'blocked', label: 'Blocked' },
+        ].map(tab => (
           <button
-            key={p.value}
-            onClick={() => setPeriod(p.value)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              period === p.value
+            key={tab.value}
+            onClick={() => { setStatusTab(tab.value); setPage(1); }}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+              statusTab === tab.value
                 ? 'bg-primary-600 text-white shadow-sm'
-                : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
-            {p.label}
+            {tab.dot && <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />}
+            {tab.label}
+            {tab.value === 'online' && <span className="text-xs opacity-75">({activeUserIds.size})</span>}
           </button>
         ))}
+      </div>
+
+      {/* Date Range Filter */}
+      <div className="flex gap-2 mb-3 items-center flex-wrap">
         <button
-          onClick={() => setPeriod('custom')}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-            period === 'custom'
-              ? 'bg-primary-600 text-white shadow-sm'
-              : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
-          }`}
+          type="button"
+          onClick={() => setDatePickerOpen(true)}
+          className="px-4 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50"
         >
-          Custom
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {getDateRangeLabel()}
         </button>
-        {period !== 'all' && (
+        {(startDate || endDate) && (
           <button
-            onClick={() => { setPeriod('all'); setCustomFrom(''); setCustomTo(''); }}
-            className="px-4 py-1.5 rounded-full text-sm font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+            onClick={() => { setStartDate(null); setEndDate(null); setPage(1); }}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
           >
             Clear
           </button>
         )}
       </div>
 
-      {period === 'custom' && (
-        <div className="flex gap-2 mb-3 items-end flex-wrap">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">From</label>
-            <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">To</label>
-            <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-          </div>
-          <button
-            onClick={() => { if (customFrom && customTo) fetchUsers(); }}
-            disabled={!customFrom || !customTo}
-            className="px-4 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+      <DatePickerModal
+        open={datePickerOpen}
+        onClose={() => setDatePickerOpen(false)}
+        onApply={handleDateApply}
+        initialStartDate={startDate}
+        initialEndDate={endDate}
+        rangeMode={true}
+      />
+
+      {/* Role Filter & Active Toggle */}
+      <div className="flex gap-3 mb-3 items-center flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <label className="text-sm text-gray-600 font-medium">Role:</label>
+          <select
+            value={roleFilter}
+            onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            Apply
-          </button>
+            <option value="all">All Roles</option>
+            <option value="user">User</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
-      )}
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={activeOnly}
+              onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors" />
+            <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4" />
+          </div>
+          <span className="text-sm text-gray-600 font-medium flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+            Active Only
+          </span>
+        </label>
+      </div>
 
       {/* Search */}
       <form onSubmit={handleSearch} className="flex gap-2 mb-4">
@@ -288,8 +379,13 @@ const Users = () => {
                 className="w-full p-4 flex items-center justify-between text-left"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary-700 font-bold">{user.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                  <div className="relative flex-shrink-0">
+                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                      <span className="text-primary-700 font-bold">{user.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                    </div>
+                    {activeUserIds.has(user._id) && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -406,6 +502,27 @@ const Users = () => {
           );
         })}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 py-4 mt-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="flex items-center gap-1 px-4 py-2 rounded-lg bg-white text-gray-700 text-sm font-medium shadow-sm disabled:opacity-40"
+          >
+            <IoChevronBack /> Prev
+          </button>
+          <span className="text-sm text-gray-500">{page}/{totalPages}</span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="flex items-center gap-1 px-4 py-2 rounded-lg bg-white text-gray-700 text-sm font-medium shadow-sm disabled:opacity-40"
+          >
+            Next <IoChevronForward />
+          </button>
+        </div>
+      )}
 
       {/* 3-dot Menu */}
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>

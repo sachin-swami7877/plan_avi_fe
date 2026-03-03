@@ -20,7 +20,6 @@ const Settings = () => {
   const [termsGeneral, setTermsGeneral] = useState('');
   const [dummyUserCount, setDummyUserCount] = useState(10);
   const [layout, setLayout] = useState(false);
-  const [ludoGameDurationMinutes, setLudoGameDurationMinutes] = useState(30);
   const [ludoDummyRunningBattles, setLudoDummyRunningBattles] = useState(15);
   // Ludo tiered commission
   const [ludoCommTier1Max, setLudoCommTier1Max] = useState(250);
@@ -61,7 +60,6 @@ const Settings = () => {
       setTermsGeneral(d.termsGeneral || '');
       setDummyUserCount(d.dummyUserCount || 10);
       setLayout(d.layout ?? false);
-      setLudoGameDurationMinutes(d.ludoGameDurationMinutes ?? 30);
       setLudoDummyRunningBattles(d.ludoDummyRunningBattles ?? 15);
       setLudoCommTier1Max(d.ludoCommTier1Max ?? 250);
       setLudoCommTier1Pct(d.ludoCommTier1Pct ?? 10);
@@ -148,12 +146,7 @@ const Settings = () => {
   };
 
   const handleSaveLudo = async () => {
-    const duration = Number(ludoGameDurationMinutes);
     const dummy = Number(ludoDummyRunningBattles);
-    if (duration < 5 || duration > 120) {
-      toast.error('Duration: enter between 5 and 120 minutes');
-      return;
-    }
     if (dummy < 0 || dummy > 50) {
       toast.error('Dummy battles: enter between 0 and 50');
       return;
@@ -161,7 +154,6 @@ const Settings = () => {
     setSaving(true);
     try {
       await adminAPI.updateSettings({
-        ludoGameDurationMinutes: duration,
         ludoDummyRunningBattles: dummy,
         ludoCommTier1Max: Number(ludoCommTier1Max),
         ludoCommTier1Pct: Number(ludoCommTier1Pct),
@@ -327,21 +319,8 @@ const Settings = () => {
       </Section>
 
       {/* Ludo */}
-      <Section title="Ludo Game" desc="Game duration and dummy running battles shown on user app.">
+      <Section title="Ludo Game" desc="Dummy running battles and commission tiers.">
         <div className="space-y-3">
-          <div className="flex flex-wrap items-end gap-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Expiration time (minutes)</label>
-              <input
-                type="number"
-                min={5}
-                max={120}
-                value={ludoGameDurationMinutes}
-                onChange={(e) => setLudoGameDurationMinutes(e.target.value)}
-                className="w-28 px-3 py-2 border rounded-lg text-sm"
-              />
-            </div>
-          </div>
           <div className="flex flex-wrap items-end gap-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Dummy Ludo live battles (running battles)</label>
