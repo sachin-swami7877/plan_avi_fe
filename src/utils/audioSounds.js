@@ -11,6 +11,22 @@ winAudio.preload = 'auto';
 notificationAudio.preload = 'auto';
 planeRunAudio.preload = 'auto';
 
+// Mobile browsers block audio until a user gesture (tap/click).
+// Unlock all audio elements on first interaction so useEffect-triggered
+// sounds (crash, planerun) work on phones.
+let unlocked = false;
+function unlockAudio() {
+  if (unlocked) return;
+  unlocked = true;
+  [crashAudio, winAudio, notificationAudio, planeRunAudio].forEach((a) => {
+    a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
+  });
+  document.removeEventListener('touchstart', unlockAudio, true);
+  document.removeEventListener('click', unlockAudio, true);
+}
+document.addEventListener('touchstart', unlockAudio, true);
+document.addEventListener('click', unlockAudio, true);
+
 // Debounce guard — prevent same sound playing twice within 500ms
 const lastPlayed = {};
 
