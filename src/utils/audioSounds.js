@@ -1,24 +1,20 @@
 // Audio sound effects using preloaded Audio elements
 
-const crashAudio = new Audio('/crash.wav');
 const winAudio = new Audio('/sounds/win.wav');
 const notificationAudio = new Audio('/sounds/notification.wav');
-const planeRunAudio = new Audio('/planrun.mp3');
 
 // Preload
-crashAudio.preload = 'auto';
 winAudio.preload = 'auto';
 notificationAudio.preload = 'auto';
-planeRunAudio.preload = 'auto';
 
 // Mobile browsers block audio until a user gesture (tap/click).
 // Unlock all audio elements on first interaction so useEffect-triggered
-// sounds (crash, planerun) work on phones.
+// sounds work on phones.
 let unlocked = false;
 function unlockAudio() {
   if (unlocked) return;
   unlocked = true;
-  [crashAudio, winAudio, notificationAudio, planeRunAudio].forEach((a) => {
+  [winAudio, notificationAudio].forEach((a) => {
     a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
   });
   document.removeEventListener('touchstart', unlockAudio, true);
@@ -40,10 +36,6 @@ function playSound(audio, key) {
   } catch (e) { /* ignore */ }
 }
 
-export function playCrashSound() {
-  playSound(crashAudio, 'crash');
-}
-
 export function playWinSound() {
   playSound(winAudio, 'win');
 }
@@ -52,16 +44,3 @@ export function playNotificationSound() {
   playSound(notificationAudio, 'notification');
 }
 
-export function playPlaneRunSound() {
-  try {
-    planeRunAudio.currentTime = 0;
-    planeRunAudio.play().catch(() => {});
-  } catch (e) { /* ignore */ }
-}
-
-export function stopPlaneRunSound() {
-  try {
-    planeRunAudio.pause();
-    planeRunAudio.currentTime = 0;
-  } catch (e) { /* ignore */ }
-}

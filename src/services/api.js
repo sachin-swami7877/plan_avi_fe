@@ -139,6 +139,11 @@ export const ludoAPI = {
   submitRoomCode: (matchId, roomCode) => api.post('/ludo/submit-room-code', { matchId, roomCode }),
   joinMatch: (matchId) => api.post('/ludo/join', { matchId }),
   cancelMatch: (matchId) => api.post('/ludo/cancel', { matchId }),
+  requestCancel: (matchId, reasonCode, customReason) =>
+    api.post('/ludo/request-cancel', { matchId, reasonCode, customReason }),
+  acceptCancel: (matchId) => api.post('/ludo/accept-cancel', { matchId }),
+  submitWinDispute: (formData) =>
+    api.post('/ludo/submit-win-dispute', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   checkMatchWaiting: (id) => api.get(`/ludo/match/${id}/check`),
   getMyMatches: (params) => api.get('/ludo/my-matches', { params }),
   getMatchDetail: (id) => api.get(`/ludo/match/${id}`),
@@ -200,6 +205,8 @@ export const adminAPI = {
   getLudoResultRequests: (params) => api.get('/admin/ludo/result-requests', { params }),
   approveLudoResultRequest: (id, winnerId, note) => api.put(`/admin/ludo/result-requests/${id}/approve`, { winnerId, note }),
   rejectLudoResultRequest: (id, note) => api.put(`/admin/ludo/result-requests/${id}/reject`, { note }),
+  resolveDispute: (id, body) =>
+    api.put(`/admin/ludo/result-requests/${id}/resolve-dispute`, body),
   deleteLudoMatches: (ids) => api.post('/admin/ludo/matches/bulk-delete', { ids }),
 };
 

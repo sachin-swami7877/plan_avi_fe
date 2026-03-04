@@ -178,10 +178,10 @@ const AdminUserDetail = () => {
               </div>
             ) : (
               <div className="flex items-center justify-center gap-1">
-                <p className="font-bold text-teal-600">₹{Math.max(0, (user.walletBalance || 0) - (user.totalDeposited || 0)).toFixed(2)}</p>
+                <p className="font-bold text-teal-600">₹{(user.earningsBalance || 0).toFixed(2)}</p>
                 <button
                   onClick={() => {
-                    setEarningsValue(String(Math.max(0, (user.walletBalance || 0) - (user.totalDeposited || 0)).toFixed(2)));
+                    setEarningsValue(String((user.earningsBalance || 0).toFixed(2)));
                     setEarningsEdit(true);
                   }}
                   className="p-0.5 rounded hover:bg-teal-100 transition-colors"

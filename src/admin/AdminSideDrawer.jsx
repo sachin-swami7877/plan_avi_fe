@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { IoClose } from 'react-icons/io5';
-import { HiOutlineCog6Tooth, HiOutlineGift } from 'react-icons/hi2';
+import { HiOutlineCog6Tooth, HiOutlineGift, HiOutlineUser } from 'react-icons/hi2';
 import { IoLogOutOutline, IoGridOutline } from 'react-icons/io5';
 import { PiSpinnerBallFill } from 'react-icons/pi';
 
@@ -21,6 +21,7 @@ const AdminSideDrawer = ({ open, onClose }) => {
     { to: '/admin/bonus-records', label: 'Bonus Records', icon: HiOutlineGift, subAdmin: false },
     { to: '/admin/ludo', label: 'Ludo', icon: IoGridOutline, subAdmin: true },
     { to: '/admin/settings', label: 'Settings', icon: HiOutlineCog6Tooth, subAdmin: false },
+    { to: '/admin/profile', label: 'Your Profile', icon: HiOutlineUser, subAdmin: true },
   ];
 
   // Filter links based on role

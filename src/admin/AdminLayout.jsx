@@ -17,6 +17,7 @@ const AdminLayout = () => {
   const { socket } = useSocket();
   const location = useLocation();
   const [pendingCount, setPendingCount] = useState({ deposits: 0, withdrawals: 0 });
+  const [ludoAlertCount, setLudoAlertCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // All available menu items
@@ -29,8 +30,9 @@ const AdminLayout = () => {
     { path: '/admin/spinner-records', label: 'Spinner Records', icon: '🎡', subAdmin: false },
     { path: '/admin/notifications', label: 'Notifications', icon: '🔔', subAdmin: true },
     { path: '/admin/bonus-records', label: 'Bonus Records', icon: '🎁', subAdmin: false },
-    { path: '/admin/ludo', label: 'Ludo', icon: '🎲', subAdmin: true },
+    { path: '/admin/ludo', label: 'Ludo', icon: '🎲', badge: ludoAlertCount, subAdmin: true },
     { path: '/admin/settings', label: 'Settings', icon: '⚙️', subAdmin: false },
+    { path: '/admin/profile', label: 'Your Profile', icon: '👤', subAdmin: true },
   ];
 
   // Filter items based on role (managers see only subAdmin:true items)
@@ -46,7 +48,7 @@ const AdminLayout = () => {
     { path: '/admin/money', label: 'Money', icon: HiOutlineCurrencyRupee, activeIcon: HiCurrencyRupee, badge: pendingCount.deposits + pendingCount.withdrawals, subAdmin: true },
     { path: '/admin/bets', label: 'Bets', icon: IoBarChartOutline, activeIcon: IoBarChart, subAdmin: false },
     { path: '/admin/notifications', label: 'Alerts', icon: IoNotificationsOutline, activeIcon: IoNotifications, subAdmin: true },
-    { path: '/admin/ludo', label: 'Ludo', icon: IoGridOutline, activeIcon: IoGrid, subAdmin: true },
+    { path: '/admin/ludo', label: 'Ludo', icon: IoGridOutline, activeIcon: IoGrid, badge: ludoAlertCount, subAdmin: true },
   ];
 
   const mobileNavItems = isManager
@@ -65,6 +67,7 @@ const AdminLayout = () => {
     });
     socket.on('admin:ludo-result-request', (data) => {
       toast(`Ludo result submitted by ${data?.userName || 'a player'}`, { icon: '🎲', duration: 5000 });
+      setLudoAlertCount(prev => prev + 1);
       playNotificationSound();
     });
     return () => {
@@ -73,6 +76,13 @@ const AdminLayout = () => {
       socket.off('admin:ludo-result-request');
     };
   }, [socket]);
+
+  // Reset ludo badge when admin visits the ludo page
+  useEffect(() => {
+    if (location.pathname.startsWith('/admin/ludo')) {
+      setLudoAlertCount(0);
+    }
+  }, [location.pathname]);
 
   const isActive = (path) => {
     if (path === '/admin') return location.pathname === '/admin';

@@ -26,24 +26,24 @@ const Terms = () => {
           <div className="space-y-4">
             {/* Payment Instructions — same as wallet popup */}
             <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-              <h4 className="font-bold text-emerald-800 mb-2 text-base">💰 जमा कैसे करें (Deposit)</h4>
+              <h4 className="font-bold text-emerald-800 mb-2 text-base">💰 Deposit</h4>
               <p className="text-gray-700 text-sm leading-relaxed mb-2">
-                सबसे पहले अपने UPI ऐप में जाकर यहाँ दिए गए QR कोड या UPI नंबर पर कम से कम ₹100 जमा करें। उसके बाद यहाँ वापस आकर जमा वाले भाग में UTR नंबर, स्क्रीनशॉट और कितनी राशि जमा की है — यह सब भरें। यह जानकारी एडमिन तक पहुँचेगी और एडमिन राशि वॉलेट में जोड़ देगा। मदद के लिए दिए गए सपोर्ट नंबर पर भी कॉल कर सकते हैं।
+                सबसे पहले अपने UPI ऐप में जाकर यहाँ दिए गए QR कोड या UPI नंबर पर कम से कम ₹100 deposite करें। उसके बाद यहाँ वापस आकर deposit वाले भाग में UTR नंबर, स्क्रीनशॉट और कितनी राशि जमा की है — यह सब भरें। यह जानकारी एडमिन तक पहुँचेगी और एडमिन amount वॉलेट में add kar देगा। help के लिए दिए गए सपोर्ट नंबर पर भी कॉल कर सकते हैं।
               </p>
          
             </div>
 
             <div className="bg-rose-50 rounded-xl p-4 border border-rose-100">
-              <h4 className="font-bold text-rose-800 mb-2 text-base">🏦 निकासी कैसे करें (Withdrawal)</h4>
+              <h4 className="font-bold text-rose-800 mb-2 text-base">🏦 Withdrawal</h4>
               <p className="text-gray-700 text-sm leading-relaxed mb-2">
-                जितनी राशि निकालनी है, कम से कम ₹100, उसका अनुरोध भेज दें। एडमिन दिए गए UPI नंबर पर राशि भेज देगा। मदद के लिए सपोर्ट से भी संपर्क कर सकते हैं।
+                जितनी राशि निकालनी है, कम से कम ₹100, उसका अनुरोध भेज दें। एडमिन दिए गए UPI नंबर पर amount भेज देगा। Help के लिए सपोर्ट से भी संपर्क कर सकते हैं।
               </p>
        
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
               <p className="text-amber-800 font-semibold text-sm leading-relaxed">
-                ⚠️ एक दिन में अधिकतम 2 बार निकासी का अनुरोध कर सकते हैं।
+                ⚠️ एक दिन में अधिकतम 2 बार withdrawal का अनुरोध कर सकते हैं।
               </p>
         
             </div>

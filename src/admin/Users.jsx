@@ -226,7 +226,7 @@ const Users = () => {
   };
 
   const openEarningsModal = (user) => {
-    const currentEarnings = Math.max(0, (user.walletBalance || 0) - (user.totalDeposited || 0));
+    const currentEarnings = user.earningsBalance || 0;
     setEarningsModal({ open: true, userId: user._id, userName: user.name, currentEarnings, walletBalance: user.walletBalance || 0 });
     setEarningsAmount(String(currentEarnings.toFixed(2)));
   };
@@ -406,14 +406,24 @@ const Users = () => {
                 <div className="px-4 pb-4 border-t border-gray-100 pt-3">
                   <div className="grid grid-cols-3 gap-3 mb-3">
                     <div className="bg-green-50 rounded-lg p-3">
-                      <p className="text-xs text-gray-500">Balance</p>
+                      <p className="text-xs text-gray-500">Total Balance</p>
                       <p className="text-lg font-bold text-green-600">₹{user.walletBalance?.toFixed(2)}</p>
                     </div>
-                    <div className="bg-emerald-50 rounded-lg p-3">
-                      <p className="text-xs text-gray-500">Earnings</p>
-                      <p className="text-lg font-bold text-emerald-600">₹{Math.max(0, (user.walletBalance || 0) - (user.totalDeposited || 0)).toFixed(2)}</p>
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500">Remaining Deposit</p>
+                      <p className="text-lg font-bold text-blue-600">₹{(user.depositBalance || 0).toFixed(2)}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-emerald-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500">Withdrawable Earnings</p>
+                      <p className="text-lg font-bold text-emerald-600">₹{(user.earningsBalance || 0).toFixed(2)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="bg-gray-50 rounded-lg p-3 flex-1">
+                      <p className="text-xs text-gray-500">Total Deposited</p>
+                      <p className="text-sm font-bold text-gray-700">₹{(user.totalDeposited || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3 flex-1">
                       <p className="text-xs text-gray-500">Joined</p>
                       <p className="text-sm font-medium text-gray-700">{new Date(user.createdAt).toLocaleDateString()}</p>
                     </div>

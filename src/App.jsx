@@ -39,6 +39,7 @@ import AdminBonusRecords from './admin/BonusRecords';
 import AdminLudo from './admin/AdminLudo';
 import AdminUserDetail from './admin/AdminUserDetail';
 import AdminUserTransactions from './admin/AdminUserTransactions';
+import AdminProfile from './admin/AdminProfile';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -234,6 +235,7 @@ function AppRoutes() {
         <Route path="spinner-records" element={<AdminSpinnerRecords />} />
         <Route path="bonus-records" element={<AdminBonusRecords />} />
         <Route path="ludo" element={<AdminLudo />} />
+        <Route path="profile" element={<AdminProfile />} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="settings" element={
           <SubAdminBlock>
