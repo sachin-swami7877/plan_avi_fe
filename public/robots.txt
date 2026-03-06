@@ -1,4 +1,17 @@
 User-agent: *
 Allow: /
+Allow: /about
+Allow: /how-to-play
+Allow: /contact
+Allow: /privacy
+Allow: /login
+Allow: /aviator-public
+
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /dashboard
+Disallow: /wallet
+Disallow: /profile
+Disallow: /history
 
 Sitemap: https://rushkroludo.com/sitemap.xml

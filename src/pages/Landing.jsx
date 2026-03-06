@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { settingsAPI } from '../services/api';
 
 // Single layout fetch (avoids duplicate calls from React Strict Mode / remounts)
@@ -695,6 +696,14 @@ const Landing = () => {
 
 /* ────────── Shayri Landing Page ────────── */
 const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpen }) => {
+  // SEO: Block Google from indexing the Shayri/motivational layout
+  const noIndexHelmet = (
+    <Helmet>
+      <meta name="robots" content="noindex, nofollow" />
+      <title>Shayri.com – Beautiful Hindi & Urdu Shayari Collection</title>
+    </Helmet>
+  );
+
   const quotes = [
     { text: "रौशनी तेरी ढूँढती है अँधेरा अपना, तू रहा खामोश सितारों की तरह।", author: "Jaun Elia" },
     { text: "दिल की बात कहने का सलीका नहीं आता, सोचता रहता हूँ तुझे क्या कहूँ।", author: "Jaun Elia" },
@@ -716,6 +725,7 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a14] via-[#1a1a2e] to-[#0f0f1e] text-white overflow-x-hidden">
+      {noIndexHelmet}
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_50%,rgba(139,92,246,0.12),transparent)]" />

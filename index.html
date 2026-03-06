@@ -41,11 +41,20 @@
       "url": "https://rushkroludo.com",
       "logo": "https://rushkroludo.com/icon-512.png",
       "description": "Play Ludo King, Aviator crash game & Lucky Spinner. Win real cash with instant UPI withdrawals.",
-      "sameAs": ["https://www.instagram.com/rushkroludo/"]
+      "sameAs": [
+        "https://www.instagram.com/rushkroludo/",
+        "https://t.me/rushkroludo"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "url": "https://rushkroludo.com/contact",
+        "availableLanguage": ["Hindi", "English"]
+      }
     }
     </script>
 
-    <!-- Structured Data - WebSite -->
+    <!-- Structured Data - WebSite with Sitelinks -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -55,9 +64,125 @@
       "url": "https://rushkroludo.com"
     }
     </script>
+
+    <!-- Structured Data - FAQ (for rich snippets in Google) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "RushkroLudo kya hai?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "RushkroLudo ek online gaming platform hai jahan aap Ludo King, Aviator crash game aur Lucky Spinner khel kar real cash jeet sakte hain. Instant UPI withdrawal available hai."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "RushkroLudo pe kaise khele?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "rushkroludo.com par jaayein, sign up karein, wallet mein UPI se paise add karein, aur Ludo, Aviator ya Spinner khel kar real cash jeetein."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "RushkroLudo se paise kaise nikale?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Wallet section mein jaayein, Withdraw par click karein, apna UPI ID aur amount daalein. Paise turant aapke bank account mein aa jaayenge."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Kya RushkroLudo safe hai?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Haan, RushkroLudo 100% safe hai. Secure payment gateways aur encrypted connections use hote hain aapke data aur paise ki suraksha ke liye."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "RushkroLudo ka Instagram kya hai?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "RushkroLudo ka official Instagram handle @rushkroludo hai. Follow karein latest updates, offers aur gaming tips ke liye: instagram.com/rushkroludo"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data - MobileApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MobileApplication",
+      "name": "RushkroLudo",
+      "operatingSystem": "Android, iOS",
+      "applicationCategory": "GameApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.5",
+        "ratingCount": "500"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- SEO: Visible to crawlers that don't execute JS -->
+    <noscript>
+      <div style="max-width:800px;margin:0 auto;padding:40px 20px;font-family:sans-serif;color:#fff;background:#0a0a14;">
+        <h1>RushkroLudo – Play Ludo, Aviator & Win Real Cash</h1>
+        <p>RushkroLudo is India's #1 online gaming platform. Play Ludo King, Aviator crash game and Lucky Spinner to win real cash with instant UPI withdrawals.</p>
+
+        <h2>Our Games</h2>
+        <ul>
+          <li><strong>Ludo King</strong> – Play classic Ludo board game with real players. Create rooms, bet and compete for real money.</li>
+          <li><strong>Aviator Crash Game</strong> – Watch the multiplier rise and cash out before it crashes. Fast rounds, big wins!</li>
+          <li><strong>Lucky Spinner</strong> – Spin the wheel of fortune and win instant cash prizes every day.</li>
+        </ul>
+
+        <h2>Why Choose RushkroLudo?</h2>
+        <ul>
+          <li>100% Safe & Secure Platform</li>
+          <li>Instant UPI Withdrawals – Google Pay, PhonePe, Paytm</li>
+          <li>Play with real players from across India</li>
+          <li>24/7 Customer Support</li>
+          <li>Refer & Earn Bonus Program</li>
+        </ul>
+
+        <h2>How to Play on RushkroLudo</h2>
+        <ol>
+          <li>Visit rushkroludo.com and sign up</li>
+          <li>Add money via UPI</li>
+          <li>Choose Ludo, Aviator or Spinner</li>
+          <li>Win real cash and withdraw instantly</li>
+        </ol>
+
+        <h2>Follow RushkroLudo</h2>
+        <p>Instagram: <a href="https://www.instagram.com/rushkroludo/" style="color:#a78bfa;">@rushkroludo</a></p>
+        <p>Telegram: <a href="https://t.me/rushkroludo" style="color:#a78bfa;">@rushkroludo</a></p>
+        <p>Website: <a href="https://rushkroludo.com" style="color:#a78bfa;">rushkroludo.com</a></p>
+
+        <nav style="margin-top:30px;">
+          <a href="/about" style="color:#a78bfa;margin-right:15px;">About Us</a>
+          <a href="/how-to-play" style="color:#a78bfa;margin-right:15px;">How to Play</a>
+          <a href="/contact" style="color:#a78bfa;margin-right:15px;">Contact Us</a>
+          <a href="/privacy" style="color:#a78bfa;margin-right:15px;">Privacy Policy</a>
+          <a href="/login" style="color:#a78bfa;">Login</a>
+        </nav>
+      </div>
+    </noscript>
   </body>
 </html>

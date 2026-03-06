@@ -24,6 +24,10 @@ import Bonus from './pages/Bonus';
 import PaymentInfo from './pages/PaymentInfo';
 import WalletRecords from './pages/WalletRecords';
 import AviatorPublic from './pages/AviatorPublic';
+import AboutUs from './pages/AboutUs';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import HowToPlay from './pages/HowToPlay';
+import ContactUs from './pages/ContactUs';
 
 // Admin Pages
 import AdminLogin from './admin/Login';
@@ -170,6 +174,10 @@ function AppRoutes() {
       <Route path="/find-email" element={
         <PublicRoute><FindEmail /></PublicRoute>
       } />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/how-to-play" element={<HowToPlay />} />
+      <Route path="/contact" element={<ContactUs />} />
 
       {/* Protected User Routes */}
       <Route path="/dashboard" element={
