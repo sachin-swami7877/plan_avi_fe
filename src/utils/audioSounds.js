@@ -1,46 +1,43 @@
 // Audio sound effects using preloaded Audio elements
 
-const winAudio = new Audio('/sounds/win.wav');
-const notificationAudio = new Audio('/sounds/notification.wav');
+let winAudio = null;
+let notificationAudio = null;
 
-// Preload
-winAudio.preload = 'auto';
-notificationAudio.preload = 'auto';
-
-// Mobile browsers block audio until a user gesture (tap/click).
-// Unlock all audio elements on first interaction so useEffect-triggered
-// sounds work on phones.
-let unlocked = false;
-function unlockAudio() {
-  if (unlocked) return;
-  unlocked = true;
-  [winAudio, notificationAudio].forEach((a) => {
-    a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
-  });
-  document.removeEventListener('touchstart', unlockAudio, true);
-  document.removeEventListener('click', unlockAudio, true);
+// Lazy-init audio elements on first actual play (avoids browser autoplay issues)
+function getWinAudio() {
+  if (!winAudio) {
+    winAudio = new Audio('/sounds/win.wav');
+    winAudio.preload = 'auto';
+  }
+  return winAudio;
 }
-document.addEventListener('touchstart', unlockAudio, true);
-document.addEventListener('click', unlockAudio, true);
+function getNotificationAudio() {
+  if (!notificationAudio) {
+    notificationAudio = new Audio('/sounds/notification.wav');
+    notificationAudio.preload = 'auto';
+  }
+  return notificationAudio;
+}
 
 // Debounce guard — prevent same sound playing twice within 500ms
 const lastPlayed = {};
 
-function playSound(audio, key) {
+function playSound(audioGetter, key) {
   try {
     const now = Date.now();
     if (lastPlayed[key] && now - lastPlayed[key] < 500) return;
     lastPlayed[key] = now;
+    const audio = audioGetter();
     audio.currentTime = 0;
     audio.play().catch(() => {});
   } catch (e) { /* ignore */ }
 }
 
 export function playWinSound() {
-  playSound(winAudio, 'win');
+  playSound(getWinAudio, 'win');
 }
 
 export function playNotificationSound() {
-  playSound(notificationAudio, 'notification');
+  playSound(getNotificationAudio, 'notification');
 }
 

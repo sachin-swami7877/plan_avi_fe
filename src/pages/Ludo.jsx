@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { ludoAPI } from '../services/api';
-import { playWinSound } from '../utils/audioSounds';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
@@ -123,7 +122,6 @@ export default function Ludo() {
   const [exitingIds, setExitingIds] = useState(new Set());
   const [enteringIds, setEnteringIds] = useState(new Set());
   const dummyBattlesRef = useRef([]);
-  const myWaitingRef = useRef(null);
   const [tick, setTick] = useState(() => Date.now());
   const [rulesOpen, setRulesOpen] = useState(false);
 
@@ -134,7 +132,6 @@ export default function Ludo() {
 
   // Keep refs in sync (avoids stale closure)
   useEffect(() => { dummyBattlesRef.current = dummyBattles; }, [dummyBattles]);
-  useEffect(() => { myWaitingRef.current = myWaitingList; }, [myWaitingList]);
 
   // Generate dummy running battles; roll 5 out / 5 in every 30 sec with animation
   useEffect(() => {
@@ -254,7 +251,6 @@ export default function Ludo() {
   useEffect(() => {
     if (!socket) return;
     socket.on('ludo:match-live', () => {
-      if (myWaitingRef.current?.length > 0) playWinSound();
       fetchMyMatches();
       fetchWaitingList();
       fetchRunningBattles();

@@ -91,7 +91,8 @@ const Users = () => {
     const thisId = ++fetchIdRef.current;
     setLoading(true);
     try {
-      const params = { page, limit: 30 };
+      const isOnlineMode = statusTab === 'online' || activeOnly;
+      const params = { page: isOnlineMode ? 1 : page, limit: isOnlineMode ? 500 : 30 };
       if (startDate) params.from = startDate;
       if (endDate) params.to = endDate;
       if (statusTab === 'deactivated') params.status = 'inactive';
@@ -105,11 +106,18 @@ const Users = () => {
       let userList = data.users || data;
       // For "online" tab or activeOnly toggle, filter to only currently connected users
       if (statusTab === 'online' || activeOnly) {
+        // Client-side filter — also fix pagination to reflect filtered count
         userList = userList.filter(u => activeUserIds.has(u._id));
       }
       setUsers(userList);
-      setTotalPages(data.totalPages || 1);
-      setTotalCount(data.totalCount || userList.length);
+      // When filtering online client-side, override pagination with actual filtered count
+      if (statusTab === 'online' || activeOnly) {
+        setTotalPages(1);
+        setTotalCount(userList.length);
+      } else {
+        setTotalPages(data.totalPages || 1);
+        setTotalCount(data.totalCount || userList.length);
+      }
     }
     catch (error) { if (thisId === fetchIdRef.current) console.error('Failed to fetch users:', error); }
     finally { if (thisId === fetchIdRef.current) setLoading(false); }
@@ -274,7 +282,7 @@ const Users = () => {
         ].map(tab => (
           <button
             key={tab.value}
-            onClick={() => { setStatusTab(tab.value); setPage(1); }}
+            onClick={() => { setStatusTab(tab.value); setPage(1); if (tab.value === 'online') setActiveOnly(false); }}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
               statusTab === tab.value
                 ? 'bg-primary-600 text-white shadow-sm'
@@ -334,22 +342,24 @@ const Users = () => {
             <option value="admin">Admin</option>
           </select>
         </div>
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <div className="relative">
-            <input
-              type="checkbox"
-              checked={activeOnly}
-              onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }}
-              className="sr-only peer"
-            />
-            <div className="w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors" />
-            <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4" />
-          </div>
-          <span className="text-sm text-gray-600 font-medium flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-            Active Only
-          </span>
-        </label>
+        {statusTab !== 'online' && (
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={activeOnly}
+                onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors" />
+              <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4" />
+            </div>
+            <span className="text-sm text-gray-600 font-medium flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+              Active Only
+            </span>
+          </label>
+        )}
       </div>
 
       {/* Search */}

@@ -160,6 +160,7 @@ export const ludoAPI = {
 // Admin API
 export const adminAPI = {
   getDashboard: (params) => api.get('/admin/dashboard', { params }),
+  getPendingCounts: () => api.get('/admin/pending-counts'),
   getUsers: (params) => api.get('/admin/users', { params }),
   getActiveUsers: () => api.get('/admin/active-users'),
   createUser: (data) => api.post('/admin/users', data),

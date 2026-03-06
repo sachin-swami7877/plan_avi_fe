@@ -11,6 +11,7 @@ import { HiOutlineBars3 } from 'react-icons/hi2';
 import AdminSideDrawer from './AdminSideDrawer';
 import toast from 'react-hot-toast';
 import { playNotificationSound } from '../utils/audioSounds';
+import { adminAPI } from '../services/api';
 
 const AdminLayout = () => {
   const { user, logout, isAdmin, isSubAdmin, role } = useAuth();
@@ -55,6 +56,15 @@ const AdminLayout = () => {
     ? allMobileNavItems.filter(item => item.subAdmin)
     : allMobileNavItems;
 
+  // Fetch initial pending counts from API
+  useEffect(() => {
+    adminAPI.getPendingCounts().then(res => {
+      const { pendingDeposits, pendingWithdrawals, pendingLudo } = res.data;
+      setPendingCount({ deposits: pendingDeposits || 0, withdrawals: pendingWithdrawals || 0 });
+      setLudoAlertCount(pendingLudo || 0);
+    }).catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!socket) return;
     socket.on('admin:wallet-request', () => {
@@ -70,17 +80,25 @@ const AdminLayout = () => {
       setLudoAlertCount(prev => prev + 1);
       playNotificationSound();
     });
+    socket.on('admin:new-user', (data) => {
+      toast(`New user registered: ${data?.phone || data?.email || 'Unknown'}`, { icon: '🆕', duration: 5000 });
+      playNotificationSound();
+    });
     return () => {
       socket.off('admin:wallet-request');
       socket.off('admin:withdrawal-request');
       socket.off('admin:ludo-result-request');
+      socket.off('admin:new-user');
     };
   }, [socket]);
 
-  // Reset ludo badge when admin visits the ludo page
+  // Reset badges when admin visits the respective pages
   useEffect(() => {
     if (location.pathname.startsWith('/admin/ludo')) {
       setLudoAlertCount(0);
+    }
+    if (location.pathname.startsWith('/admin/money')) {
+      setPendingCount({ deposits: 0, withdrawals: 0 });
     }
   }, [location.pathname]);
 
