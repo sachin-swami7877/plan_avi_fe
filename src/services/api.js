@@ -86,9 +86,7 @@ export const adminAuthAPI = {
 export const walletAPI = {
   getPaymentInfo: () => api.get('/wallet/payment-info'),
   getBalance: () => api.get('/wallet/balance'),
-  deposit: (formData) => api.post('/wallet/deposit', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
+  deposit: (formData) => api.post('/wallet/deposit', formData),
   withdraw: (amount) => api.post('/wallet/withdraw', { amount }),
   getWithdrawalInfo: () => api.get('/wallet/withdrawal-info'),
   getHistory: (params) => api.get('/wallet/history', { params }),
@@ -145,12 +143,12 @@ export const ludoAPI = {
     api.post('/ludo/request-cancel', { matchId, reasonCode, customReason }),
   acceptCancel: (matchId) => api.post('/ludo/accept-cancel', { matchId }),
   submitWinDispute: (formData) =>
-    api.post('/ludo/submit-win-dispute', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    api.post('/ludo/submit-win-dispute', formData),
   checkMatchWaiting: (id) => api.get(`/ludo/match/${id}/check`),
   getMyMatches: (params) => api.get('/ludo/my-matches', { params }),
   getMatchDetail: (id) => api.get(`/ludo/match/${id}`),
   submitResult: (matchId, formData) =>
-    api.post('/ludo/submit-result', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    api.post('/ludo/submit-result', formData),
   submitLoss: (matchId) => api.post('/ludo/submit-loss', { matchId }),
   cancelAsLoss: (matchId) => api.post('/ludo/cancel-as-loss', { matchId }),
   checkExpiry: (matchId) => api.post('/ludo/check-expiry', { matchId }),
@@ -195,9 +193,7 @@ export const adminAPI = {
   getSpinnerRecords: (params) => api.get('/admin/spinner-records', { params }),
   getSettings: () => api.get('/admin/settings'),
   updateSettings: (data) => api.put('/admin/settings', data),
-  uploadQrCode: (formData) => api.post('/admin/settings/qr', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
+  uploadQrCode: (formData) => api.post('/admin/settings/qr', formData),
   getBonusRecords: (params) => api.get('/admin/bonus-records', { params }),
   getUserTransactions: (id, params) => api.get(`/admin/users/${id}/transactions`, { params }),
   // Ludo admin
