@@ -125,6 +125,7 @@ const Landing = () => {
   const [layoutEnabled, setLayoutEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [whatsAppNumber, setWhatsAppNumber] = useState('');
+  const [supportPhone, setSupportPhone] = useState('');
   const [landingPlayers, setLandingPlayers] = useState('1000+');
   const [landingWonToday, setLandingWonToday] = useState('₹1K+');
 
@@ -144,12 +145,12 @@ const Landing = () => {
         if (!cancelled) setLoading(false);
       });
 
-    // Fetch WhatsApp support number
+    // Fetch support numbers
     settingsAPI.getSupport()
       .then((res) => {
         if (!cancelled) {
-          const num = res.data?.supportWhatsApp || res.data?.supportPhone || '';
-          setWhatsAppNumber(num);
+          setWhatsAppNumber(res.data?.supportWhatsApp || res.data?.supportPhone || '');
+          setSupportPhone(res.data?.supportPhone || res.data?.supportWhatsApp || '');
         }
       })
       .catch(() => {});
@@ -627,32 +628,18 @@ const Landing = () => {
                 <Link to="/support" className="hover:text-white/70 transition-colors">Support</Link>
                 <span>18+ | Play Responsibly</span>
               </div>
-              <a href="tel:+919166821247" className="flex items-center gap-1.5 hover:text-white/70 transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                +91 91668 21247
-              </a>
+              {supportPhone && (
+                <a href={`tel:${supportPhone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-1.5 hover:text-white/70 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  {supportPhone}
+                </a>
+              )}
             </div>
           </div>
         </div>
       </footer>
-
-      {/* ═══ Floating Support Phone Icon ═══ */}
-      <a
-        href="tel:+919166821247"
-        className="fixed right-4 z-[9999] w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
-        style={{
-          bottom: '24px',
-          animation: 'bounce 2s infinite',
-          boxShadow: '0 6px 25px rgba(59, 130, 246, 0.5)',
-        }}
-        aria-label="Call Support"
-      >
-        <svg className="w-7 h-7" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-        </svg>
-      </a>
 
       {/* ═══ Floating WhatsApp Icon ═══ */}
       {whatsAppNumber && (
@@ -661,7 +648,7 @@ const Landing = () => {
           rel="noopener noreferrer"
           className="fixed right-4 z-[9999] w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
           style={{
-            bottom: '96px',
+            bottom: '24px',
             animation: 'bounce 2s infinite',
             animationDelay: '0.3s',
             boxShadow: '0 6px 25px rgba(37, 211, 102, 0.5)',
