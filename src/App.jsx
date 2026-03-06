@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { Toaster } from 'react-hot-toast';
+import usePushNotifications from './hooks/usePushNotifications';
 
 // User Pages
 import Login from './pages/Login';
@@ -154,6 +155,9 @@ const SubAdminBlock = ({ children }) => {
 };
 
 function AppRoutes() {
+  const { user } = useAuth();
+  usePushNotifications(user);
+
   return (
     <Routes>
       {/* Public Routes */}

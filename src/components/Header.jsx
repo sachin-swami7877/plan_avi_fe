@@ -61,7 +61,7 @@ const Header = () => {
             </Link>
             <div className="flex items-center gap-1.5">
               <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400' : 'bg-red-400'}`} />
-              {activeUserCount > 0 && (
+              {(isAdmin || isSubAdmin) && activeUserCount > 0 && (
                 <span className="text-emerald-400/70 text-[10px] font-medium">{activeUserCount}</span>
               )}
               <span className="text-emerald-400 font-semibold text-sm">

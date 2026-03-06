@@ -14,6 +14,7 @@
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.3.7",
     "axios": "^1.13.4",
+    "firebase": "^12.10.0",
     "gsap": "^3.14.2",
     "js-cookie": "^3.0.5",
     "pixi.js": "^8.16.0",

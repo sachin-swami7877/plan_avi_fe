@@ -117,6 +117,8 @@ export const notificationAPI = {
   getUnreadCount: () => api.get('/notifications/unread-count'),
   markAsRead: (id) => api.put(`/notifications/${id}/read`),
   markAllAsRead: () => api.put('/notifications/read-all'),
+  saveFcmToken: (token) => api.post('/notifications/fcm-token', { token }),
+  removeFcmToken: (token) => api.delete('/notifications/fcm-token', { data: { token } }),
 };
 
 // Bonus API
