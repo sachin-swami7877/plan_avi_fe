@@ -18,20 +18,29 @@ self.addEventListener('fetch', (e) => {
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
-  let data;
+  let payload;
   try {
-    data = event.data.json();
+    payload = event.data.json();
   } catch {
     return;
   }
 
-  const notification = data.notification || {};
-  const title = notification.title || 'RushkroLudo';
+  // Support both notification-based and data-only messages
+  const notification = payload.notification || {};
+  const dataFields = payload.data || {};
+  const title = notification.title || dataFields.title || 'RushkroLudo';
+  const body = notification.body || dataFields.body || '';
+
+  // Skip if no meaningful content
+  if (!title && !body) return;
+
   const options = {
-    body: notification.body || '',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    data: data.data || {},
+    body,
+    icon: self.location.origin + '/icon-192.png',
+    badge: self.location.origin + '/icon-192.png',
+    data: dataFields,
+    tag: dataFields.type || 'general',
+    renotify: true,
     vibrate: [200, 100, 200],
   };
 
