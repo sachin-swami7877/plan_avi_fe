@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminAPI } from '../services/api';
+import { useSocket } from '../context/SocketContext';
 
 const WithdrawalRequests = () => {
+  const { socket } = useSocket();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
@@ -9,6 +11,18 @@ const WithdrawalRequests = () => {
   useEffect(() => {
     fetchRequests();
   }, [filter]);
+
+  // Auto-refresh on new withdrawal socket events
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewRequest = () => {
+      if (filter === 'pending' || filter === 'all') fetchRequests();
+    };
+    socket.on('admin:withdrawal-request', handleNewRequest);
+    return () => {
+      socket.off('admin:withdrawal-request', handleNewRequest);
+    };
+  }, [socket, filter]);
 
   const fetchRequests = async () => {
     try {

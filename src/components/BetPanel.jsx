@@ -19,7 +19,7 @@ const BetPanel = () => {
   const runningStartTimeRef = useRef(null);
   const prevStatusRef = useRef(null);
 
-  const { gameState } = useSocket();
+  const { gameState, socket } = useSocket();
   const { user, updateBalance } = useAuth();
 
   // Track when game starts running and disable Place Bet for 3 seconds
@@ -105,17 +105,34 @@ const BetPanel = () => {
 
   const handleCashOut = async () => {
     setLoading(true);
-    try {
-      const res = await gameAPI.cashOut();
-      setHasBet(false);
-      setCurrentBet(null);
-      updateBalance(res.data.newBalance);
-      setMessage(`Won ₹${res.data.profit.toFixed(2)} @ ${res.data.cashOutMultiplier}x`);
-      playWinSound();
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Failed to cash out');
-    } finally {
-      setLoading(false);
+    // Fast path: use socket if available
+    if (socket?.connected) {
+      socket.emit('game:cashout', (res) => {
+        if (res?.success) {
+          setHasBet(false);
+          setCurrentBet(null);
+          updateBalance(res.newBalance);
+          setMessage(`Won ₹${res.profit.toFixed(2)} @ ${res.cashOutMultiplier}x`);
+          playWinSound();
+        } else {
+          setMessage(res?.error || 'Failed to cash out');
+        }
+        setLoading(false);
+      });
+    } else {
+      // Fallback: HTTP
+      try {
+        const res = await gameAPI.cashOut();
+        setHasBet(false);
+        setCurrentBet(null);
+        updateBalance(res.data.newBalance);
+        setMessage(`Won ₹${res.data.profit.toFixed(2)} @ ${res.data.cashOutMultiplier}x`);
+        playWinSound();
+      } catch (error) {
+        setMessage(error.response?.data?.message || 'Failed to cash out');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

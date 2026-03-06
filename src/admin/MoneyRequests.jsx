@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminAPI } from '../services/api';
+import { useSocket } from '../context/SocketContext';
 import { IoChevronBack, IoChevronForward, IoChevronDown } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
 const PER_PAGE = 25;
 
 const MoneyRequests = () => {
+  const { socket } = useSocket();
   const [tab, setTab] = useState('deposit');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,20 @@ const MoneyRequests = () => {
   useEffect(() => {
     fetchRequests();
   }, [fetchRequests]);
+
+  // Auto-refresh on new deposit/withdrawal socket events
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewRequest = () => {
+      if (filter === 'pending' || filter === 'all') fetchRequests();
+    };
+    socket.on('admin:wallet-request', handleNewRequest);
+    socket.on('admin:withdrawal-request', handleNewRequest);
+    return () => {
+      socket.off('admin:wallet-request', handleNewRequest);
+      socket.off('admin:withdrawal-request', handleNewRequest);
+    };
+  }, [socket, filter, fetchRequests]);
 
   const handleProcess = async (id, action) => {
     setProcessing(`${id}-${action}`);
