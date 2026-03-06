@@ -150,7 +150,7 @@ export const ludoAPI = {
   getMatchDetail: (id) => api.get(`/ludo/match/${id}`),
   submitResult: (matchId, formData) =>
     api.post('/ludo/submit-result', formData),
-  submitLoss: (matchId) => api.post('/ludo/submit-loss', { matchId }),
+  submitLoss: (formData) => api.post('/ludo/submit-loss', formData),
   cancelAsLoss: (matchId) => api.post('/ludo/cancel-as-loss', { matchId }),
   checkExpiry: (matchId) => api.post('/ludo/check-expiry', { matchId }),
   getWaitingList: () => api.get('/ludo/waiting-list'),

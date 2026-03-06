@@ -70,6 +70,7 @@ export default function LudoMatchDetail() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [lossConfirmOpen, setLossConfirmOpen] = useState(false);
   const [submittingLoss, setSubmittingLoss] = useState(false);
+  const [lossScreenshotFile, setLossScreenshotFile] = useState(null);
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [submittingRoomCode, setSubmittingRoomCode] = useState(false);
   const [whatsAppNumber, setWhatsAppNumber] = useState(null);
@@ -334,11 +335,16 @@ export default function LudoMatchDetail() {
 
   const handleSubmitLoss = async () => {
     if (!match?._id) return;
+    if (!lossScreenshotFile) { toast.error('Screenshot upload करें'); return; }
     setLossConfirmOpen(false);
     setSubmittingLoss(true);
     try {
-      await ludoAPI.submitLoss(match._id);
+      const formData = new FormData();
+      formData.append('matchId', match._id);
+      formData.append('screenshot', lossScreenshotFile);
+      await ludoAPI.submitLoss(formData);
       toast.success('Loss submitted. Admin will decide winner.');
+      setLossScreenshotFile(null);
       await loadMatch();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed');
@@ -1135,10 +1141,20 @@ export default function LudoMatchDetail() {
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
             <h3 className="font-bold text-gray-800 mb-2">😔 क्या आप सच में हार गए?</h3>
             <p className="text-gray-600 text-sm mb-1">यह request Admin को भेजी जाएगी।</p>
-            <p className="text-red-600 text-sm font-semibold mb-4">एक बार submit करने के बाद बदला नहीं जा सकता।</p>
+            <p className="text-red-600 text-sm font-semibold mb-3">एक बार submit करने के बाद बदला नहीं जा सकता।</p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Screenshot upload करें *</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setLossScreenshotFile(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-gray-500 file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-orange-100 file:text-orange-700"
+              />
+              {lossScreenshotFile && <p className="text-xs text-orange-600 mt-1">✓ {lossScreenshotFile.name}</p>}
+            </div>
             <div className="flex gap-2">
-              <button onClick={() => setLossConfirmOpen(false)} className="flex-1 py-2 rounded-lg border border-gray-300 text-gray-700">वापस जाएं</button>
-              <button onClick={handleSubmitLoss} disabled={submittingLoss} className="flex-1 py-2 rounded-lg bg-orange-500 text-white font-medium disabled:opacity-50">{submittingLoss ? '...' : 'हाँ, मैं हार गया'}</button>
+              <button onClick={() => { setLossConfirmOpen(false); setLossScreenshotFile(null); }} className="flex-1 py-2 rounded-lg border border-gray-300 text-gray-700">वापस जाएं</button>
+              <button onClick={handleSubmitLoss} disabled={submittingLoss || !lossScreenshotFile} className="flex-1 py-2 rounded-lg bg-orange-500 text-white font-medium disabled:opacity-50">{submittingLoss ? '...' : 'हाँ, मैं हार गया'}</button>
             </div>
           </div>
         </div>
