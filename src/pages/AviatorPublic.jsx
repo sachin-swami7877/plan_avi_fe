@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { PublicSocketProvider } from '../context/PublicSocketContext';
 import { useSocket } from '../context/SocketContext';
 import GameGraph from '../components/GameGraph';
@@ -12,6 +13,12 @@ const AviatorPublicContent = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] pb-8 overflow-x-hidden">
+      <Helmet>
+        <title>Aviator Crash Game – Play & Win Real Cash | RushkroLudo</title>
+        <meta name="description" content="Play Aviator crash game on RushkroLudo. Watch the multiplier rise, cash out before it crashes and win real money. Live rounds, instant UPI withdrawals!" />
+        <meta name="keywords" content="Aviator game, aviator crash game, RushkroLudo aviator, rushkroludo, Rushkro Ludo, Rush Kro Ludo, RushLudo, rushludo, Rush Ludo, RushKro, rushkro, Ludo Rush, aviator game kaise khele, aviator game real money, crash game India, online aviator game" />
+        <link rel="canonical" href="https://rushkroludo.com/aviator-public" />
+      </Helmet>
       {/* Simplified header with login CTA */}
       <header className="bg-[#0d0d12] border-b border-white/10 px-3 py-2.5 sticky top-0 z-40">
         <div className="max-w-md mx-auto flex justify-between items-center">

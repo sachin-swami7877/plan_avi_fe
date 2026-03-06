@@ -7,7 +7,7 @@ const AboutUs = () => {
       <Helmet>
         <title>About Us - RushkroLudo | Play Ludo, Aviator & Win Real Cash</title>
         <meta name="description" content="RushkroLudo is India's trusted online gaming platform. Play Ludo King, Aviator crash game & Lucky Spinner. Win real cash with instant UPI withdrawals." />
-        <meta name="keywords" content="RushkroLudo about, online gaming India, Ludo game, Aviator game, real cash games, UPI withdrawal" />
+        <meta name="keywords" content="RushkroLudo about, rushkroludo, Rushkro Ludo, Rush Kro Ludo, RushLudo, rushludo, Rush Ludo, rush ludo, RushKro, rushkro, Ludo Rush, LudoRush, online gaming India, Ludo game, Aviator game, real cash games, UPI withdrawal, ludo paisa wala game, online ludo khelo, rushkroludo kya hai" />
         <link rel="canonical" href="https://rushkroludo.com/about" />
       </Helmet>
 

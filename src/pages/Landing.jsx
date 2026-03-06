@@ -228,6 +228,12 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-[#07070d] text-white overflow-x-hidden relative">
+      <Helmet>
+        <title>RushkroLudo – Play Ludo, Aviator & Win Real Cash | India's #1 Gaming Platform</title>
+        <meta name="description" content="RushkroLudo (Rush Kro Ludo) – Play Ludo King, Aviator crash game & Lucky Spinner. Win real cash with instant UPI withdrawals. Join now and start winning!" />
+        <meta name="keywords" content="RushkroLudo, rushkroludo, Rushkro Ludo, rushkro ludo, Rush Kro Ludo, rush kro ludo, RushKroLudo, Rush Ludo, rush ludo, RushLudo, rushludo, Rush Kro, rushkro, RushKro, Ludo Rush, ludo rush, LudoRush, ludorush, Rushkroludo game, rushkro ludo game, rush ludo game, Ludo King, Aviator game, Lucky Spinner, win real cash, online gaming, UPI withdrawal, crash game, ludo online, real money ludo, online ludo game India, rushkroludo kya hai, rushkroludo kaise khele, ludo paisa wala game, online ludo khelo, paisa kamao game, ludo khelo paise jeeto, aviator game kaise khele, real cash ludo app" />
+        <link rel="canonical" href="https://rushkroludo.com/" />
+      </Helmet>
       {/* ═══ Background layers ═══ */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(220,38,38,0.15),transparent)]" />

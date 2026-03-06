@@ -7,7 +7,7 @@ const HowToPlay = () => {
       <Helmet>
         <title>How to Play - RushkroLudo | Ludo, Aviator & Spinner Guide</title>
         <meta name="description" content="Learn how to play Ludo King, Aviator crash game and Lucky Spinner on RushkroLudo. Step-by-step guide to win real cash. Download and start playing now!" />
-        <meta name="keywords" content="how to play RushkroLudo, Ludo King guide, Aviator game tips, how to win real cash, online Ludo, crash game guide" />
+        <meta name="keywords" content="how to play RushkroLudo, rushkroludo, Rushkro Ludo, Rush Kro Ludo, RushLudo, rushludo, Rush Ludo, RushKro, rushkro, Ludo Rush, LudoRush, Ludo King guide, Aviator game tips, how to win real cash, online Ludo, crash game guide, rushkroludo kaise khele, ludo kaise khele, aviator game kaise khele" />
         <link rel="canonical" href="https://rushkroludo.com/how-to-play" />
       </Helmet>
 

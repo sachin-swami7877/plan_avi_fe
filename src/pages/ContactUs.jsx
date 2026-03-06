@@ -7,7 +7,7 @@ const ContactUs = () => {
       <Helmet>
         <title>Contact Us - RushkroLudo | Customer Support</title>
         <meta name="description" content="Contact RushkroLudo for any queries, payment issues, or game support. Reach us via Instagram, Telegram, or in-app support. We're here to help 24/7." />
-        <meta name="keywords" content="RushkroLudo contact, customer support, help, payment issue, game support" />
+        <meta name="keywords" content="RushkroLudo contact, rushkroludo, Rushkro Ludo, Rush Kro Ludo, RushLudo, rushludo, Rush Ludo, RushKro, rushkro, Ludo Rush, LudoRush, customer support, help, payment issue, game support, rushkroludo helpline, rushkroludo complaint, rushkroludo customer care" />
         <link rel="canonical" href="https://rushkroludo.com/contact" />
       </Helmet>
 

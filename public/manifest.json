@@ -1,7 +1,9 @@
 {
-  "name": "RushkroLudo – Play & Win",
+  "name": "RushkroLudo – Play Ludo, Aviator & Win Real Cash",
   "short_name": "RushkroLudo",
-  "description": "Play Ludo, Aviator & Lucky Spinner. Win real cash!",
+  "description": "RushkroLudo (Rush Kro Ludo) – Play Ludo King, Aviator crash game & Lucky Spinner. Win real cash with instant UPI withdrawals. India's #1 online gaming platform.",
+  "categories": ["games", "entertainment"],
+  "lang": "en-IN",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
