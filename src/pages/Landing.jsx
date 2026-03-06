@@ -612,7 +612,11 @@ const Landing = () => {
               <span className="font-extrabold">Rushkro<span className="text-red-500">Ludo</span></span>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-sm text-white/40">
-              <div className="flex items-center gap-6">
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                <Link to="/about" className="hover:text-white/70 transition-colors">About</Link>
+                <Link to="/how-to-play" className="hover:text-white/70 transition-colors">How to Play</Link>
+                <Link to="/contact" className="hover:text-white/70 transition-colors">Contact</Link>
+                <Link to="/privacy" className="hover:text-white/70 transition-colors">Privacy</Link>
                 <Link to="/terms" className="hover:text-white/70 transition-colors">Terms</Link>
                 <Link to="/support" className="hover:text-white/70 transition-colors">Support</Link>
                 <span>18+ | Play Responsibly</span>
