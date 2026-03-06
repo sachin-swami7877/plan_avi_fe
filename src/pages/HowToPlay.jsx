@@ -56,7 +56,7 @@ const HowToPlay = () => {
               <h2 className="text-2xl font-bold text-white mb-4">&#x1F3B2; How to Play Ludo King</h2>
               <ul className="space-y-2 list-disc list-inside">
                 <li>Select Ludo from the home screen</li>
-                <li>Choose your bet amount (minimum Rs 10)</li>
+                <li>Choose your bet amount (minimum Rs 50)</li>
                 <li>Get matched with a real player</li>
                 <li>Roll the dice and move your tokens to the finish</li>
                 <li>Winner takes the prize pool!</li>
@@ -109,7 +109,7 @@ const HowToPlay = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-white">What is the minimum deposit?</h3>
-                  <p>You can start playing with as low as Rs 10.</p>
+                  <p>Minimum deposit is Rs 100. Aviator bets start from Rs 10 and Ludo bets start from Rs 50.</p>
                 </div>
                 <div>
                   <h3 className="font-bold text-white">How fast are withdrawals?</h3>
