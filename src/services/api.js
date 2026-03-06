@@ -131,6 +131,7 @@ export const settingsAPI = {
   getTerms: () => api.get('/settings/terms'),
   getLayout: () => api.get('/settings/layout'),
   getUserWarning: () => api.get('/settings/user-warning'),
+  getLandingStats: () => api.get('/settings/landing-stats'),
 };
 
 // Ludo API (user)

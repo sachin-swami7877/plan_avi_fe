@@ -124,6 +124,8 @@ const Landing = () => {
   const [layoutEnabled, setLayoutEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [whatsAppNumber, setWhatsAppNumber] = useState('');
+  const [landingPlayers, setLandingPlayers] = useState('1000+');
+  const [landingWonToday, setLandingWonToday] = useState('₹1K+');
 
   useEffect(() => {
     let cancelled = false;
@@ -147,6 +149,16 @@ const Landing = () => {
         if (!cancelled) {
           const num = res.data?.supportWhatsApp || res.data?.supportPhone || '';
           setWhatsAppNumber(num);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch landing page stats
+    settingsAPI.getLandingStats()
+      .then((res) => {
+        if (!cancelled) {
+          setLandingPlayers(res.data?.landingPlayers || '1000+');
+          setLandingWonToday(res.data?.landingWonToday || '₹1K+');
         }
       })
       .catch(() => {});
@@ -415,8 +427,8 @@ const Landing = () => {
       <section className="relative z-10 border-y border-white/5 bg-white/[0.02]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           {[
-            { val: '10K+', label: 'Players' },
-            { val: '₹50L+', label: 'Won Today' },
+            { val: landingPlayers, label: 'Players' },
+            { val: landingWonToday, label: 'Won Today' },
             { val: '3 Games', label: 'Ludo, Aviator, Spinner' },
             { val: '24/7', label: 'Live Games' },
           ].map((s, i) => (

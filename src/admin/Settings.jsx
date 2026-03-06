@@ -31,6 +31,8 @@ const Settings = () => {
   const [withdrawalsEnabled, setWithdrawalsEnabled] = useState(true);
   const [withdrawalDisableReason, setWithdrawalDisableReason] = useState('');
   // Ludo toggle & warning
+  const [landingPlayers, setLandingPlayers] = useState('1000+');
+  const [landingWonToday, setLandingWonToday] = useState('₹1K+');
   const [ludoEnabled, setLudoEnabled] = useState(true);
   const [ludoDisableReason, setLudoDisableReason] = useState('');
   const [ludoWarning, setLudoWarning] = useState('');
@@ -60,6 +62,8 @@ const Settings = () => {
       setTermsGeneral(d.termsGeneral || '');
       setDummyUserCount(d.dummyUserCount || 10);
       setLayout(d.layout ?? false);
+      setLandingPlayers(d.landingPlayers || '1000+');
+      setLandingWonToday(d.landingWonToday || '₹1K+');
       setLudoDummyRunningBattles(d.ludoDummyRunningBattles ?? 15);
       setLudoCommTier1Max(d.ludoCommTier1Max ?? 250);
       setLudoCommTier1Pct(d.ludoCommTier1Pct ?? 10);
@@ -488,6 +492,30 @@ const Settings = () => {
           <p className="text-xs text-gray-500 mt-1">Current: {dummyUserCount} dummy users (33% will cashout)</p>
         </div>
         <button onClick={handleSaveDummyUsers} disabled={saving} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save Dummy User Count</button>
+      </Section>
+
+      {/* Landing Page Stats */}
+      <Section title="Landing Page Stats" desc="Update the stats displayed on the landing page (Players count and Won Today amount).">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Players Count</label>
+            <input type="text" value={landingPlayers} onChange={(e) => setLandingPlayers(e.target.value)} placeholder="e.g. 1000+" className="w-full px-3 py-2 border rounded-lg text-sm" />
+            <p className="text-xs text-gray-500 mt-1">Shown as "Players" on landing page</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Won Today</label>
+            <input type="text" value={landingWonToday} onChange={(e) => setLandingWonToday(e.target.value)} placeholder="e.g. ₹1K+" className="w-full px-3 py-2 border rounded-lg text-sm" />
+            <p className="text-xs text-gray-500 mt-1">Shown as "Won Today" on landing page</p>
+          </div>
+        </div>
+        <button onClick={async () => {
+          setSaving(true);
+          try {
+            await adminAPI.updateSettings({ landingPlayers, landingWonToday });
+            toast.success('Landing page stats saved successfully');
+          } catch { toast.error('Failed to save landing page stats'); }
+          finally { setSaving(false); }
+        }} disabled={saving} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save Landing Stats</button>
       </Section>
 
       {/* Landing Page Layout */}
