@@ -3,6 +3,19 @@ import { adminAPI } from '../services/api';
 import { useCountdown } from '../hooks/useCountdown';
 import toast from 'react-hot-toast';
 
+function calcPrize(entry, tiers) {
+  const pool = entry * 2;
+  let commission;
+  if (entry <= (tiers?.tier1Max ?? 250)) {
+    commission = Math.round((pool * (tiers?.tier1Pct ?? 10)) / 100);
+  } else if (entry <= (tiers?.tier2Max ?? 600)) {
+    commission = Math.round((pool * (tiers?.tier2Pct ?? 8)) / 100);
+  } else {
+    commission = Math.round((pool * (tiers?.tier3Pct ?? 5)) / 100);
+  }
+  return pool - commission;
+}
+
 function formatTime12hr(date) {
   if (!date) return '—';
   return new Date(date).toLocaleString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, day: 'numeric', month: 'short', year: 'numeric' });
@@ -96,6 +109,9 @@ export default function AdminLudo() {
   const [disputeResolveMode, setDisputeResolveMode] = useState('refund'); // 'winner' | 'refund'
   const [disputeWinnerId, setDisputeWinnerId] = useState('');
 
+  // Commission tiers (dynamic from settings)
+  const [commTiers, setCommTiers] = useState({ tier1Max: 250, tier1Pct: 10, tier2Max: 600, tier2Pct: 8, tier3Pct: 5 });
+
   // Admin cancel with refund option
   const [adminCancelModal, setAdminCancelModal] = useState(null); // matchId
   const [adminCancelRefund, setAdminCancelRefund] = useState(true);
@@ -145,8 +161,7 @@ export default function AdminLudo() {
       setOpenBattles(waitRes.data?.data || []);
       const live = (liveRes.data?.data || []).filter((m) => !m.hasPendingRequest);
       setRunningBattles(live.map((m) => {
-        const pool = (m.players || []).reduce((s, p) => s + (p.amountPaid || 0), 0) || m.entryAmount * 2;
-        const prize = Math.round(pool * 0.9);
+        const prize = calcPrize(m.entryAmount, commTiers);
         return { ...m, prize, playingFor: m.entryAmount };
       }));
     } catch (err) {
@@ -156,6 +171,19 @@ export default function AdminLudo() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    adminAPI.getSettings().then((r) => {
+      const d = r.data || {};
+      setCommTiers({
+        tier1Max: d.ludoCommTier1Max ?? 250,
+        tier1Pct: d.ludoCommTier1Pct ?? 10,
+        tier2Max: d.ludoCommTier2Max ?? 600,
+        tier2Pct: d.ludoCommTier2Pct ?? 8,
+        tier3Pct: d.ludoCommTier3Pct ?? 5,
+      });
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -202,8 +230,10 @@ export default function AdminLudo() {
     try {
       await adminAPI.approveLudoResultRequest(id, winnerId);
       toast.success('Result approved. Winner credited.');
+      // Immediately remove from local list so it disappears instantly
+      setRequests((prev) => prev.filter((r) => r._id !== id));
       setDetailMatch(null);
-      fetchRequests();
+      await fetchRequests();
       if (activeTab === 'records') fetchRecords();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to approve');
@@ -217,7 +247,8 @@ export default function AdminLudo() {
     try {
       await adminAPI.rejectLudoResultRequest(id);
       toast.success('Result rejected');
-      fetchRequests();
+      setRequests((prev) => prev.filter((r) => r._id !== id));
+      await fetchRequests();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to reject');
     } finally {
@@ -277,10 +308,12 @@ export default function AdminLudo() {
 
     setResolvingDispute(true);
     try {
-      await adminAPI.resolveDispute(disputeModal.request._id, body);
+      const resolvedId = disputeModal.request._id;
+      await adminAPI.resolveDispute(resolvedId, body);
       toast.success('Dispute resolved. Players notified.');
+      setRequests((prev) => prev.filter((r) => r._id !== resolvedId));
       setDisputeModal(null);
-      fetchRequests();
+      await fetchRequests();
       if (activeTab === 'records') fetchRecords();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to resolve dispute');
@@ -376,7 +409,7 @@ export default function AdminLudo() {
               <div className="space-y-3">
                 {openBattles.map((m) => {
                   const remaining = getRemainingDisplay(m.joinExpiryAt);
-                  const prize = Math.round(2 * m.entryAmount * 0.9);
+                  const prize = calcPrize(m.entryAmount, commTiers);
                   return (
                     <div key={m._id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-200">
                       <div>
@@ -482,7 +515,7 @@ export default function AdminLudo() {
               {records.map((m) => {
                 const statusInfo = getLudoStatusDisplay(m);
                 const waitingRemaining = m.status === 'waiting' && m.joinExpiryAt ? getRemainingDisplay(m.joinExpiryAt) : null;
-                const prize = Math.round(2 * m.entryAmount * 0.9);
+                const prize = calcPrize(m.entryAmount, commTiers);
                 const p1 = m.players?.[0]?.userName || '—';
                 const p2 = m.players?.[1]?.userName || '—';
                 const isWaiting = m.status === 'waiting';
@@ -706,7 +739,7 @@ export default function AdminLudo() {
             {/* Basic info */}
             <div className="bg-gray-50 rounded-xl px-4 py-3 space-y-1 mb-3">
               <p className="text-sm text-gray-700">Room: <strong>{detailMatch.roomCode || '—'}</strong></p>
-              <p className="text-sm text-gray-700">Entry: <strong>₹{detailMatch.entryAmount}</strong> • Prize: <strong>₹{Math.round(2 * detailMatch.entryAmount * 0.9)}</strong></p>
+              <p className="text-sm text-gray-700">Entry: <strong>₹{detailMatch.entryAmount}</strong> • Prize: <strong>₹{calcPrize(detailMatch.entryAmount, commTiers)}</strong></p>
               <p className="text-sm text-gray-700">Players: {detailMatch.players?.map((p) => p.userName).join(' vs ')}</p>
               {winnerName && <p className="text-sm text-green-700 font-semibold">🏆 Winner: {winnerName}</p>}
               {detailMatch.gameStartedAt && <p className="text-xs text-gray-500">Started: {formatTime12hr(detailMatch.gameStartedAt)}</p>}
@@ -905,7 +938,7 @@ export default function AdminLudo() {
                   const decision = refundDecisions[player.userId] || { refundType: 'full', customAmount: '', winPercent: '70' };
                   const isCanceller = player.userId?.toString() === disputeModal.match?.cancelRequestedBy?.toString();
                   const entryAmt = player.amountPaid || disputeModal.match?.entryAmount || 0;
-                  const prize = Math.round(2 * (disputeModal.match?.entryAmount || 0) * 0.9);
+                  const prize = calcPrize(disputeModal.match?.entryAmount || 0, commTiers);
                   const winPct = Math.max(0, Math.min(100, Number(decision.winPercent) || 0));
                   // Win portion = X% of one side's entry, after commission deducted proportionally
                   // Simplified: prize/2 * winPct/100  (prize/2 = per-player share after commission)

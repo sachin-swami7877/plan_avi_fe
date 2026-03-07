@@ -8,6 +8,19 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
 
+function calcPrizeFrontend(entry, tiers) {
+  const pool = entry * 2;
+  let commission;
+  if (entry <= (tiers?.tier1Max ?? 250)) {
+    commission = Math.round((pool * (tiers?.tier1Pct ?? 10)) / 100);
+  } else if (entry <= (tiers?.tier2Max ?? 600)) {
+    commission = Math.round((pool * (tiers?.tier2Pct ?? 8)) / 100);
+  } else {
+    commission = Math.round((pool * (tiers?.tier3Pct ?? 5)) / 100);
+  }
+  return pool - commission;
+}
+
 function formatTime12hr(date) {
   if (!date) return '—';
   return new Date(date).toLocaleString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, day: 'numeric', month: 'short' });
@@ -96,6 +109,22 @@ export default function LudoMatchDetail() {
   // Accept cancel modal state
   const [acceptCancelOpen, setAcceptCancelOpen] = useState(false);
   const [acceptingCancel, setAcceptingCancel] = useState(false);
+
+  // Commission tiers for prize calculation
+  const [commTiers, setCommTiers] = useState({ tier1Max: 250, tier1Pct: 10, tier2Max: 600, tier2Pct: 8, tier3Pct: 5 });
+
+  useEffect(() => {
+    ludoAPI.getSettings().then((r) => {
+      const d = r.data || {};
+      setCommTiers({
+        tier1Max: d.ludoCommTier1Max ?? 250,
+        tier1Pct: d.ludoCommTier1Pct ?? 10,
+        tier2Max: d.ludoCommTier2Max ?? 600,
+        tier2Pct: d.ludoCommTier2Pct ?? 8,
+        tier3Pct: d.ludoCommTier3Pct ?? 5,
+      });
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     settingsAPI.getSupport()
@@ -497,7 +526,7 @@ export default function LudoMatchDetail() {
           {(() => {
             const p1 = match.players?.[0];
             const p2 = match.players?.[1];
-            const prize = Math.round(match.entryAmount * 2 * 0.95);
+            const prize = calcPrizeFrontend(match.entryAmount, commTiers);
             const statusColor = isWaiting ? 'bg-amber-500'
               : isLive ? 'bg-green-500'
               : isCancelRequested ? 'bg-orange-500'
