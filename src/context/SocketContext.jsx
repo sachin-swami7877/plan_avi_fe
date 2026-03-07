@@ -167,7 +167,8 @@ export const SocketProvider = ({ children }) => {
       if (goTimeoutRef.current) clearTimeout(goTimeoutRef.current);
       newSocket.disconnect();
     };
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?._id]);
 
   return (
     <SocketContext.Provider value={{ socket, connected, gameState, newNotification, clearNotification, unreadNotifCount, setUnreadNotifCount, activeUserCount }}>

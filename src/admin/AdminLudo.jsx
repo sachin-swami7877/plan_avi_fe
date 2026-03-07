@@ -354,7 +354,7 @@ export default function AdminLudo() {
   };
 
   const selectAllDeletable = () => {
-    const deletable = records.filter((m) => m.status === 'cancelled' || ((m.cancelReason || '').toLowerCase().includes('expired')));
+    const deletable = records.filter((m) => ['cancelled', 'completed'].includes(m.status));
     if (deletable.length === selectedIds.size && deletable.every((m) => selectedIds.has(m._id))) {
       setSelectedIds(new Set());
     } else {
@@ -471,28 +471,27 @@ export default function AdminLudo() {
       {/* ── Records Tab ── */}
       {activeTab === 'records' && (
         <div className="mb-4">
-          <div className="flex gap-2 flex-wrap mb-2">
+          <div className="grid grid-cols-5 gap-1.5 mb-2">
             {[
               { value: '', label: 'All' },
               { value: 'waiting', label: 'Waiting' },
               { value: 'live', label: 'Live' },
-              { value: 'requested', label: 'Requested' },
-              { value: 'completed', label: 'Completed' },
+              { value: 'completed', label: 'Done' },
               { value: 'cancelled', label: 'Cancelled' },
             ].map((f) => (
               <button
                 key={f.value}
                 onClick={() => { setStatusFilter(f.value); setPage(1); setSelectedIds(new Set()); }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${statusFilter === f.value ? 'bg-primary-600 text-white shadow-sm' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                className={`py-1.5 rounded-lg text-xs font-semibold text-center transition-colors ${statusFilter === f.value ? 'bg-primary-600 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
               >
                 {f.label}
               </button>
             ))}
           </div>
-          {records.some((m) => m.status === 'cancelled') && (
+          {records.some((m) => ['cancelled', 'completed'].includes(m.status)) && (
             <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
               <button onClick={selectAllDeletable} className="text-xs font-medium text-primary-600 hover:underline">
-                {selectedIds.size > 0 ? 'Deselect All' : 'Select All Expired/Cancelled'}
+                {selectedIds.size > 0 ? 'Deselect All' : 'Select All Completed/Cancelled'}
               </button>
               {selectedIds.size > 0 && (
                 <button onClick={handleBulkDelete} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded-lg text-xs font-medium disabled:opacity-50">
@@ -521,7 +520,7 @@ export default function AdminLudo() {
                 const isWaiting = m.status === 'waiting';
                 const isLive = m.status === 'live';
                 const isCompleted = m.status === 'completed';
-                const isDeletable = m.status === 'cancelled';
+                const isDeletable = ['cancelled', 'completed'].includes(m.status);
                 return (
                   <div key={m._id} className={`rounded-lg px-3 py-2.5 border ${statusInfo.bg}`}>
                     <div className="flex items-center justify-between gap-2">
