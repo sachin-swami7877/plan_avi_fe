@@ -384,12 +384,12 @@ export default function AdminLudo() {
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-4">Ludo</h1>
 
-      <div className="flex justify-between mb-4 flex-wrap gap-2">
+      <div className="flex justify-evenly mb-4 flex-wrap gap-2">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`px-4 py-2 rounded-lg font-medium ${activeTab === t.id ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700'}`}
+            className={`px-2 py-2 rounded-lg font-medium ${activeTab === t.id ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700'}`}
           >
             {t.label}
           </button>

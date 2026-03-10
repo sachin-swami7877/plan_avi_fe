@@ -19,7 +19,8 @@ const Profile = () => {
   const whatsAppNumber = support.supportWhatsApp || support.supportPhone;
   const [showInstallTip, setShowInstallTip] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', phone: '', upiId: '', upiNumber: '' });
+  const [editForm, setEditForm] = useState({ name: '', phone: '', upiId: '', upiNumber: '', bankAccountNumber: '', bankIfscCode: '', bankAccountHolder: '' });
+  const [paymentTab, setPaymentTab] = useState('upi'); // 'upi' | 'bank'
   const [editLoading, setEditLoading] = useState(false);
   const [editMsg, setEditMsg] = useState('');
   const [balanceDetails, setBalanceDetails] = useState({ depositBalance: 0, earningsBalance: 0 });
@@ -117,7 +118,11 @@ const Profile = () => {
       phone: user?.phone || '',
       upiId: user?.upiId || '',
       upiNumber: user?.upiNumber || '',
+      bankAccountNumber: user?.bankAccountNumber || '',
+      bankIfscCode: user?.bankIfscCode || '',
+      bankAccountHolder: user?.bankAccountHolder || '',
     });
+    setPaymentTab('upi');
     setEditMsg('');
     setEditOpen(true);
   };
@@ -392,8 +397,37 @@ const Profile = () => {
           {editMsg && <div className={`mb-3 p-2 rounded text-sm ${editMsg.includes('updated') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{editMsg}</div>}
           <TextField fullWidth label="Name" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} sx={{ mt: 1, mb: 2 }} />
           <TextField fullWidth label="Phone" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} sx={{ mb: 2 }} />
-          <TextField fullWidth label="UPI ID" value={editForm.upiId} onChange={(e) => setEditForm({ ...editForm, upiId: e.target.value })} sx={{ mb: 2 }} />
-          <TextField fullWidth label="UPI Number" value={editForm.upiNumber} onChange={(e) => setEditForm({ ...editForm, upiNumber: e.target.value })} sx={{ mb: 1 }} />
+
+          {/* Payment method tabs */}
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
+            <button
+              type="button"
+              onClick={() => setPaymentTab('upi')}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${paymentTab === 'upi' ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}
+            >
+              UPI
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentTab('bank')}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${paymentTab === 'bank' ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}
+            >
+              Bank Account
+            </button>
+          </div>
+
+          {paymentTab === 'upi' ? (
+            <>
+              <TextField fullWidth label="UPI ID (e.g. name@upi)" value={editForm.upiId} onChange={(e) => setEditForm({ ...editForm, upiId: e.target.value })} sx={{ mb: 2 }} />
+              <TextField fullWidth label="UPI Number (mobile linked to UPI)" value={editForm.upiNumber} onChange={(e) => setEditForm({ ...editForm, upiNumber: e.target.value })} sx={{ mb: 1 }} />
+            </>
+          ) : (
+            <>
+              <TextField fullWidth label="Account Holder Name" value={editForm.bankAccountHolder} onChange={(e) => setEditForm({ ...editForm, bankAccountHolder: e.target.value })} sx={{ mb: 2 }} />
+              <TextField fullWidth label="Account Number" value={editForm.bankAccountNumber} onChange={(e) => setEditForm({ ...editForm, bankAccountNumber: e.target.value })} sx={{ mb: 2 }} slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
+              <TextField fullWidth label="IFSC Code" value={editForm.bankIfscCode} onChange={(e) => setEditForm({ ...editForm, bankIfscCode: e.target.value.toUpperCase() })} sx={{ mb: 1 }} placeholder="e.g. SBIN0001234" />
+            </>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(false)}>Cancel</Button>

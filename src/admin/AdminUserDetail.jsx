@@ -123,8 +123,16 @@ const AdminUserDetail = () => {
             </div>
             {user.email && <p className="text-sm text-gray-500 mt-0.5">{user.email}</p>}
             {user.phone && <p className="text-sm text-gray-600 mt-0.5">📱 {user.phone}</p>}
-            {user.upiId && <p className="text-xs text-gray-400 mt-0.5">UPI ID: {user.upiId}</p>}
-            {user.upiNumber && <p className="text-xs text-gray-400">UPI No: {user.upiNumber}</p>}
+            {user.upiId && <p className="text-xs text-gray-400 mt-0.5">UPI ID: <span className="font-mono">{user.upiId}</span></p>}
+            {user.upiNumber && <p className="text-xs text-gray-400">UPI No: <span className="font-mono">{user.upiNumber}</span></p>}
+            {(user.bankAccountNumber || user.bankIfscCode) && (
+              <div className="mt-1 bg-blue-50 rounded-lg px-2 py-1.5 inline-block">
+                <p className="text-[10px] text-gray-500 font-medium">Bank Account</p>
+                {user.bankAccountHolder && <p className="text-xs text-gray-600">Holder: <span className="font-medium">{user.bankAccountHolder}</span></p>}
+                {user.bankAccountNumber && <p className="text-xs text-gray-500">Acc: <span className="font-mono">{user.bankAccountNumber}</span></p>}
+                {user.bankIfscCode && <p className="text-xs text-gray-500">IFSC: <span className="font-mono">{user.bankIfscCode}</span></p>}
+              </div>
+            )}
             <p className="text-xs text-gray-400 mt-1">Joined: {fmt(user.createdAt)}</p>
           </div>
         </div>

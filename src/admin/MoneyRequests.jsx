@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { adminAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import { IoChevronBack, IoChevronForward, IoChevronDown } from 'react-icons/io5';
+import DatePickerModal from '../components/DatePickerModal';
 import toast from 'react-hot-toast';
 
 const PER_PAGE = 25;
@@ -18,6 +19,14 @@ const MoneyRequests = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [editAmounts, setEditAmounts] = useState({});
   const [processing, setProcessing] = useState(null);
+  const [depositTotals, setDepositTotals] = useState({ totalAmount: 0, count: 0 });
+  const [withdrawalTotals, setWithdrawalTotals] = useState({ totalAmount: 0, count: 0 });
+
+  // Date filter state
+  const [datePreset, setDatePreset] = useState(''); // '', 'today', 'last5', 'custom'
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -28,18 +37,25 @@ const MoneyRequests = () => {
         limit: PER_PAGE,
       };
       if (filter !== 'all') params.status = filter;
+      if (datePreset && datePreset !== 'custom') params.datePreset = datePreset;
+      if (datePreset === 'custom' && startDate && endDate) {
+        params.from = startDate;
+        params.to = endDate;
+      }
       const res = await adminAPI.getWalletRequests(params);
       const data = res.data;
       setRequests(data.data || []);
       setTotalPages(data.totalPages || 1);
       setTotalCount(data.totalCount || 0);
+      setDepositTotals(data.depositTotals || { totalAmount: 0, count: 0 });
+      setWithdrawalTotals(data.withdrawalTotals || { totalAmount: 0, count: 0 });
     } catch (error) {
       console.error('Failed to fetch requests:', error);
       setRequests([]);
     } finally {
       setLoading(false);
     }
-  }, [tab, filter, page]);
+  }, [tab, filter, page, datePreset, startDate, endDate]);
 
   useEffect(() => {
     fetchRequests();
@@ -74,28 +90,50 @@ const MoneyRequests = () => {
     }
   };
 
-  const switchTab = (t) => {
-    setTab(t);
+  const switchTab = (t) => { setTab(t); setPage(1); };
+  const switchFilter = (f) => { setFilter(f); setPage(1); };
+
+  const setPreset = (preset) => {
+    setDatePreset(preset);
+    setStartDate(null);
+    setEndDate(null);
     setPage(1);
   };
 
-  const switchFilter = (f) => {
-    setFilter(f);
+  const handleDateApply = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+    setDatePreset('custom');
+    setPage(1);
+    setDatePickerOpen(false);
+  };
+
+  const clearDateFilter = () => {
+    setDatePreset('');
+    setStartDate(null);
+    setEndDate(null);
     setPage(1);
   };
+
+  const getDateLabel = () => {
+    if (datePreset === 'today') return 'Today';
+    if (datePreset === 'last5') return 'Last 5 Days';
+    if (datePreset === 'custom' && startDate && endDate) {
+      return `${new Date(startDate + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – ${new Date(endDate + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+    }
+    return 'All Time';
+  };
+
+  const currentTotals = tab === 'deposit' ? depositTotals : withdrawalTotals;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-4">Money Requests</h1>
-
       {/* Top tabs: Deposit / Withdrawal */}
-      <div className="flex bg-white rounded-xl p-1 mb-4 shadow-sm">
+      <div className="flex bg-white rounded-xl p-1 mb-3 shadow-sm">
         <button
           onClick={() => switchTab('deposit')}
           className={`flex-1 py-3 rounded-lg font-semibold text-sm transition-colors ${
-            tab === 'deposit'
-              ? 'bg-emerald-600 text-white shadow'
-              : 'text-gray-500 hover:text-gray-700'
+            tab === 'deposit' ? 'bg-emerald-600 text-white shadow' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Deposit Requests
@@ -103,22 +141,76 @@ const MoneyRequests = () => {
         <button
           onClick={() => switchTab('withdrawal')}
           className={`flex-1 py-3 rounded-lg font-semibold text-sm transition-colors ${
-            tab === 'withdrawal'
-              ? 'bg-rose-600 text-white shadow'
-              : 'text-gray-500 hover:text-gray-700'
+            tab === 'withdrawal' ? 'bg-rose-600 text-white shadow' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Withdrawal Requests
         </button>
       </div>
 
+      {/* Summary + Date Filters — single row */}
+      <div className={`rounded-xl p-3 mb-3 flex items-center justify-between gap-3 ${tab === 'deposit' ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'}`}>
+        <div className="flex items-center gap-4 min-w-0">
+          <div>
+            <p className="text-[10px] text-gray-500 leading-tight">Count</p>
+            <p className={`text-lg font-bold leading-tight ${tab === 'deposit' ? 'text-emerald-700' : 'text-rose-700'}`}>{currentTotals.count}</p>
+          </div>
+          <div className="w-px h-8 bg-gray-200 flex-shrink-0" />
+          <div>
+            <p className="text-[10px] text-gray-500 leading-tight">Total</p>
+            <p className={`text-lg font-bold leading-tight ${tab === 'deposit' ? 'text-emerald-700' : 'text-rose-700'}`}>₹{(currentTotals.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+          {[
+            { label: 'All', value: '' },
+            { label: 'Today', value: 'today' },
+            { label: '5D', value: 'last5' },
+          ].map((p) => (
+            <button
+              key={p.value}
+              onClick={() => setPreset(p.value)}
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                (datePreset === p.value || (!datePreset && p.value === ''))
+                  ? (tab === 'deposit' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white')
+                  : 'bg-white/70 text-gray-600 hover:bg-white'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+          <button
+            onClick={() => setDatePickerOpen(true)}
+            className={`px-2 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
+              datePreset === 'custom'
+                ? (tab === 'deposit' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white')
+                : 'bg-white/70 text-gray-600 hover:bg-white'
+            }`}
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {datePreset === 'custom' ? getDateLabel() : 'Range'}
+          </button>
+        </div>
+      </div>
+
+      <DatePickerModal
+        open={datePickerOpen}
+        onClose={() => setDatePickerOpen(false)}
+        onApply={handleDateApply}
+        initialStartDate={startDate}
+        initialEndDate={endDate}
+        rangeMode={true}
+      />
+
       {/* Status Filter */}
-      <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
+      <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
         {['pending', 'approved', 'rejected', 'all'].map((status) => (
           <button
             key={status}
             onClick={() => switchFilter(status)}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
+            className={`flex-1 py-2 rounded-lg text-xs font-medium capitalize transition-colors ${
               filter === status ? 'bg-white shadow text-gray-800' : 'text-gray-500'
             }`}
           >
@@ -154,9 +246,14 @@ const MoneyRequests = () => {
                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow">
                       <span className="text-lg">{tab === 'deposit' ? '₹' : '💸'}</span>
                     </div>
-                    <div className="text-left">
-                      <h3 className="font-bold text-gray-800">{request.userId?.name}</h3>
+                    <div className="text-left min-w-0">
+                      <h3 className="font-bold text-gray-800 truncate">{request.userId?.name || '(no name)'}</h3>
                       <p className="text-xs text-gray-500">{request.userId?.phone || request.userId?.email}</p>
+                      {(request.userId?.upiId || request.userId?.upiNumber || request.userId?.bankAccountNumber) && (
+                        <p className="text-[10px] text-blue-600 font-mono truncate mt-0.5">
+                          {request.userId?.upiId || request.userId?.upiNumber || `Acc: ${request.userId.bankAccountNumber}`}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -189,10 +286,7 @@ const MoneyRequests = () => {
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText(request.utrNumber);
-                            const btn = document.activeElement;
-                            const orig = btn.innerHTML;
-                            btn.innerHTML = '<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
-                            setTimeout(() => { btn.innerHTML = orig; }, 1500);
+                            toast.success('Copied');
                           }}
                           className="p-1 rounded hover:bg-gray-200 transition-colors"
                           title="Copy UTR"
@@ -219,8 +313,9 @@ const MoneyRequests = () => {
                   </div>
                 </div>
 
-                {/* User UPI Details */}
-                {(request.userId?.upiId || request.userId?.upiNumber || request.userId?.phone) && (
+                {/* User Payment Info */}
+                {(request.userId?.upiId || request.userId?.upiNumber || request.userId?.phone ||
+                  request.userId?.bankAccountNumber || request.userId?.bankIfscCode) && (
                   <div className="bg-blue-50 rounded-lg p-3 mb-3">
                     <p className="text-xs text-gray-500 mb-1 font-medium">User Payment Info</p>
                     {request.userId?.upiId && (
@@ -238,6 +333,25 @@ const MoneyRequests = () => {
                           <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                         </button>
                       </div>
+                    )}
+                    {request.userId?.bankAccountNumber && (
+                      <div className="flex items-center gap-2 mt-1 pt-1 border-t border-blue-200">
+                        <p className="text-sm"><span className="text-gray-500">Acc No:</span> <span className="font-mono font-medium">{request.userId.bankAccountNumber}</span></p>
+                        <button onClick={() => { navigator.clipboard.writeText(request.userId.bankAccountNumber); toast.success('Account number copied'); }} className="p-0.5 rounded hover:bg-blue-100" title="Copy">
+                          <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      </div>
+                    )}
+                    {request.userId?.bankIfscCode && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm"><span className="text-gray-500">IFSC:</span> <span className="font-mono font-medium">{request.userId.bankIfscCode}</span></p>
+                        <button onClick={() => { navigator.clipboard.writeText(request.userId.bankIfscCode); toast.success('IFSC copied'); }} className="p-0.5 rounded hover:bg-blue-100" title="Copy">
+                          <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      </div>
+                    )}
+                    {request.userId?.bankAccountHolder && (
+                      <p className="text-sm"><span className="text-gray-500">Holder:</span> <span className="font-medium">{request.userId.bankAccountHolder}</span></p>
                     )}
                     {request.userId?.phone && (
                       <div className="flex items-center gap-2">

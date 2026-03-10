@@ -65,6 +65,10 @@ const Users = () => {
   // Filters
   const [roleFilter, setRoleFilter] = useState('all');
   const [activeOnly, setActiveOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('');
+  const [balanceMin, setBalanceMin] = useState('');
+  const [balanceMax, setBalanceMax] = useState('');
+  const [balanceRangeActive, setBalanceRangeActive] = useState(false);
 
   // Active user IDs (online tracking)
   const [activeUserIds, setActiveUserIds] = useState(new Set());
@@ -85,9 +89,7 @@ const Users = () => {
     return () => socket.off('app:active-user-ids', handler);
   }, [socket]);
 
-  useEffect(() => { fetchUsers(); }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     const thisId = ++fetchIdRef.current;
     setLoading(true);
     try {
@@ -100,17 +102,19 @@ const Users = () => {
       else if (statusTab === 'online') params.status = 'active';
       if (roleFilter !== 'all') params.role = roleFilter;
       if (search.trim()) params.search = search.trim();
+      if (sortBy) params.sortBy = sortBy;
+      if (balanceRangeActive) {
+        if (balanceMin !== '') params.balanceMin = balanceMin;
+        if (balanceMax !== '') params.balanceMax = balanceMax;
+      }
       const res = await adminAPI.getUsers(params);
-      if (thisId !== fetchIdRef.current) return; // ignore stale response
+      if (thisId !== fetchIdRef.current) return;
       const data = res.data;
       let userList = data.users || data;
-      // For "online" tab or activeOnly toggle, filter to only currently connected users
       if (statusTab === 'online' || activeOnly) {
-        // Client-side filter — also fix pagination to reflect filtered count
         userList = userList.filter(u => activeUserIds.has(u._id));
       }
       setUsers(userList);
-      // When filtering online client-side, override pagination with actual filtered count
       if (statusTab === 'online' || activeOnly) {
         setTotalPages(1);
         setTotalCount(userList.length);
@@ -121,11 +125,14 @@ const Users = () => {
     }
     catch (error) { if (thisId === fetchIdRef.current) console.error('Failed to fetch users:', error); }
     finally { if (thisId === fetchIdRef.current) setLoading(false); }
-  };
+  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, sortBy, balanceRangeActive, balanceMin, balanceMax, activeUserIds]);
+
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     setSearch(searchInput);
+    setPage(1);
   };
 
   const handleDateApply = (start, end) => {
@@ -296,25 +303,43 @@ const Users = () => {
         ))}
       </div>
 
-      {/* Date Range Filter */}
+      {/* Date, Role, Online — single row */}
       <div className="flex gap-2 mb-3 items-center flex-wrap">
         <button
           type="button"
           onClick={() => setDatePickerOpen(true)}
-          className="px-4 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50"
+          className="px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium flex items-center gap-1.5 hover:bg-gray-50"
         >
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           {getDateRangeLabel()}
         </button>
         {(startDate || endDate) && (
-          <button
-            onClick={() => { setStartDate(null); setEndDate(null); setPage(1); }}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-          >
-            Clear
-          </button>
+          <button onClick={() => { setStartDate(null); setEndDate(null); setPage(1); }} className="px-2 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">Clear</button>
+        )}
+        <select
+          value={roleFilter}
+          onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+          className="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option value="all">All Roles</option>
+          <option value="user">User</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+        {statusTab !== 'online' && (
+          <label className="flex items-center gap-1.5 cursor-pointer select-none ml-auto">
+            <div className="relative">
+              <input type="checkbox" checked={activeOnly} onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }} className="sr-only peer" />
+              <div className="w-8 h-4 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors" />
+              <div className="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4" />
+            </div>
+            <span className="text-xs text-gray-600 font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+              Online
+            </span>
+          </label>
         )}
       </div>
 
@@ -327,38 +352,30 @@ const Users = () => {
         rangeMode={true}
       />
 
-      {/* Role Filter & Active Toggle */}
-      <div className="flex gap-3 mb-3 items-center flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <label className="text-sm text-gray-600 font-medium">Role:</label>
-          <select
-            value={roleFilter}
-            onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="all">All Roles</option>
-            <option value="user">User</option>
-            <option value="manager">Manager</option>
-            <option value="admin">Admin</option>
-          </select>
+      {/* Sort & Balance Range — second row */}
+      <div className="flex gap-2 mb-3 items-center flex-wrap">
+        <select
+          value={sortBy}
+          onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
+          className="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option value="">Sort: Default</option>
+          <option value="topBalance">Top Balance</option>
+          <option value="topEarnings">Top Earnings</option>
+          <option value="topWithdrawable">Top Withdrawable</option>
+        </select>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-gray-400">₹</span>
+          <input type="number" placeholder="Min" value={balanceMin} onChange={(e) => setBalanceMin(e.target.value)} className="w-16 px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500" />
         </div>
-        {statusTab !== 'online' && (
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={activeOnly}
-                onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }}
-                className="sr-only peer"
-              />
-              <div className="w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors" />
-              <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4" />
-            </div>
-            <span className="text-sm text-gray-600 font-medium flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-              Active Only
-            </span>
-          </label>
+        <span className="text-xs text-gray-400">–</span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-gray-400">₹</span>
+          <input type="number" placeholder="Max" value={balanceMax} onChange={(e) => setBalanceMax(e.target.value)} className="w-16 px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500" />
+        </div>
+        <button onClick={() => { setBalanceRangeActive(true); setPage(1); }} className="px-2 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium">Go</button>
+        {balanceRangeActive && (
+          <button onClick={() => { setBalanceMin(''); setBalanceMax(''); setBalanceRangeActive(false); setPage(1); }} className="px-2 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs">Clear</button>
         )}
       </div>
 
@@ -373,7 +390,7 @@ const Users = () => {
         />
         <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">Search</button>
         {search && (
-          <button type="button" onClick={() => { setSearch(''); setSearchInput(''); }} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">Clear</button>
+          <button type="button" onClick={() => { setSearch(''); setSearchInput(''); setPage(1); }} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">Clear</button>
         )}
       </form>
 
@@ -405,6 +422,11 @@ const Users = () => {
                       {getStatusBadge(user.status)}
                     </div>
                     <p className="text-xs text-gray-500 truncate">{user.phone || user.email}</p>
+                    {(user.upiId || user.upiNumber || user.bankAccountNumber) && (
+                      <p className="text-[10px] text-blue-600 font-mono truncate mt-0.5">
+                        {user.upiId ? `UPI: ${user.upiId}` : user.upiNumber ? `UPI No: ${user.upiNumber}` : `Acc: ${user.bankAccountNumber}`}
+                      </p>
+                    )}
                   </div>
                   <p className="text-sm font-bold text-green-600 flex-shrink-0 mr-2">₹{user.walletBalance?.toFixed(2)}</p>
                 </div>
@@ -457,11 +479,29 @@ const Users = () => {
                     </div>
                   )}
                   {user.upiNumber && (
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-1">
                       <p className="text-xs text-gray-500">UPI No: <span className="font-mono">{user.upiNumber}</span></p>
                       <button onClick={() => { navigator.clipboard.writeText(user.upiNumber); toast.success('UPI number copied'); }} className="p-0.5 rounded hover:bg-gray-100" title="Copy">
                         <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                       </button>
+                    </div>
+                  )}
+                  {(user.bankAccountNumber || user.bankIfscCode) && (
+                    <div className="bg-blue-50 rounded-lg p-2 mb-2">
+                      <p className="text-[10px] text-gray-500 font-medium mb-1">Bank Account</p>
+                      {user.bankAccountHolder && <p className="text-xs text-gray-600 mb-0.5">Holder: <span className="font-medium">{user.bankAccountHolder}</span></p>}
+                      {user.bankAccountNumber && (
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-gray-500">Acc: <span className="font-mono">{user.bankAccountNumber}</span></p>
+                          <button onClick={() => { navigator.clipboard.writeText(user.bankAccountNumber); toast.success('Account number copied'); }} className="p-0.5 rounded hover:bg-blue-100"><svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                        </div>
+                      )}
+                      {user.bankIfscCode && (
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-gray-500">IFSC: <span className="font-mono">{user.bankIfscCode}</span></p>
+                          <button onClick={() => { navigator.clipboard.writeText(user.bankIfscCode); toast.success('IFSC copied'); }} className="p-0.5 rounded hover:bg-blue-100"><svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                        </div>
+                      )}
                     </div>
                   )}
 
