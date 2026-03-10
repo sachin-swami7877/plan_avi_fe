@@ -72,6 +72,8 @@ const Users = () => {
 
   // Active user IDs (online tracking)
   const [activeUserIds, setActiveUserIds] = useState(new Set());
+  const activeUserIdsRef = useRef(activeUserIds);
+  activeUserIdsRef.current = activeUserIds;
   const fetchIdRef = useRef(0);
 
   // Fetch active user IDs
@@ -93,6 +95,7 @@ const Users = () => {
     const thisId = ++fetchIdRef.current;
     setLoading(true);
     try {
+      const currentActiveIds = activeUserIdsRef.current;
       const isOnlineMode = statusTab === 'online' || activeOnly;
       const params = { page: isOnlineMode ? 1 : page, limit: isOnlineMode ? 500 : 30 };
       if (startDate) params.from = startDate;
@@ -112,7 +115,7 @@ const Users = () => {
       const data = res.data;
       let userList = data.users || data;
       if (statusTab === 'online' || activeOnly) {
-        userList = userList.filter(u => activeUserIds.has(u._id));
+        userList = userList.filter(u => currentActiveIds.has(u._id));
       }
       setUsers(userList);
       if (statusTab === 'online' || activeOnly) {
@@ -125,7 +128,7 @@ const Users = () => {
     }
     catch (error) { if (thisId === fetchIdRef.current) console.error('Failed to fetch users:', error); }
     finally { if (thisId === fetchIdRef.current) setLoading(false); }
-  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, sortBy, balanceRangeActive, balanceMin, balanceMax, activeUserIds]);
+  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, sortBy, balanceRangeActive, balanceMin, balanceMax]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -422,11 +425,6 @@ const Users = () => {
                       {getStatusBadge(user.status)}
                     </div>
                     <p className="text-xs text-gray-500 truncate">{user.phone || user.email}</p>
-                    {(user.upiId || user.upiNumber || user.bankAccountNumber) && (
-                      <p className="text-[10px] text-blue-600 font-mono truncate mt-0.5">
-                        {user.upiId ? `UPI: ${user.upiId}` : user.upiNumber ? `UPI No: ${user.upiNumber}` : `Acc: ${user.bankAccountNumber}`}
-                      </p>
-                    )}
                   </div>
                   <p className="text-sm font-bold text-green-600 flex-shrink-0 mr-2">₹{user.walletBalance?.toFixed(2)}</p>
                 </div>

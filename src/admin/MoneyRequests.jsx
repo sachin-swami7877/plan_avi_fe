@@ -249,11 +249,6 @@ const MoneyRequests = () => {
                     <div className="text-left min-w-0">
                       <h3 className="font-bold text-gray-800 truncate">{request.userId?.name || '(no name)'}</h3>
                       <p className="text-xs text-gray-500">{request.userId?.phone || request.userId?.email}</p>
-                      {(request.userId?.upiId || request.userId?.upiNumber || request.userId?.bankAccountNumber) && (
-                        <p className="text-[10px] text-blue-600 font-mono truncate mt-0.5">
-                          {request.userId?.upiId || request.userId?.upiNumber || `Acc: ${request.userId.bankAccountNumber}`}
-                        </p>
-                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
