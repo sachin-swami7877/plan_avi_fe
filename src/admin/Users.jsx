@@ -28,7 +28,6 @@ const Users = () => {
   const { socket } = useSocket();
   const isFullAdmin = myRole === 'admin';
   const [loading, setLoading] = useState(true);
-  const silentRefresh = useRef(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', phone: '', walletBalance: 0, role: 'user' });
   const [balanceModal, setBalanceModal] = useState({ open: false, userId: null, operation: null, userName: '' });
@@ -75,45 +74,59 @@ const Users = () => {
 
   // Active user IDs (online tracking)
   const [activeUserIds, setActiveUserIds] = useState(new Set());
+  const activeUserIdsRef = useRef(new Set());
+  const prevActiveIdsRef = useRef(new Set());
   const fetchIdRef = useRef(0);
 
-  // Fetch active user IDs
+  // Keep ref in sync with state
+  useEffect(() => { activeUserIdsRef.current = activeUserIds; }, [activeUserIds]);
+
+  // Fetch active user IDs on mount
   useEffect(() => {
     adminAPI.getActiveUsers().then(res => {
-      setActiveUserIds(new Set(res.data.ids));
+      const newIds = new Set(res.data.ids);
+      setActiveUserIds(prev => {
+        if (prev.size === newIds.size && [...prev].every(id => newIds.has(id))) return prev;
+        return newIds;
+      });
     }).catch(() => {});
   }, []);
 
-  // Listen for real-time active user updates
+  // Listen for real-time active user updates — incremental add/remove, NO full refetch
   useEffect(() => {
     if (!socket) return;
-    const handler = (data) => { silentRefresh.current = true; setActiveUserIds(new Set(data.ids)); };
+    const handler = (data) => {
+      const newIds = new Set(data.ids);
+      setActiveUserIds(prev => {
+        if (prev.size === newIds.size && [...prev].every(id => newIds.has(id))) return prev;
+        return newIds;
+      });
+    };
     socket.on('app:active-user-ids', handler);
     return () => socket.off('app:active-user-ids', handler);
   }, [socket]);
 
+  // fetchUsers — only called on tab/filter/page/search changes, NOT on activeUserIds change
   const fetchUsers = useCallback(async () => {
     const thisId = ++fetchIdRef.current;
     const isOnlineMode = statusTab === 'online' || activeOnly;
-    // In online mode, if no active users, show empty list without API call
-    if (isOnlineMode && activeUserIds.size === 0) {
+    const currentIds = activeUserIdsRef.current;
+    if (isOnlineMode && currentIds.size === 0) {
       setRawUsers([]);
       setRawTotalPages(1);
       setRawTotalCount(0);
       setLoading(false);
       return;
     }
-    if (!silentRefresh.current) setLoading(true);
-    silentRefresh.current = false;
+    setLoading(true);
     try {
       const params = { page, limit: 30 };
       if (startDate) params.from = startDate;
       if (endDate) params.to = endDate;
       if (statusTab === 'deactivated') params.status = 'inactive';
       else if (statusTab === 'blocked') params.status = 'blocked';
-      // For online mode, send the actual online user IDs to backend
       if (isOnlineMode) {
-        params.userIds = Array.from(activeUserIds).join(',');
+        params.userIds = Array.from(currentIds).join(',');
       }
       if (roleFilter !== 'all') params.role = roleFilter;
       if (search.trim()) params.search = search.trim();
@@ -132,11 +145,51 @@ const Users = () => {
     }
     catch (error) { if (thisId === fetchIdRef.current) console.error('Failed to fetch users:', error); }
     finally { if (thisId === fetchIdRef.current) setLoading(false); }
-  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, activeUserIds, sortBy, balanceRangeActive, balanceMin, balanceMax]);
+  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, sortBy, balanceRangeActive, balanceMin, balanceMax]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  // In non-online mode, use raw data directly. In online mode, data is already filtered by backend.
+  // Incremental online list updates via socket (no full API refetch)
+  useEffect(() => {
+    const prevIds = prevActiveIdsRef.current;
+    prevActiveIdsRef.current = activeUserIds;
+
+    // Skip on first render (prevIds is empty set from init)
+    if (prevIds.size === 0 && activeUserIds.size > 0) return;
+
+    const isOnlineMode = statusTab === 'online' || activeOnly;
+
+    // For non-online tabs, just re-render for green dots — no list changes needed
+    if (!isOnlineMode) return;
+
+    const addedIds = [...activeUserIds].filter(id => !prevIds.has(id));
+    const removedIds = [...prevIds].filter(id => !activeUserIds.has(id));
+
+    // Remove users who went offline
+    if (removedIds.length > 0) {
+      const removedSet = new Set(removedIds);
+      setRawUsers(prev => prev.filter(u => !removedSet.has(u._id)));
+      setRawTotalCount(prev => Math.max(0, prev - removedIds.length));
+    }
+
+    // Fetch and add new online users (only the new ones)
+    if (addedIds.length > 0) {
+      adminAPI.getUsers({ userIds: addedIds.join(','), limit: addedIds.length })
+        .then(res => {
+          const newUsers = (res.data.users || res.data);
+          if (newUsers.length > 0) {
+            setRawUsers(prev => {
+              const existingIds = new Set(prev.map(u => u._id));
+              const toAdd = newUsers.filter(u => !existingIds.has(u._id));
+              return [...toAdd, ...prev];
+            });
+            setRawTotalCount(prev => prev + newUsers.length);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [activeUserIds, statusTab, activeOnly]);
+
   const users = rawUsers;
   const totalPages = rawTotalPages;
   const totalCount = rawTotalCount;
