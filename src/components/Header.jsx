@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { HiOutlineBars3, HiOutlineWallet } from 'react-icons/hi2';
+import { HiOutlineBars3 } from 'react-icons/hi2';
 import SideDrawer from './SideDrawer';
 
 const Header = () => {
@@ -54,10 +54,17 @@ const Header = () => {
             </Link>
             <Link
               to="/wallet"
-              className="p-1.5 text-emerald-400 hover:text-emerald-300 transition-transform hover:scale-110"
+              className="transition-transform hover:scale-110"
               aria-label="Wallet"
             >
-              <HiOutlineWallet className="w-5 h-5" />
+              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7)' }}>
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M21 7H3a1 1 0 0 0-1 1v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1zm-1 12H4V9h16v10z"/>
+                  <path d="M5 7V5a2 2 0 0 1 2-2h8l4 4"/>
+                  <path d="M16 14a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+                  <path d="M6 3h9l4 4H5V5a2 2 0 0 1 1-1.73z" opacity="0.6"/>
+                </svg>
+              </div>
             </Link>
             <div className="flex items-center gap-1.5">
               <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400' : 'bg-red-400'}`} />

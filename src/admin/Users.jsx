@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DatePickerModal from '../components/DatePickerModal';
 import Modal from '@mui/material/Modal';
@@ -27,7 +27,6 @@ const Users = () => {
   const { role: myRole } = useAuth();
   const { socket } = useSocket();
   const isFullAdmin = myRole === 'admin';
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', phone: '', walletBalance: 0, role: 'user' });
@@ -59,8 +58,6 @@ const Users = () => {
   // Tabs & pagination
   const [statusTab, setStatusTab] = useState('all');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
 
   // Filters
   const [roleFilter, setRoleFilter] = useState('all');
@@ -70,10 +67,13 @@ const Users = () => {
   const [balanceMax, setBalanceMax] = useState('');
   const [balanceRangeActive, setBalanceRangeActive] = useState(false);
 
+  // Raw fetched users (before online filtering)
+  const [rawUsers, setRawUsers] = useState([]);
+  const [rawTotalPages, setRawTotalPages] = useState(1);
+  const [rawTotalCount, setRawTotalCount] = useState(0);
+
   // Active user IDs (online tracking)
   const [activeUserIds, setActiveUserIds] = useState(new Set());
-  const activeUserIdsRef = useRef(activeUserIds);
-  activeUserIdsRef.current = activeUserIds;
   const fetchIdRef = useRef(0);
 
   // Fetch active user IDs
@@ -95,7 +95,6 @@ const Users = () => {
     const thisId = ++fetchIdRef.current;
     setLoading(true);
     try {
-      const currentActiveIds = activeUserIdsRef.current;
       const isOnlineMode = statusTab === 'online' || activeOnly;
       const params = { page: isOnlineMode ? 1 : page, limit: isOnlineMode ? 500 : 30 };
       if (startDate) params.from = startDate;
@@ -113,24 +112,26 @@ const Users = () => {
       const res = await adminAPI.getUsers(params);
       if (thisId !== fetchIdRef.current) return;
       const data = res.data;
-      let userList = data.users || data;
-      if (statusTab === 'online' || activeOnly) {
-        userList = userList.filter(u => currentActiveIds.has(u._id));
-      }
-      setUsers(userList);
-      if (statusTab === 'online' || activeOnly) {
-        setTotalPages(1);
-        setTotalCount(userList.length);
-      } else {
-        setTotalPages(data.totalPages || 1);
-        setTotalCount(data.totalCount || userList.length);
-      }
+      const userList = data.users || data;
+      setRawUsers(userList);
+      setRawTotalPages(data.totalPages || 1);
+      setRawTotalCount(data.totalCount || userList.length);
     }
     catch (error) { if (thisId === fetchIdRef.current) console.error('Failed to fetch users:', error); }
     finally { if (thisId === fetchIdRef.current) setLoading(false); }
   }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, sortBy, balanceRangeActive, balanceMin, balanceMax]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  // Derive displayed users — filter by activeUserIds when in online mode (reactive to socket updates)
+  const { users, totalPages, totalCount } = useMemo(() => {
+    const isOnlineMode = statusTab === 'online' || activeOnly;
+    if (isOnlineMode) {
+      const filtered = rawUsers.filter(u => activeUserIds.has(u._id));
+      return { users: filtered, totalPages: 1, totalCount: filtered.length };
+    }
+    return { users: rawUsers, totalPages: rawTotalPages, totalCount: rawTotalCount };
+  }, [rawUsers, rawTotalPages, rawTotalCount, statusTab, activeOnly, activeUserIds]);
 
   const handleSearch = (e) => {
     e.preventDefault();
