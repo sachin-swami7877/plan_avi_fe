@@ -28,6 +28,7 @@ const Users = () => {
   const { socket } = useSocket();
   const isFullAdmin = myRole === 'admin';
   const [loading, setLoading] = useState(true);
+  const silentRefresh = useRef(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', phone: '', walletBalance: 0, role: 'user' });
   const [balanceModal, setBalanceModal] = useState({ open: false, userId: null, operation: null, userName: '' });
@@ -86,7 +87,7 @@ const Users = () => {
   // Listen for real-time active user updates
   useEffect(() => {
     if (!socket) return;
-    const handler = (data) => setActiveUserIds(new Set(data.ids));
+    const handler = (data) => { silentRefresh.current = true; setActiveUserIds(new Set(data.ids)); };
     socket.on('app:active-user-ids', handler);
     return () => socket.off('app:active-user-ids', handler);
   }, [socket]);
@@ -102,7 +103,8 @@ const Users = () => {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!silentRefresh.current) setLoading(true);
+    silentRefresh.current = false;
     try {
       const params = { page, limit: 30 };
       if (startDate) params.from = startDate;
