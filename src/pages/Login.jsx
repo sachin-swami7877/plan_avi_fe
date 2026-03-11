@@ -172,6 +172,14 @@ const Login = () => {
       setError('Please enter your name');
       return;
     }
+    if (pendingData?.needsUsername && trimmedName.length < 3) {
+      setError('Name must be at least 3 characters');
+      return;
+    }
+    if (pendingData?.needsUsername && /^[\.\-\s]+$/.test(trimmedName)) {
+      setError('Please enter a valid name');
+      return;
+    }
     if (pendingData?.needsPhone && !trimmedPhone) {
       setError('Please enter your mobile number');
       return;
@@ -199,6 +207,14 @@ const Login = () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError('Please enter your name');
+      return;
+    }
+    if (trimmedName.length < 3) {
+      setError('Name must be at least 3 characters');
+      return;
+    }
+    if (/^[\.\-\s]+$/.test(trimmedName)) {
+      setError('Please enter a valid name');
       return;
     }
     setLoading(true);

@@ -288,6 +288,7 @@ export default function Ludo() {
     try {
       const res = await ludoAPI.createMatch(effectiveAmount);
       toast.success(res.data?.message || 'Match created');
+      setCustomAmount('');
       await refreshUser();
       await loadAll();
     } catch (err) {

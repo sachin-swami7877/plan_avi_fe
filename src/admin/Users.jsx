@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DatePickerModal from '../components/DatePickerModal';
 import Modal from '@mui/material/Modal';
@@ -93,15 +93,26 @@ const Users = () => {
 
   const fetchUsers = useCallback(async () => {
     const thisId = ++fetchIdRef.current;
+    const isOnlineMode = statusTab === 'online' || activeOnly;
+    // In online mode, if no active users, show empty list without API call
+    if (isOnlineMode && activeUserIds.size === 0) {
+      setRawUsers([]);
+      setRawTotalPages(1);
+      setRawTotalCount(0);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const isOnlineMode = statusTab === 'online' || activeOnly;
-      const params = { page: isOnlineMode ? 1 : page, limit: isOnlineMode ? 500 : 30 };
+      const params = { page, limit: 30 };
       if (startDate) params.from = startDate;
       if (endDate) params.to = endDate;
       if (statusTab === 'deactivated') params.status = 'inactive';
       else if (statusTab === 'blocked') params.status = 'blocked';
-      else if (statusTab === 'online') params.status = 'active';
+      // For online mode, send the actual online user IDs to backend
+      if (isOnlineMode) {
+        params.userIds = Array.from(activeUserIds).join(',');
+      }
       if (roleFilter !== 'all') params.role = roleFilter;
       if (search.trim()) params.search = search.trim();
       if (sortBy) params.sortBy = sortBy;
@@ -119,19 +130,14 @@ const Users = () => {
     }
     catch (error) { if (thisId === fetchIdRef.current) console.error('Failed to fetch users:', error); }
     finally { if (thisId === fetchIdRef.current) setLoading(false); }
-  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, sortBy, balanceRangeActive, balanceMin, balanceMax]);
+  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, activeUserIds, sortBy, balanceRangeActive, balanceMin, balanceMax]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  // Derive displayed users — filter by activeUserIds when in online mode (reactive to socket updates)
-  const { users, totalPages, totalCount } = useMemo(() => {
-    const isOnlineMode = statusTab === 'online' || activeOnly;
-    if (isOnlineMode) {
-      const filtered = rawUsers.filter(u => activeUserIds.has(u._id));
-      return { users: filtered, totalPages: 1, totalCount: filtered.length };
-    }
-    return { users: rawUsers, totalPages: rawTotalPages, totalCount: rawTotalCount };
-  }, [rawUsers, rawTotalPages, rawTotalCount, statusTab, activeOnly, activeUserIds]);
+  // In non-online mode, use raw data directly. In online mode, data is already filtered by backend.
+  const users = rawUsers;
+  const totalPages = rawTotalPages;
+  const totalCount = rawTotalCount;
 
   const handleSearch = (e) => {
     e.preventDefault();

@@ -67,6 +67,15 @@ const Bets = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
+  // Bulk clear bets
+  const [bulkClearOpen, setBulkClearOpen] = useState(false);
+  const [bulkClearFrom, setBulkClearFrom] = useState('');
+  const [bulkClearTo, setBulkClearTo] = useState('');
+  const [bulkClearStatus, setBulkClearStatus] = useState('all');
+  const [bulkClearConfirm, setBulkClearConfirm] = useState(false);
+  const [bulkClearing, setBulkClearing] = useState(false);
+  const [bulkClearPreviewCount, setBulkClearPreviewCount] = useState(null);
+
   // Debounce search input
   useEffect(() => {
     const t = setTimeout(() => { setSearchDebounce(histSearch); setHistPage(1); }, 400);
@@ -181,6 +190,39 @@ const Bets = () => {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleBulkClear = async () => {
+    setBulkClearConfirm(false);
+    setBulkClearing(true);
+    try {
+      const res = await adminAPI.bulkClearBets(bulkClearFrom, bulkClearTo, bulkClearStatus);
+      setMessage(`${res.data.deletedCount} bets cleared`);
+      setBulkClearOpen(false);
+      setBulkClearFrom('');
+      setBulkClearTo('');
+      setBulkClearStatus('all');
+      setBulkClearPreviewCount(null);
+      fetchBets();
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Failed to clear bets');
+    } finally {
+      setBulkClearing(false);
+    }
+  };
+
+  // Preview count for bulk clear
+  const fetchBulkClearCount = async () => {
+    if (!bulkClearFrom || !bulkClearTo) return;
+    try {
+      const params = { page: 1, limit: 1 };
+      if (bulkClearStatus === 'won') params.status = 'won';
+      else if (bulkClearStatus === 'lost') params.status = 'lost';
+      params.from = bulkClearFrom;
+      params.to = bulkClearTo;
+      const res = await adminAPI.getBets(params);
+      setBulkClearPreviewCount(res.data?.totalCount || 0);
+    } catch { setBulkClearPreviewCount(null); }
   };
 
   const handleForceCrashRound = async () => {
@@ -866,10 +908,71 @@ const Bets = () => {
             </div>
           )}
 
+          {/* Bulk Clear Panel */}
+          {bulkClearOpen && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-3">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-red-800 text-sm">Clear Bets by Date Range</h4>
+                <button onClick={() => { setBulkClearOpen(false); setBulkClearPreviewCount(null); }} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="flex gap-2 items-end flex-wrap">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">From</label>
+                  <input type="date" value={bulkClearFrom} onChange={(e) => { setBulkClearFrom(e.target.value); setBulkClearPreviewCount(null); }} className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">To</label>
+                  <input type="date" value={bulkClearTo} onChange={(e) => { setBulkClearTo(e.target.value); setBulkClearPreviewCount(null); }} className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Status</label>
+                  <select value={bulkClearStatus} onChange={(e) => { setBulkClearStatus(e.target.value); setBulkClearPreviewCount(null); }} className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm">
+                    <option value="all">All Bets</option>
+                    <option value="won">Won Only</option>
+                    <option value="lost">Lost Only</option>
+                  </select>
+                </div>
+                <button
+                  onClick={fetchBulkClearCount}
+                  disabled={!bulkClearFrom || !bulkClearTo}
+                  className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                >
+                  Check Count
+                </button>
+              </div>
+              {bulkClearPreviewCount !== null && (
+                <div className="mt-3 flex items-center gap-3">
+                  <p className="text-sm text-red-700 font-medium">
+                    {bulkClearPreviewCount} {bulkClearStatus === 'all' ? '' : bulkClearStatus} bets found ({bulkClearFrom} to {bulkClearTo})
+                  </p>
+                  {bulkClearPreviewCount > 0 && (
+                    <button
+                      onClick={() => setBulkClearConfirm(true)}
+                      disabled={bulkClearing}
+                      className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold disabled:opacity-50"
+                    >
+                      {bulkClearing ? 'Clearing...' : `Delete ${bulkClearPreviewCount} Bets`}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Count + select/delete toolbar */}
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs text-gray-500">{histTotalCount} total bets</p>
             <div className="flex items-center gap-2">
+              {!bulkClearOpen && (
+                <button
+                  onClick={() => setBulkClearOpen(true)}
+                  className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-medium"
+                >
+                  Clear Bets
+                </button>
+              )}
               {selectMode && selectedBets.length > 0 && (
                 <button
                   onClick={() => setDeleteConfirm(true)}
@@ -1002,6 +1105,24 @@ const Bets = () => {
                     Deleting...
                   </span>
                 ) : 'Delete'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Bulk Clear Confirmation */}
+          <Dialog open={bulkClearConfirm} onClose={() => setBulkClearConfirm(false)}>
+            <DialogTitle>Confirm Bulk Clear</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Are you sure you want to permanently delete <strong>{bulkClearPreviewCount}</strong> {bulkClearStatus === 'all' ? '' : bulkClearStatus} bets from <strong>{bulkClearFrom}</strong> to <strong>{bulkClearTo}</strong>?
+                <br /><br />
+                This action cannot be undone.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setBulkClearConfirm(false)} disabled={bulkClearing}>Cancel</Button>
+              <Button variant="contained" color="error" onClick={handleBulkClear} disabled={bulkClearing}>
+                {bulkClearing ? 'Clearing...' : `Delete ${bulkClearPreviewCount} Bets`}
               </Button>
             </DialogActions>
           </Dialog>

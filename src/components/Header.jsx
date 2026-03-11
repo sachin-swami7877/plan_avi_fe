@@ -57,12 +57,24 @@ const Header = () => {
               className="transition-transform hover:scale-110"
               aria-label="Wallet"
             >
-              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7)' }}>
-                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21 7H3a1 1 0 0 0-1 1v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1zm-1 12H4V9h16v10z"/>
-                  <path d="M5 7V5a2 2 0 0 1 2-2h8l4 4"/>
-                  <path d="M16 14a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
-                  <path d="M6 3h9l4 4H5V5a2 2 0 0 1 1-1.73z" opacity="0.6"/>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center relative" style={{ background: 'linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7)' }}>
+                <svg className="w-[18px] h-[18px]" viewBox="0 0 32 32" fill="none">
+                  {/* Wallet body */}
+                  <rect x="2" y="10" width="28" height="18" rx="3" fill="white"/>
+                  {/* Wallet flap */}
+                  <path d="M6 10V7a3 3 0 0 1 3-3h14l5 6" fill="white" opacity="0.85"/>
+                  {/* Card slot */}
+                  <rect x="20" y="16" width="10" height="7" rx="2" fill="url(#walletSlot)"/>
+                  <circle cx="23" cy="19.5" r="1.5" fill="white"/>
+                  {/* Rupee symbol on money sticking out */}
+                  <rect x="8" y="2" width="10" height="11" rx="1.5" fill="#4ade80"/>
+                  <text x="13" y="10.5" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" fontFamily="Arial, sans-serif">₹</text>
+                  <defs>
+                    <linearGradient id="walletSlot" x1="20" y1="16" x2="30" y2="23">
+                      <stop stopColor="#ee2a7b"/>
+                      <stop offset="1" stopColor="#6228d7"/>
+                    </linearGradient>
+                  </defs>
                 </svg>
               </div>
             </Link>

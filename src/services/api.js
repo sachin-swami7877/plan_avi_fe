@@ -179,6 +179,7 @@ export const adminAPI = {
     api.put(`/admin/wallet-requests/${id}`, { action, ...(editedAmount !== undefined && { editedAmount }) }),
   getBets: (params) => api.get('/admin/bets', { params }),
   deleteBets: (ids) => api.post('/admin/bets/delete', { ids }),
+  bulkClearBets: (from, to, status) => api.post('/admin/bets/bulk-clear', { from, to, status }),
   getLiveBets: () => api.get('/admin/bets/live'),
   forceCrashBet: (id) => api.post(`/admin/bets/${id}/force-crash`),
   getCurrentRoundWithBets: () => api.get('/admin/game/current-round'),
