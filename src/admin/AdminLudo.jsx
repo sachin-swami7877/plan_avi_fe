@@ -3,6 +3,28 @@ import { adminAPI } from '../services/api';
 import { useCountdown } from '../hooks/useCountdown';
 import toast from 'react-hot-toast';
 
+// Helper to render screenshot — handles both Cloudinary URLs and base64 data URIs
+function ScreenshotView({ url }) {
+  if (!url) return null;
+  const isBase64 = url.startsWith('data:');
+  if (isBase64) {
+    return (
+      <div className="mt-1.5">
+        <p className="text-xs text-gray-500 mb-1">📷 Screenshot:</p>
+        <img src={url} alt="Screenshot" className="max-w-[200px] max-h-[200px] rounded-lg border border-gray-300 cursor-pointer" onClick={() => {
+          const w = window.open();
+          w.document.write(`<img src="${url}" style="max-width:100%;"/>`);
+        }} />
+      </div>
+    );
+  }
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-1.5 text-primary-600 text-xs underline font-medium">
+      📷 Screenshot देखें
+    </a>
+  );
+}
+
 function calcPrize(entry, tiers) {
   const pool = entry * 2;
   let commission;
@@ -637,11 +659,7 @@ export default function AdminLudo() {
                               Win Reason: <span className="font-semibold text-gray-800">{getWinReasonLabel(c.winReasonCode, c.winReasonCustom)}</span>
                             </p>
                           )}
-                          {c.screenshotUrl && (
-                            <a href={c.screenshotUrl} target="_blank" rel="noopener noreferrer" className="inline-block mt-1.5 text-primary-600 text-xs underline font-medium">
-                              📷 Screenshot देखें
-                            </a>
-                          )}
+                          <ScreenshotView url={c.screenshotUrl} />
                         </div>
                       ))}
                       {isCancelAccepted && claims.length === 0 && (
@@ -651,9 +669,7 @@ export default function AdminLudo() {
                         <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
                           <span className="font-medium text-gray-800">{r.userName}</span>
                           <span className="text-sm text-green-600 font-medium">Won request</span>
-                          {r.screenshotUrl && (
-                            <a href={r.screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-primary-600 text-xs underline ml-2">Screenshot</a>
-                          )}
+                          {r.screenshotUrl && <ScreenshotView url={r.screenshotUrl} />}
                         </div>
                       )}
                     </div>
@@ -786,11 +802,7 @@ export default function AdminLudo() {
                       </span>
                     </div>
                     {c.winReasonCode && <p className="text-xs text-gray-600 mt-0.5">{getWinReasonLabel(c.winReasonCode, c.winReasonCustom)}</p>}
-                    {c.screenshotUrl && (
-                      <a href={c.screenshotUrl} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-primary-600 text-xs underline font-medium">
-                        📷 Screenshot देखें
-                      </a>
-                    )}
+                    <ScreenshotView url={c.screenshotUrl} />
                   </div>
                 ))}
 
@@ -878,11 +890,7 @@ export default function AdminLudo() {
               <div key={i} className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 mb-4">
                 <p className="text-xs text-orange-600 font-semibold uppercase mb-0.5">Win Claim</p>
                 <p className="text-orange-800 font-bold text-sm">{c.userName} — {getWinReasonLabel(c.winReasonCode, c.winReasonCustom)}</p>
-                {c.screenshotUrl && (
-                  <a href={c.screenshotUrl} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-primary-600 text-xs underline font-medium">
-                    📷 Screenshot देखें
-                  </a>
-                )}
+                <ScreenshotView url={c.screenshotUrl} />
               </div>
             ))}
 

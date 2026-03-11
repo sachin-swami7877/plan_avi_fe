@@ -46,11 +46,8 @@ const CANCEL_REASONS = [
 
 // Win result reasons shown when submitting "I Won" result normally
 const WIN_RESULT_REASONS = [
-  { code: 'i_won_clearly', label: 'मैंने Game Clearly जीता है' },
-  { code: 'all_tokens_home', label: 'मेरे सभी Tokens घर पहुंच गए' },
-  { code: 'opponent_conceded', label: 'Opponent ने हार मान ली' },
-  { code: 'have_screenshot', label: 'मेरे पास Screenshot Proof है' },
-  { code: 'other', label: 'अन्य कारण' },
+  { code: 'i_won_clearly', label: 'I Won the Game' },
+  { code: 'other', label: 'Other Reason' },
 ];
 
 // Win dispute reasons shown when opponent cancelled and user claims win
@@ -78,7 +75,7 @@ export default function LudoMatchDetail() {
   const [submitResultOpen, setSubmitResultOpen] = useState(false);
   const [screenshotFile, setScreenshotFile] = useState(null);
   const [submittingResult, setSubmittingResult] = useState(false);
-  const [winResultReason, setWinResultReason] = useState('');
+  const [winResultReason, setWinResultReason] = useState('i_won_clearly');
   const [winResultReasonCustom, setWinResultReasonCustom] = useState('');
   const [codeCopied, setCodeCopied] = useState(false);
   const [lossConfirmOpen, setLossConfirmOpen] = useState(false);
@@ -403,9 +400,9 @@ export default function LudoMatchDetail() {
   };
 
   const handleSubmitResult = async () => {
-    if (!winResultReason) { toast.error('जीत का कारण चुनें'); return; }
-    if (winResultReason === 'other' && !winResultReasonCustom.trim()) { toast.error('कृपया कारण लिखें'); return; }
-    if (!screenshotFile) { toast.error('Screenshot जरूरी है'); return; }
+    if (!winResultReason) { toast.error('Please select a reason'); return; }
+    if (winResultReason === 'other' && !winResultReasonCustom.trim()) { toast.error('Please enter a reason'); return; }
+    if (!screenshotFile) { toast.error('Screenshot is required'); return; }
     setSubmittingResult(true);
     try {
       const formData = new FormData();
@@ -417,11 +414,40 @@ export default function LudoMatchDetail() {
       toast.success('Result submitted for admin approval');
       setSubmitResultOpen(false);
       setScreenshotFile(null);
-      setWinResultReason('');
+      setWinResultReason('i_won_clearly');
       setWinResultReasonCustom('');
       await loadMatch();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit');
+      // If upload failed, retry with base64 image
+      if (err.response?.status === 500 && screenshotFile) {
+        try {
+          toast.loading('Retrying with alternate upload...', { id: 'b64retry' });
+          const reader = new FileReader();
+          const base64 = await new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(screenshotFile);
+          });
+          await ludoAPI.submitResultBase64(match._id, {
+            matchId: match._id,
+            winReasonCode: winResultReason,
+            winReasonCustom: winResultReasonCustom.trim(),
+            screenshotBase64: base64,
+          });
+          toast.dismiss('b64retry');
+          toast.success('Result submitted for admin approval');
+          setSubmitResultOpen(false);
+          setScreenshotFile(null);
+          setWinResultReason('i_won_clearly');
+          setWinResultReasonCustom('');
+          await loadMatch();
+        } catch (retryErr) {
+          toast.dismiss('b64retry');
+          toast.error(retryErr.response?.data?.message || 'Failed to submit');
+        }
+      } else {
+        toast.error(err.response?.data?.message || 'Failed to submit');
+      }
     } finally {
       setSubmittingResult(false);
     }
@@ -1062,7 +1088,7 @@ export default function LudoMatchDetail() {
               />
             )}
             <div className="mb-4">
-              <p className="text-sm font-semibold text-gray-700 mb-1">Screenshot Upload करें <span className="text-red-500">*</span></p>
+              <p className="text-sm font-semibold text-gray-700 mb-1">Upload Screenshot <span className="text-red-500">*</span></p>
               <input
                 type="file"
                 accept="image/*"
@@ -1105,7 +1131,7 @@ export default function LudoMatchDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full max-h-[90vh] overflow-y-auto">
             <h3 className="font-bold text-gray-800 mb-1 text-lg">🏆 Submit Result (I Won)</h3>
-            <p className="text-sm text-gray-500 mb-4">जीत का कारण चुनें और screenshot upload करें। Admin verify करेगा।</p>
+            <p className="text-sm text-gray-500 mb-4">Select reason and upload screenshot. Admin will verify.</p>
             <div className="space-y-2 mb-4">
               {WIN_RESULT_REASONS.map((r) => (
                 <label key={r.code} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${winResultReason === r.code ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
@@ -1132,7 +1158,7 @@ export default function LudoMatchDetail() {
               />
             )}
             <div className="mb-4">
-              <p className="text-sm font-semibold text-gray-700 mb-1">Screenshot Upload करें <span className="text-red-500">*</span></p>
+              <p className="text-sm font-semibold text-gray-700 mb-1">Upload Screenshot <span className="text-red-500">*</span></p>
               <input
                 type="file"
                 accept="image/*"
@@ -1143,7 +1169,7 @@ export default function LudoMatchDetail() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => { setSubmitResultOpen(false); setScreenshotFile(null); setWinResultReason(''); setWinResultReasonCustom(''); }}
+                onClick={() => { setSubmitResultOpen(false); setScreenshotFile(null); setWinResultReason('i_won_clearly'); setWinResultReasonCustom(''); }}
                 className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium"
               >
                 Back
@@ -1153,7 +1179,7 @@ export default function LudoMatchDetail() {
                 disabled={!winResultReason || !screenshotFile || submittingResult}
                 className="flex-1 py-2.5 rounded-xl bg-green-600 text-white font-bold disabled:opacity-50"
               >
-                {submittingResult ? '...' : 'Submit करें'}
+                {submittingResult ? '...' : 'Submit'}
               </button>
             </div>
           </div>

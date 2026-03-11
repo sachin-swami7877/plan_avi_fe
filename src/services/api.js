@@ -150,6 +150,8 @@ export const ludoAPI = {
   getMatchDetail: (id) => api.get(`/ludo/match/${id}`),
   submitResult: (matchId, formData) =>
     api.post('/ludo/submit-result', formData),
+  submitResultBase64: (matchId, data) =>
+    api.post('/ludo/submit-result-base64', data),
   submitLoss: (formData) => api.post('/ludo/submit-loss', formData),
   cancelAsLoss: (matchId) => api.post('/ludo/cancel-as-loss', { matchId }),
   checkExpiry: (matchId) => api.post('/ludo/check-expiry', { matchId }),
