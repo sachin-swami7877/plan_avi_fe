@@ -29,6 +29,13 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/';
     }
+    // Force logout blocked users on any API call
+    if (error.response?.status === 403 && error.response?.data?.blocked) {
+      removeToken();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );

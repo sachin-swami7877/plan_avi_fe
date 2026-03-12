@@ -161,6 +161,14 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
+    // Force logout when admin blocks the user
+    newSocket.on('force-logout', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      window.location.href = '/login';
+    });
+
     setSocket(newSocket);
 
     return () => {
