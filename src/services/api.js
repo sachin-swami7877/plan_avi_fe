@@ -218,6 +218,15 @@ export const adminAPI = {
   resolveDispute: (id, body) =>
     api.put(`/admin/ludo/result-requests/${id}/resolve-dispute`, body),
   deleteLudoMatches: (ids) => api.post('/admin/ludo/matches/bulk-delete', { ids }),
+  // Profit
+  getLudoProfit: (params) => api.get('/admin/profit/ludo', { params }),
+  getAviatorProfit: (params) => api.get('/admin/profit/aviator', { params }),
+  // Database cleanup
+  getCleanupPreview: (params) => api.get('/admin/cleanup/preview', { params }),
+  cleanupPhotos: (data) => api.post('/admin/cleanup/photos', data),
+  cleanupLudoMatches: (data) => api.post('/admin/cleanup/ludo-matches', data),
+  // Export
+  exportUsers: () => api.get('/admin/export/users'),
 };
 
 export default api;

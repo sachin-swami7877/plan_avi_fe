@@ -46,6 +46,8 @@ import AdminLudo from './admin/AdminLudo';
 import AdminUserDetail from './admin/AdminUserDetail';
 import AdminUserTransactions from './admin/AdminUserTransactions';
 import AdminProfile from './admin/AdminProfile';
+import AdminProfit from './admin/AdminProfit';
+import AdminDatabase from './admin/AdminDatabase';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -249,6 +251,8 @@ function AppRoutes() {
         <Route path="bonus-records" element={<AdminBonusRecords />} />
         <Route path="ludo" element={<AdminLudo />} />
         <Route path="profile" element={<AdminProfile />} />
+        <Route path="profit" element={<SubAdminBlock><AdminProfit /></SubAdminBlock>} />
+        <Route path="database" element={<SubAdminBlock><AdminDatabase /></SubAdminBlock>} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="settings" element={
           <SubAdminBlock>

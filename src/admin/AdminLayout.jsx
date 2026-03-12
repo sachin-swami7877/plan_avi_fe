@@ -32,6 +32,8 @@ const AdminLayout = () => {
     { path: '/admin/notifications', label: 'Notifications', icon: '🔔', subAdmin: true },
     { path: '/admin/bonus-records', label: 'Bonus Records', icon: '🎁', subAdmin: false },
     { path: '/admin/ludo', label: 'Ludo', icon: '🎲', badge: ludoAlertCount, subAdmin: true },
+    { path: '/admin/profit', label: 'Profit', icon: '💹', subAdmin: false },
+    { path: '/admin/database', label: 'Database', icon: '🗄️', subAdmin: false },
     { path: '/admin/settings', label: 'Settings', icon: '⚙️', subAdmin: false },
     { path: '/admin/profile', label: 'Your Profile', icon: '👤', subAdmin: true },
   ];
