@@ -62,10 +62,10 @@ export default function AdminProfit() {
         ? await adminAPI.getLudoProfit(params)
         : await adminAPI.getAviatorProfit(params);
 
-      setRows(res.data.rows);
-      setTotalPages(res.data.totalPages);
-      setTotalProfit(res.data.totalProfit);
-      setTotal(res.data.total);
+      setRows(res.data.rows || []);
+      setTotalPages(res.data.totalPages || 1);
+      setTotalProfit(res.data.totalProfit || 0);
+      setTotal(res.data.total || 0);
     } catch (err) {
       console.error(err);
     } finally {
@@ -87,15 +87,20 @@ export default function AdminProfit() {
     return 'Select Date';
   };
 
-  const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const formatDate = (d) => {
+    if (!d) return '—';
+    const dt = new Date(d);
+    if (isNaN(dt)) return '—';
+    return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-800">Admin Profit</h1>
-        <div className={`text-lg font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          Total: {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+        <div className={`text-lg font-bold ${(totalProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          Total: {(totalProfit || 0) >= 0 ? '+' : ''}{(totalProfit || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
         </div>
       </div>
 
@@ -190,9 +195,9 @@ export default function AdminProfit() {
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                    r.profit >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                    (r.profit || 0) >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
                   }`}>
-                    {r.profit >= 0 ? '+' : ''}{r.profit.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+                    {(r.profit || 0) >= 0 ? '+' : ''}{(r.profit || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
                   </span>
                   <span className="text-xs text-gray-400">{formatDate(r.createdAt)}</span>
                 </div>

@@ -110,7 +110,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-100" style={{ overflowX: 'clip' }}>
       {/* Top Bar */}
       <header className="bg-primary-800 text-white px-4 py-3 sticky top-0 z-50 overflow-hidden">
         <div className="max-w-7xl mx-auto flex justify-between items-center min-w-0">
