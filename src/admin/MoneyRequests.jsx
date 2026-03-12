@@ -19,6 +19,7 @@ const MoneyRequests = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [editAmounts, setEditAmounts] = useState({});
   const [processing, setProcessing] = useState(null);
+  const [rejectDeductConfirm, setRejectDeductConfirm] = useState(null); // { id, amount, userName }
   const [depositTotals, setDepositTotals] = useState({ totalAmount: 0, count: 0 });
   const [withdrawalTotals, setWithdrawalTotals] = useState({ totalAmount: 0, count: 0 });
 
@@ -420,6 +421,15 @@ const MoneyRequests = () => {
                         ) : (tab === 'deposit' ? 'Reject' : 'Reject & Refund')}
                       </button>
                     </div>
+                    {tab === 'withdrawal' && (
+                      <button
+                        onClick={() => setRejectDeductConfirm({ id: request._id, amount: request.amount, userName: request.userId?.name || 'User' })}
+                        disabled={!!processing}
+                        className="w-full mt-2 bg-orange-600 text-white py-2.5 rounded-lg font-medium text-sm disabled:opacity-60"
+                      >
+                        Reject (Deduct — No Refund)
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -450,6 +460,38 @@ const MoneyRequests = () => {
             >
               Next <IoChevronForward />
             </button>
+          </div>
+        </div>
+      )}
+      {/* Reject & Deduct Confirmation Modal */}
+      {rejectDeductConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5">
+            <h3 className="text-lg font-bold text-red-600 mb-2">⚠️ Reject & Deduct</h3>
+            <p className="text-sm text-gray-700 mb-1">
+              <strong>₹{rejectDeductConfirm.amount}</strong> will be permanently deducted from <strong>{rejectDeductConfirm.userName}</strong>'s account.
+            </p>
+            <p className="text-sm text-red-600 font-medium mb-4">
+              Amount will NOT be refunded to the user. This action cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setRejectDeductConfirm(null)}
+                className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const { id } = rejectDeductConfirm;
+                  setRejectDeductConfirm(null);
+                  await handleProcess(id, 'reject_deduct');
+                }}
+                className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium text-sm"
+              >
+                Yes, Deduct
+              </button>
+            </div>
           </div>
         </div>
       )}

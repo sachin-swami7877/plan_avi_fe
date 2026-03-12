@@ -36,6 +36,7 @@ const Dashboard = () => {
     try {
       const res = await adminAPI.exportUsers();
       const users = res.data.users;
+      const totalBalance = res.data.totalBalance || 0;
       if (!users?.length) { toast.error('No users found'); return; }
 
       if (format === 'excel') {
@@ -49,6 +50,9 @@ const Dashboard = () => {
             return val;
           }).join(','));
         });
+        // Add total balance row at the end
+        const totalRow = headers.map((h) => h === 'Balance' ? totalBalance : (h === 'Name' ? 'TOTAL' : '')).join(',');
+        csvRows.push(totalRow);
         const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -56,22 +60,26 @@ const Dashboard = () => {
         a.download = `users_${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        toast.success(`Exported ${users.length} users as CSV`);
+        toast.success(`Exported ${users.length} users | Total Balance: ₹${totalBalance.toLocaleString('en-IN')}`);
       } else if (format === 'pdf') {
         // Generate PDF using browser print
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Users Export</title>
         <style>body{font-family:Arial,sans-serif;font-size:11px;margin:20px}
         h1{font-size:18px;margin-bottom:5px}
         p{color:#666;font-size:12px;margin-bottom:15px}
+        .total{font-size:14px;color:#1e40af;font-weight:bold;margin-bottom:10px}
         table{width:100%;border-collapse:collapse}
         th{background:#1e40af;color:#fff;padding:6px 8px;text-align:left;font-size:10px}
         td{padding:5px 8px;border-bottom:1px solid #e5e7eb;font-size:10px}
         tr:nth-child(even){background:#f9fafb}
+        tr.total-row{background:#dbeafe;font-weight:bold}
         @media print{body{margin:10px}}</style></head>
         <body><h1>RushkroLudo - All Users</h1>
         <p>Total: ${users.length} users | Exported: ${new Date().toLocaleDateString('en-IN')}</p>
+        <p class="total">Total Available Balance: ₹${totalBalance.toLocaleString('en-IN')}</p>
         <table><thead><tr>${Object.keys(users[0]).map(h => `<th>${h}</th>`).join('')}</tr></thead>
-        <tbody>${users.map(u => `<tr>${Object.values(u).map(v => `<td>${v ?? '—'}</td>`).join('')}</tr>`).join('')}</tbody></table></body></html>`;
+        <tbody>${users.map(u => `<tr>${Object.values(u).map(v => `<td>${v ?? '—'}</td>`).join('')}</tr>`).join('')}
+        <tr class="total-row">${Object.keys(users[0]).map(h => `<td>${h === 'Balance' ? '₹' + totalBalance.toLocaleString('en-IN') : (h === 'Name' ? 'TOTAL' : '')}</td>`).join('')}</tr></tbody></table></body></html>`;
         const w = window.open('', '_blank');
         w.document.write(html);
         w.document.close();

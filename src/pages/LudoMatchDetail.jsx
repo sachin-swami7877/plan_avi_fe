@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { ludoAPI, settingsAPI } from '../services/api';
-import { useCountdown, useElapsedTimer } from '../hooks/useCountdown';
+import { useCountdown } from '../hooks/useCountdown';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
@@ -187,6 +187,13 @@ export default function LudoMatchDetail() {
       }
     };
 
+    const handleWinClaimed = (data) => {
+      if (data?.matchId === id) {
+        toast(`${data.claimerName} has claimed the win.`, { duration: 6000, icon: '🏆' });
+        loadMatch();
+      }
+    };
+
     const handleCancelRequested = (data) => {
       if (data?.matchId === id) {
         toast.error(`${data.cancellerName} ने cancel request दी है!\nकारण: ${data.displayReason}`, { duration: 8000 });
@@ -222,6 +229,7 @@ export default function LudoMatchDetail() {
     socket.on('wallet:balance-updated', handleWalletUpdate);
     socket.on('ludo:match-cancelled', handleMatchCancelled);
     socket.on('ludo:loss-submitted', handleLossSubmitted);
+    socket.on('ludo:win-claimed', handleWinClaimed);
     socket.on('ludo:cancel-requested', handleCancelRequested);
     socket.on('ludo:cancel-request-sent', handleMatchUpdate);
     socket.on('ludo:win-dispute-submitted', handleWinDisputeSubmitted);
@@ -235,6 +243,7 @@ export default function LudoMatchDetail() {
       socket.off('wallet:balance-updated', handleWalletUpdate);
       socket.off('ludo:match-cancelled', handleMatchCancelled);
       socket.off('ludo:loss-submitted', handleLossSubmitted);
+      socket.off('ludo:win-claimed', handleWinClaimed);
       socket.off('ludo:cancel-requested', handleCancelRequested);
       socket.off('ludo:cancel-request-sent', handleMatchUpdate);
       socket.off('ludo:win-dispute-submitted', handleWinDisputeSubmitted);
@@ -256,7 +265,6 @@ export default function LudoMatchDetail() {
   const _isCreator = match?.creatorId?.toString() === user?._id?.toString();
 
   const gameActuallyStarted = _hasRoomCode && !!match?.gameActualStartAt;
-  const elapsedTimer = useElapsedTimer(gameActuallyStarted ? match?.gameActualStartAt : null);
 
   useEffect(() => {
     if (!roomCodeCountdown.expired || !isLive || _hasRoomCode) return;
@@ -682,9 +690,7 @@ export default function LudoMatchDetail() {
                 ) : !resultRequest ? (
                   <>
                     <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
-                      <p className="text-xs text-blue-600 uppercase font-semibold tracking-wide mb-1">Game running</p>
-                      <p className="text-3xl font-bold font-mono text-blue-700">{elapsedTimer.display}</p>
-                      <p className="text-xs text-gray-500 mt-1">Started: {formatTime12hr(match.gameActualStartAt || match.gameStartedAt)}</p>
+                      <p className="text-sm text-blue-600 uppercase font-semibold tracking-wide">Game Running</p>
                     </div>
                     <GameWarning />
                   </>

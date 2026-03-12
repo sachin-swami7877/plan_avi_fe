@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import { IoChevronBack, IoChevronForward, IoWarningOutline, IoCloseCircle } from 'react-icons/io5';
 import { FiCopy, FiDownload } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
@@ -34,6 +35,10 @@ const Wallet = () => {
   const [histTotalPages, setHistTotalPages] = useState(1);
   const [histTotalCount, setHistTotalCount] = useState(0);
   const { user, updateBalance, refreshUser } = useAuth();
+
+  // Cancel request
+  const [cancelConfirm, setCancelConfirm] = useState(null); // { id, type, amount }
+  const [cancelling, setCancelling] = useState(false);
 
   // UPI popup
   const [upiPopupOpen, setUpiPopupOpen] = useState(false);
@@ -199,6 +204,23 @@ const Wallet = () => {
       case 'approved': return 'text-green-600 bg-green-50';
       case 'rejected': return 'text-red-600 bg-red-50';
       default: return 'text-yellow-600 bg-yellow-50';
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (!cancelConfirm) return;
+    setCancelling(true);
+    try {
+      const res = await walletAPI.cancelRequest(cancelConfirm.id);
+      toast.success(res.data.message);
+      if (res.data.newBalance != null) updateBalance(res.data.newBalance);
+      fetchHistory();
+      fetchEarningsInfo();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to cancel');
+    } finally {
+      setCancelling(false);
+      setCancelConfirm(null);
     }
   };
 
@@ -397,17 +419,27 @@ const Wallet = () => {
               <p className="text-gray-400 text-center py-4">No transactions yet</p>
             ) : (
               history.map((item) => (
-                <div key={item._id} className="bg-white rounded-xl p-3.5 flex justify-between items-center shadow-sm">
-                  <div>
-                    <p className="font-medium capitalize text-gray-800">{item.type}</p>
-                    <p className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                <div key={item._id} className="bg-white rounded-xl p-3.5 shadow-sm">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium capitalize text-gray-800">{item.type}</p>
+                      <p className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-semibold ${item.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
+                        {item.type === 'deposit' ? '+' : '-'}₹{item.amount}
+                      </p>
+                      <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${getStatusColor(item.status)}`}>{item.status}</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${item.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                      {item.type === 'deposit' ? '+' : '-'}₹{item.amount}
-                    </p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${getStatusColor(item.status)}`}>{item.status}</span>
-                  </div>
+                  {item.status === 'pending' && item.type === 'deposit' && (
+                    <button
+                      onClick={() => setCancelConfirm({ id: item._id, type: item.type, amount: item.amount })}
+                      className="mt-2 w-full text-xs text-red-600 border border-red-200 bg-red-50 py-1.5 rounded-lg font-medium"
+                    >
+                      Cancel Request
+                    </button>
+                  )}
                 </div>
               ))
             )}
@@ -553,6 +585,32 @@ const Wallet = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Cancel Confirmation Modal */}
+      {cancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">Cancel Request?</h3>
+            <p className="text-sm text-gray-600 mb-1">
+              Are you sure you want to cancel your <strong>{cancelConfirm.type}</strong> request of <strong>₹{cancelConfirm.amount}</strong>?
+            </p>
+            {cancelConfirm.type === 'withdrawal' && (
+              <p className="text-sm text-green-600 font-medium mb-3">₹{cancelConfirm.amount} will be refunded to your wallet.</p>
+            )}
+            {cancelConfirm.type === 'deposit' && (
+              <p className="text-sm text-gray-500 mb-3">Your deposit request will be cancelled.</p>
+            )}
+            <div className="flex gap-2">
+              <button onClick={() => setCancelConfirm(null)} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-medium text-sm">
+                Go Back
+              </button>
+              <button onClick={handleCancelRequest} disabled={cancelling} className="flex-1 bg-red-500 text-white py-2.5 rounded-lg font-medium text-sm disabled:opacity-60">
+                {cancelling ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Navbar />
     </div>

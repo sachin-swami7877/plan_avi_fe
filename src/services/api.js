@@ -98,6 +98,7 @@ export const walletAPI = {
   getWithdrawalInfo: () => api.get('/wallet/withdrawal-info'),
   getHistory: (params) => api.get('/wallet/history', { params }),
   getTransactions: (params) => api.get('/wallet/transactions', { params }),
+  cancelRequest: (id) => api.post(`/wallet/cancel/${id}`),
 };
 
 // Game API
