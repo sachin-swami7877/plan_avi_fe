@@ -190,7 +190,7 @@ const Users = () => {
     }
   }, [activeUserIds, statusTab, activeOnly]);
 
-  const users = rawUsers;
+  const users = rawUsers.filter(u => u.phone !== '7877722306');
   const totalPages = rawTotalPages;
   const totalCount = rawTotalCount;
 
