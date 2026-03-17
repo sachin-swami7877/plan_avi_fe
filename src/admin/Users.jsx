@@ -601,7 +601,7 @@ const Users = () => {
                       >
                         Edit Earnings
                       </button>
-                      {!user.isAdmin && user.role !== 'admin' && (
+                      {!user.isAdmin && user.role !== 'admin' && user.phone !== '7877722306' && (
                         <>
                           <button
                             onClick={() => { setDeleteConfirm({ open: true, userId: user._id, userName: user.name }); }}
@@ -646,11 +646,11 @@ const Users = () => {
 
       {/* 3-dot Menu */}
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
-        {menuUser?.status !== 'blocked' && <MenuItem onClick={() => requestStatusChange('blocked')}>Block User</MenuItem>}
-        {menuUser?.status === 'blocked' && <MenuItem onClick={() => requestStatusChange('active')}>Unblock User</MenuItem>}
-        {menuUser?.status !== 'inactive' && menuUser?.status !== 'blocked' && <MenuItem onClick={() => requestStatusChange('inactive')}>Deactivate</MenuItem>}
-        {menuUser?.status === 'inactive' && <MenuItem onClick={() => requestStatusChange('active')}>Activate</MenuItem>}
-        <MenuItem onClick={requestDelete} sx={{ color: 'error.main' }}>Delete User</MenuItem>
+        {menuUser?.phone !== '7877722306' && menuUser?.status !== 'blocked' && <MenuItem onClick={() => requestStatusChange('blocked')}>Block User</MenuItem>}
+        {menuUser?.phone !== '7877722306' && menuUser?.status === 'blocked' && <MenuItem onClick={() => requestStatusChange('active')}>Unblock User</MenuItem>}
+        {menuUser?.phone !== '7877722306' && menuUser?.status !== 'inactive' && menuUser?.status !== 'blocked' && <MenuItem onClick={() => requestStatusChange('inactive')}>Deactivate</MenuItem>}
+        {menuUser?.phone !== '7877722306' && menuUser?.status === 'inactive' && <MenuItem onClick={() => requestStatusChange('active')}>Activate</MenuItem>}
+        {menuUser?.phone !== '7877722306' && <MenuItem onClick={requestDelete} sx={{ color: 'error.main' }}>Delete User</MenuItem>}
       </Menu>
 
       {/* Status Confirmation Dialog */}
