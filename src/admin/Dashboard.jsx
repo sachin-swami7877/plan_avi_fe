@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import toast from 'react-hot-toast';
@@ -10,6 +10,12 @@ const PERIODS = [
   { value: '30days', label: 'Last 1 Month' },
 ];
 
+const GAME_OPTIONS = [
+  { value: 'aviator', label: 'Aviator' },
+  { value: 'ludo', label: 'Ludo' },
+  { value: 'spinner', label: 'Spinner' },
+];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
@@ -19,6 +25,7 @@ const Dashboard = () => {
   const [customTo, setCustomTo] = useState('');
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [selectedGames, setSelectedGames] = useState(['aviator', 'ludo', 'spinner']); // All selected by default
   const exportRef = useRef(null);
 
   // Close dropdown on outside click
@@ -122,19 +129,30 @@ const Dashboard = () => {
     return <div className="text-center py-8">Loading...</div>;
   }
 
+  // Calculate house profit based on selected games
+  const filteredBet = selectedGames.reduce((sum, g) => sum + (stats?.games?.[g]?.bet || 0), 0);
+  const filteredWin = selectedGames.reduce((sum, g) => sum + (stats?.games?.[g]?.win || 0), 0);
+  const houseProfit = filteredBet - filteredWin;
+
+  const toggleGame = (g) => {
+    setSelectedGames(prev =>
+      prev.includes(g) ? (prev.length > 1 ? prev.filter(x => x !== g) : prev) : [...prev, g]
+    );
+  };
+
   const statCards = [
     { label: 'Total Users', value: stats?.totalUsers || 0, icon: '👥', color: 'bg-blue-500', link: '/admin/users' },
     { label: 'Pending Deposits', value: stats?.pendingDeposits || 0, icon: '💰', color: 'bg-yellow-500', link: '/admin/money' },
     { label: 'Pending Withdrawals', value: stats?.pendingWithdrawals || 0, icon: '💸', color: 'bg-orange-500', link: '/admin/money' },
     { label: 'Total Bets', value: stats?.totalBets || 0, icon: '🎰', color: 'bg-primary-500', link: '/admin/bets' },
     { label: 'Total Wins', value: stats?.totalWins || 0, icon: '🏆', color: 'bg-green-500', link: '/admin/wins-bets' },
-    { label: 'Total Bet Amount', value: `₹${stats?.totalBetAmount?.toFixed(2) || '0.00'}`, icon: '💵', color: 'bg-indigo-500' },
-    { label: 'Total Win Amount', value: `₹${stats?.totalWinAmount?.toFixed(2) || '0.00'}`, icon: '💎', color: 'bg-purple-500' },
+    { label: 'Total Bet Amount', value: `₹${filteredBet.toFixed(0)}`, icon: '💵', color: 'bg-indigo-500' },
+    { label: 'Total Win Amount', value: `₹${filteredWin.toFixed(0)}`, icon: '💎', color: 'bg-purple-500' },
     {
       label: 'House Profit',
-      value: `₹${((stats?.totalBetAmount || 0) - (stats?.totalWinAmount || 0)).toFixed(2)}`,
+      value: `₹${houseProfit.toFixed(0)}`,
       icon: '🏠',
-      color: 'bg-emerald-500'
+      color: houseProfit >= 0 ? 'bg-emerald-500' : 'bg-red-500',
     },
   ];
 
@@ -199,6 +217,24 @@ const Dashboard = () => {
           </button>
         </div>
       )}
+
+      {/* Game Filter for House Profit */}
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
+        <span className="text-xs text-gray-500 font-medium">Games:</span>
+        {GAME_OPTIONS.map((g) => (
+          <button
+            key={g.value}
+            onClick={() => toggleGame(g.value)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+              selectedGames.includes(g.value)
+                ? 'bg-primary-600 text-white border-primary-600'
+                : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statCards.map((card, index) => (

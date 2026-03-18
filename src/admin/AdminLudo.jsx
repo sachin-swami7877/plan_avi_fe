@@ -475,9 +475,9 @@ export default function AdminLudo() {
                         <span><span className="font-medium">Prize</span> <span className="font-semibold text-gray-900">💰 ₹{b.prize}</span></span>
                       </p>
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-gray-800 truncate">{p1}</span>
+                        <span className="text-sm font-semibold text-gray-800 truncate cursor-pointer hover:text-primary-600 hover:underline" onClick={() => { const uid = b.players?.[0]?.userId; if (uid) navigate(`/admin/users/${uid}`); }}>{p1}</span>
                         <span className="text-amber-600 font-bold flex-shrink-0">Vs</span>
-                        <span className="text-sm font-semibold text-gray-800 truncate">{p2}</span>
+                        <span className="text-sm font-semibold text-gray-800 truncate cursor-pointer hover:text-primary-600 hover:underline" onClick={() => { const uid = b.players?.[1]?.userId; if (uid) navigate(`/admin/users/${uid}`); }}>{p2}</span>
                       </div>
                       <div className="flex gap-2 mt-2">
                         <button onClick={() => openDetail(b._id)} className="bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold">View</button>
@@ -568,9 +568,15 @@ export default function AdminLudo() {
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <p className="text-xs text-gray-600 truncate">
-                        <span className="font-semibold text-gray-800">{p1}</span>
+                        <span
+                          className="font-semibold text-gray-800 cursor-pointer hover:text-primary-600 hover:underline"
+                          onClick={(e) => { e.stopPropagation(); const uid = m.players?.[0]?.userId; if (uid) navigate(`/admin/users/${uid}`); }}
+                        >{p1}</span>
                         {' '}<span className="text-amber-600 font-bold">Vs</span>{' '}
-                        <span className="font-semibold text-gray-800">{p2}</span>
+                        <span
+                          className="font-semibold text-gray-800 cursor-pointer hover:text-primary-600 hover:underline"
+                          onClick={(e) => { e.stopPropagation(); const uid = m.players?.[1]?.userId; if (uid) navigate(`/admin/users/${uid}`); }}
+                        >{p2}</span>
                       </p>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {isWaiting && waitingRemaining != null && <span className="text-[10px] font-mono text-red-600">{waitingRemaining}</span>}
