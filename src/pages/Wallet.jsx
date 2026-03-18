@@ -53,15 +53,10 @@ const Wallet = () => {
   const [earningsInfo, setEarningsInfo] = useState({ walletBalance: 0, totalDeposited: 0, earnings: 0 });
 
   useEffect(() => {
-    if (user && !user.upiId && !user.upiNumber) {
-      const isFirstVisit = !localStorage.getItem('upiModalSeen');
-      const hasZeroBalance = (user.walletBalance || 0) === 0;
-      if (isFirstVisit || hasZeroBalance) {
-        setUpiPopupOpen(true);
-        localStorage.setItem('upiModalSeen', '1');
-      }
+    if (tab === 'withdraw' && user && !user.upiId && !user.upiNumber) {
+      setUpiPopupOpen(true);
     }
-  }, [user]);
+  }, [tab, user]);
 
   const fetchHistory = useCallback(async () => {
     try {
@@ -112,11 +107,6 @@ const Wallet = () => {
 
   const handleDeposit = async (e) => {
     e.preventDefault();
-    if (!user?.upiId && !user?.upiNumber) {
-      setUpiPopupOpen(true);
-      setMessage({ type: 'error', text: 'Please save your UPI details first' });
-      return;
-    }
     if (!amount || Number(amount) < 100) { setMessage({ type: 'error', text: 'Minimum deposit is ₹100' }); return; }
     if (!utrNumber.trim()) { setMessage({ type: 'error', text: 'UTR number is required' }); return; }
     if (!screenshot) { setMessage({ type: 'error', text: 'Screenshot is required' }); return; }
@@ -312,11 +302,6 @@ const Wallet = () => {
               onClick={() => {
                 if (!amount || Number(amount) < 100) {
                   setMessage({ type: 'error', text: 'Minimum deposit is ₹100' });
-                  return;
-                }
-                if (!user?.upiId && !user?.upiNumber) {
-                  setUpiPopupOpen(true);
-                  setMessage({ type: 'error', text: 'Please save your UPI details first' });
                   return;
                 }
                 navigate(`/payment-info?amount=${amount}`);

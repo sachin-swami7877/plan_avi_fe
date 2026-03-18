@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminAPI } from '../services/api';
 import { useCountdown } from '../hooks/useCountdown';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 // Helper to render screenshot — handles both Cloudinary URLs and base64 data URIs
@@ -104,6 +105,7 @@ const REFUND_OPTIONS = [
 ];
 
 export default function AdminLudo() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('requests');
   const [records, setRecords] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -628,7 +630,12 @@ export default function AdminLudo() {
                     </div>
                     <p className="text-xs text-gray-500 font-mono mb-1">Match ID: {matchId?._id}</p>
                     <p className="font-medium text-gray-800">Match: ₹{matchId?.entryAmount} • Room: {matchId?.roomCode || '—'}</p>
-                    <p className="text-sm text-gray-500 mb-2">Players: {players.map((p) => p.userName).join(', ')}</p>
+                    <p className="text-sm text-gray-500 mb-2">Players: {players.map((p, i) => (
+                      <span key={i}>
+                        {i > 0 && ', '}
+                        <span className="cursor-pointer hover:text-primary-600 underline" onClick={() => p.userId && navigate(`/admin/users/${p.userId}`)}>{p.userName}</span>
+                      </span>
+                    ))}</p>
 
                     {/* Cancel Reason Info (shown for both dispute types) */}
                     {isAdminDispute && matchId?.cancelReasonCode && (
@@ -649,7 +656,7 @@ export default function AdminLudo() {
                       {claims.map((c, i) => (
                         <div key={i} className={`rounded-lg px-3 py-2 ${c.type === 'win_dispute' ? 'bg-orange-50 border border-orange-200' : c.type === 'win' ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-800">{c.userName}</span>
+                            <span className="font-medium text-gray-800 cursor-pointer hover:text-primary-600 underline" onClick={() => c.userId && navigate(`/admin/users/${c.userId}`)}>{c.userName}</span>
                             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${c.type === 'win_dispute' ? 'bg-orange-100 text-orange-700' : c.type === 'win' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                               {c.type === 'win_dispute' ? 'Win Dispute' : c.type === 'win' ? 'Win Claim' : 'Loss'}
                             </span>

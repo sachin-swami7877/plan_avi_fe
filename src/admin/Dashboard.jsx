@@ -142,38 +142,6 @@ const Dashboard = () => {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <div className="relative" ref={exportRef}>
-          <button
-            onClick={() => setExportOpen(!exportOpen)}
-            disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
-          >
-            {exporting ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white" />
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-            )}
-            Download Users
-          </button>
-          {exportOpen && (
-            <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-20 w-44">
-              <button
-                onClick={() => handleExport('excel')}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-green-600 text-lg">📊</span>
-                Excel (CSV)
-              </button>
-              <button
-                onClick={() => handleExport('pdf')}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
-              >
-                <span className="text-red-500 text-lg">📄</span>
-                PDF
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Period Filter */}

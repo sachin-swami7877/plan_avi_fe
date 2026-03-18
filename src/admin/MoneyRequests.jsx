@@ -4,10 +4,12 @@ import { useSocket } from '../context/SocketContext';
 import { IoChevronBack, IoChevronForward, IoChevronDown } from 'react-icons/io5';
 import DatePickerModal from '../components/DatePickerModal';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const PER_PAGE = 25;
 
 const MoneyRequests = () => {
+  const navigate = useNavigate();
   const { socket } = useSocket();
   const [tab, setTab] = useState('deposit');
   const [requests, setRequests] = useState([]);
@@ -247,9 +249,20 @@ const MoneyRequests = () => {
                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow">
                       <span className="text-lg">{tab === 'deposit' ? '₹' : '💸'}</span>
                     </div>
-                    <div className="text-left min-w-0">
-                      <h3 className="font-bold text-gray-800 truncate">{request.userId?.name || '(no name)'}</h3>
-                      <p className="text-xs text-gray-500">{request.userId?.phone || request.userId?.email}</p>
+                    <div className="text-left min-w-0 max-w-[130px]">
+                      <h3
+                        className="font-bold text-gray-800 truncate cursor-pointer hover:text-primary-600 transition-colors"
+                        title={request.userId?.name}
+                        onClick={(e) => { e.stopPropagation(); if (request.userId?._id) navigate(`/admin/users/${request.userId._id}`); }}
+                      >
+                        {request.userId?.name || '(no name)'}
+                      </h3>
+                      <p
+                        className="text-xs text-gray-500 cursor-pointer hover:text-primary-600 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); if (request.userId?._id) navigate(`/admin/users/${request.userId._id}`); }}
+                      >
+                        {request.userId?.phone || request.userId?.email}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
