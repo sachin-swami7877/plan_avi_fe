@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { walletAPI, authAPI } from '../services/api';
 import { compressImage } from '../utils/compressImage';
@@ -36,6 +37,7 @@ const Wallet = () => {
   const [histTotalPages, setHistTotalPages] = useState(1);
   const [histTotalCount, setHistTotalCount] = useState(0);
   const { user, updateBalance, refreshUser } = useAuth();
+  const { socket } = useSocket();
 
   // Cancel request
   const [cancelConfirm, setCancelConfirm] = useState(null); // { id, type, amount }
@@ -97,6 +99,18 @@ const Wallet = () => {
     fetchEarningsInfo();
   }, []);
 
+  // Instant KYC status update via socket
+  useEffect(() => {
+    if (!socket) return;
+    const handler = ({ kycStatus }) => {
+      refreshUser();
+      if (kycStatus === 'approved') toast.success('KYC approved! You can now withdraw.');
+      else if (kycStatus === 'rejected') toast.error('KYC rejected. Check profile for reason.');
+    };
+    socket.on('user:kyc-updated', handler);
+    return () => socket.off('user:kyc-updated', handler);
+  }, [socket, refreshUser]);
+
   const checkFirstDeposit = async () => {
     try {
       if (!localStorage.getItem('tcSeen')) {
@@ -129,6 +143,10 @@ const Wallet = () => {
 
   const handleWithdraw = async (e) => {
     e.preventDefault();
+    if (user?.kycStatus === 'pending') {
+      toast('KYC under review. Please wait for admin approval.', { icon: '⏳' });
+      return;
+    }
     if (user?.kycStatus !== 'approved') {
       navigate('/profile?kyc=open');
       return;

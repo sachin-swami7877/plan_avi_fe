@@ -69,9 +69,12 @@ function CleanupSection({ title, icon, type }) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const res = type === 'photos'
-        ? await adminAPI.cleanupPhotos({ startDate, endDate })
-        : await adminAPI.cleanupLudoMatches({ startDate, endDate });
+      const photoTypes = ['ludo_photos', 'deposit_photos', 'kyc_photos'];
+      const res = photoTypes.includes(type)
+        ? await adminAPI.cleanupPhotos({ startDate, endDate, photoType: type })
+        : type === 'photos'
+          ? await adminAPI.cleanupPhotos({ startDate, endDate })
+          : await adminAPI.cleanupLudoMatches({ startDate, endDate });
       toast.success(res.data.message);
       setPreview(null);
       setConfirmOpen(false);
@@ -140,6 +143,12 @@ function CleanupSection({ title, icon, type }) {
                 Expired waiting: {preview.expired} | Cancelled: {preview.cancelled}
               </p>
             )}
+            {preview.sampleUrl && (
+              <div className="bg-white border border-gray-200 rounded-lg p-2">
+                <p className="text-[10px] text-gray-400 mb-1 font-semibold uppercase">Sample URL (Cloudinary confirm)</p>
+                <a href={preview.sampleUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 break-all hover:underline">{preview.sampleUrl}</a>
+              </div>
+            )}
             {preview.count > 0 && (
               <button
                 onClick={() => setConfirmOpen(true)}
@@ -200,14 +209,26 @@ export default function AdminDatabase() {
       <p className="text-sm text-gray-500">Clean up old data to save storage and improve performance.</p>
 
       <CleanupSection
-        title="Delete Photos (Cloudinary)"
-        icon="🗑️"
-        type="photos"
+        title="Delete Ludo Result Screenshots"
+        icon="🎲"
+        type="ludo_photos"
+      />
+
+      <CleanupSection
+        title="Delete Deposit Screenshots"
+        icon="💰"
+        type="deposit_photos"
+      />
+
+      <CleanupSection
+        title="Delete KYC Aadhaar Photos"
+        icon="🪪"
+        type="kyc_photos"
       />
 
       <CleanupSection
         title="Delete Expired & Cancelled Ludo Matches"
-        icon="🎲"
+        icon="🗑️"
         type="ludo"
       />
     </div>

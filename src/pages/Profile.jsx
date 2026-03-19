@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { compressImage } from '../utils/compressImage';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { walletAPI, gameAPI, authAPI, settingsAPI, spinnerAPI, ludoAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
@@ -17,6 +18,7 @@ const inputCls = 'w-full bg-gray-900 border border-gray-700 text-white rounded-x
 
 const Profile = () => {
   const { user, logout, refreshUser } = useAuth();
+  const { socket } = useSocket();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [stats, setStats] = useState({ totalBets: 0, totalWins: 0, todayEarnings: 0, spinnerEarnings: 0, ludoEarnings: 0 });
@@ -44,10 +46,29 @@ const Profile = () => {
   }, []);
 
   useEffect(() => {
+    if (!socket) return;
+    const handler = ({ kycStatus, reason }) => {
+      refreshUser();
+      fetchKycStatus();
+      if (kycStatus === 'approved') toast.success('KYC approved! Withdrawals enabled.');
+      else if (kycStatus === 'rejected') toast.error(`KYC rejected: ${reason}`);
+    };
+    socket.on('user:kyc-updated', handler);
+    return () => socket.off('user:kyc-updated', handler);
+  }, [socket, refreshUser]);
+
+  useEffect(() => {
     if (searchParams.get('kyc') === 'open') {
-      setKycModalOpen(true);
+      const status = user?.kycStatus;
+      if (status === 'pending') {
+        toast('KYC already under review. Please wait for admin approval.', { icon: '⏳' });
+      } else if (status === 'approved') {
+        toast.success('Your KYC is already verified.');
+      } else {
+        setKycModalOpen(true);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, user?.kycStatus]);
 
   const fetchKycStatus = async () => {
     try {

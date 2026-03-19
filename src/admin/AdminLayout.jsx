@@ -19,6 +19,7 @@ const AdminLayout = () => {
   const location = useLocation();
   const [pendingCount, setPendingCount] = useState({ deposits: 0, withdrawals: 0 });
   const [ludoAlertCount, setLudoAlertCount] = useState(0);
+  const [kycAlertCount, setKycAlertCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // All available menu items
@@ -33,7 +34,7 @@ const AdminLayout = () => {
     { path: '/admin/bonus-records', label: 'Bonus Records', icon: '🎁', subAdmin: false },
     { path: '/admin/ludo', label: 'Ludo', icon: '🎲', badge: ludoAlertCount, subAdmin: true },
     { path: '/admin/profit', label: 'Profit', icon: '💹', subAdmin: false },
-    { path: '/admin/kyc', label: 'KYC', icon: '🪪', subAdmin: false },
+    { path: '/admin/kyc', label: 'KYC', icon: '🪪', badge: kycAlertCount, subAdmin: false },
     { path: '/admin/database', label: 'Database', icon: '🗄️', subAdmin: false },
     { path: '/admin/settings', label: 'Settings', icon: '⚙️', subAdmin: false },
     { path: '/admin/profile', label: 'Your Profile', icon: '👤', subAdmin: true },
@@ -87,11 +88,17 @@ const AdminLayout = () => {
       toast(`New user registered: ${data?.phone || data?.email || 'Unknown'}`, { icon: '🆕', duration: 5000 });
       playNotificationSound();
     });
+    socket.on('admin:kyc-request', (data) => {
+      toast(`KYC request from ${data?.userName || 'a user'}`, { icon: '🪪', duration: 6000 });
+      setKycAlertCount(prev => prev + 1);
+      playNotificationSound();
+    });
     return () => {
       socket.off('admin:wallet-request');
       socket.off('admin:withdrawal-request');
       socket.off('admin:ludo-result-request');
       socket.off('admin:new-user');
+      socket.off('admin:kyc-request');
     };
   }, [socket]);
 
@@ -102,6 +109,9 @@ const AdminLayout = () => {
     }
     if (location.pathname.startsWith('/admin/money')) {
       setPendingCount({ deposits: 0, withdrawals: 0 });
+    }
+    if (location.pathname.startsWith('/admin/kyc')) {
+      setKycAlertCount(0);
     }
   }, [location.pathname]);
 

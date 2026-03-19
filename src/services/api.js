@@ -60,7 +60,7 @@ export const authAPI = {
   updateProfile: (data) => api.put('/auth/profile', data),
   getMe: () => api.get('/auth/me'),
   findEmail: (phone) => api.post('/auth/find-email', { phone: String(phone || '').trim() }),
-  submitKyc: (formData) => api.post('/auth/kyc', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  submitKyc: (formData) => api.post('/auth/kyc', formData),
   getKycStatus: () => api.get('/auth/kyc'),
 };
 

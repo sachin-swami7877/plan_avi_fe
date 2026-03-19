@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 const STATUS_TABS = ['pending', 'approved', 'rejected', 'all'];
 
 export default function AdminKyc() {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [statusTab, setStatusTab] = useState('pending');
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,12 @@ export default function AdminKyc() {
                 onClick={() => setExpanded(expanded === r._id ? null : r._id)}
               >
                 <div>
-                  <p className="font-semibold text-gray-800 text-sm">{r.userId?.name || '—'}</p>
+                  <p
+                    className="font-semibold text-primary-700 text-sm hover:underline inline-block"
+                    onClick={(e) => { e.stopPropagation(); if (r.userId?._id) navigate(`/admin/users/${r.userId._id}`); }}
+                  >
+                    {r.userId?.name || '—'}
+                  </p>
                   <p className="text-xs text-gray-500">{r.userId?.phone} · {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -111,15 +118,26 @@ export default function AdminKyc() {
                 <div className="border-t border-gray-100 px-4 py-3 space-y-3">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div><p className="text-xs text-gray-400">Email</p><p className="font-medium">{r.email || '—'}</p></div>
-                    <div><p className="text-xs text-gray-400">Aadhaar</p><p className="font-medium">{r.aadhaarNumber ? `XXXX XXXX ${r.aadhaarNumber.slice(-4)}` : '—'}</p></div>
+                    <div><p className="text-xs text-gray-400">Aadhaar</p><p className="font-medium font-mono">{r.aadhaarNumber || '—'}</p></div>
                     <div className="col-span-2"><p className="text-xs text-gray-400">Address</p><p className="font-medium">{r.address || '—'}</p></div>
                   </div>
 
-                  {r.aadhaarFrontUrl && (
+                  {r.aadhaarFrontUrl ? (
                     <div>
                       <p className="text-xs text-gray-400 mb-1">Aadhaar Photo</p>
-                      <img src={r.aadhaarFrontUrl} alt="Aadhaar" className="max-h-48 rounded-lg border border-gray-200 cursor-pointer" onClick={() => window.open(r.aadhaarFrontUrl, '_blank')} />
+                      <a href={r.aadhaarFrontUrl} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={r.aadhaarFrontUrl}
+                          alt="Aadhaar"
+                          className="w-full max-h-56 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                        />
+                        <p style={{display:'none'}} className="text-xs text-red-400 mt-1">Image failed to load. <a href={r.aadhaarFrontUrl} target="_blank" rel="noopener noreferrer" className="underline">Open directly</a></p>
+                      </a>
+                      <p className="text-xs text-blue-500 mt-1">Tap to open full image</p>
                     </div>
+                  ) : (
+                    <p className="text-xs text-gray-400">No photo uploaded</p>
                   )}
 
                   {r.status === 'rejected' && r.rejectionReason && (

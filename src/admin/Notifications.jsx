@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
 
@@ -6,6 +7,7 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const { socket } = useSocket();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotifications();
@@ -43,10 +45,21 @@ const Notifications = () => {
       }, ...prev]);
     });
 
+    socket.on('admin:kyc-request', (data) => {
+      setNotifications(prev => [{
+        type: 'kyc',
+        userName: data.userName || 'User',
+        userPhone: data.userPhone,
+        userId: data.userId,
+        createdAt: new Date()
+      }, ...prev]);
+    });
+
     return () => {
       socket.off('admin:wallet-request');
       socket.off('admin:withdrawal-request');
       socket.off('admin:ludo-result-request');
+      socket.off('admin:kyc-request');
     };
   }, [socket]);
 
@@ -90,6 +103,8 @@ const Notifications = () => {
         return { icon: '💸', color: 'bg-red-100', text: 'Withdrawal Request' };
       case 'ludo_result':
         return { icon: '🎲', color: 'bg-purple-100', text: 'Ludo Result Request' };
+      case 'kyc':
+        return { icon: '🪪', color: 'bg-blue-100', text: 'KYC Request' };
       default:
         return { icon: '🔔', color: 'bg-gray-100', text: 'Notification' };
     }
@@ -112,9 +127,16 @@ const Notifications = () => {
           {notifications.map((notification, index) => {
             const typeInfo = getTypeInfo(notification.type);
             return (
-              <div key={notification._id || index} className="bg-white rounded-xl p-4 shadow-sm">
+              <div
+                key={notification._id || index}
+                className={`bg-white rounded-xl p-4 shadow-sm ${notification.type === 'kyc' || notification.type === 'ludo_result' ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                onClick={() => {
+                  if (notification.type === 'kyc') navigate('/admin/kyc');
+                  else if (notification.type === 'ludo_result') navigate('/admin/ludo');
+                }}
+              >
                 <div className="flex gap-4">
-                  <div className={`w-12 h-12 ${typeInfo.color} rounded-full flex items-center justify-center text-xl`}>
+                  <div className={`w-12 h-12 ${typeInfo.color} rounded-full flex items-center justify-center text-xl flex-shrink-0`}>
                     {typeInfo.icon}
                   </div>
                   <div className="flex-1">
@@ -126,15 +148,17 @@ const Notifications = () => {
                             {notification.userName} submitted result
                             {notification.claims?.length > 1 && ` (${notification.claims.length} claims)`}
                           </p>
+                        ) : notification.type === 'kyc' ? (
+                          <p className="text-sm text-gray-600">
+                            {notification.userName} {notification.userPhone && `(${notification.userPhone})`} — tap to review
+                          </p>
                         ) : (
                           <p className="text-sm text-gray-600">
                             {notification.userName} ({notification.userPhone})
                           </p>
                         )}
                       </div>
-                      {notification.type === 'ludo_result' ? (
-                        <a href="/admin/ludo" className="text-purple-600 text-sm font-medium hover:underline">View</a>
-                      ) : (
+                      {notification.type !== 'ludo_result' && notification.type !== 'kyc' && (
                         <p className={`font-bold ${notification.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
                           ₹{notification.amount}
                         </p>
