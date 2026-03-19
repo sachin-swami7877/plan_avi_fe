@@ -57,10 +57,13 @@ const Profile = () => {
 
   const handleKycSubmit = async (e) => {
     e.preventDefault();
-    if (!kycForm.email || !kycForm.address) {
-      toast.error('All fields are required'); return;
+    if (!kycForm.email) {
+      toast.error('Email is required'); return;
     }
-    if (!kycFile && user?.kycStatus !== 'rejected') {
+    if (!kycForm.address) {
+      toast.error('Address is required'); return;
+    }
+    if (!kycFile) {
       toast.error('Aadhaar front photo is required'); return;
     }
     setKycSubmitting(true);
