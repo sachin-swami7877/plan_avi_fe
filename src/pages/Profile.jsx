@@ -57,11 +57,8 @@ const Profile = () => {
 
   const handleKycSubmit = async (e) => {
     e.preventDefault();
-    if (!kycForm.email || !kycForm.aadhaarNumber || !kycForm.address) {
+    if (!kycForm.email || !kycForm.address) {
       toast.error('All fields are required'); return;
-    }
-    if (!/^\d{12}$/.test(kycForm.aadhaarNumber.replace(/\s/g, ''))) {
-      toast.error('Aadhaar must be 12 digits'); return;
     }
     if (!kycFile && user?.kycStatus !== 'rejected') {
       toast.error('Aadhaar front photo is required'); return;
@@ -436,7 +433,6 @@ const Profile = () => {
                     value={kycForm.aadhaarNumber}
                     onChange={(e) => setKycForm({ ...kycForm, aadhaarNumber: e.target.value })}
                     className={inputCls}
-                    required
                   />
                 </div>
 

@@ -109,9 +109,7 @@ const Home = () => {
       <div className="max-w-md mx-auto p-4 w-full min-w-0">
         {/* Welcome Section */}
         <div className="mb-6">
-
         </div>
-
         {/* User Warning */}
         {userWarning && (
           <div className="mb-4 bg-white border-2 border-red-500 rounded-xl px-4 py-3 flex items-start gap-2">
