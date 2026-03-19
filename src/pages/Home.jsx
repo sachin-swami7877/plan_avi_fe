@@ -109,7 +109,7 @@ const Home = () => {
       <div className="max-w-md mx-auto p-4 w-full min-w-0">
         {/* Welcome Section */}
         <div className="mb-6">
-          <p className="text-gray-600 text-sm">Choose a game to play</p>
+
         </div>
 
         {/* User Warning */}

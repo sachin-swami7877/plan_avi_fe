@@ -139,6 +139,15 @@ export default function Ludo() {
   useEffect(() => { dummyBattlesRef.current = dummyBattles; }, [dummyBattles]);
   useEffect(() => { dummyOpenRef.current = dummyOpenBattles; }, [dummyOpenBattles]);
 
+  // Auto-remove expired matches from waiting list (client-side, every second via tick)
+  useEffect(() => {
+    const now = new Date(tick);
+    setWaitingList((prev) => {
+      const filtered = prev.filter((m) => !m.joinExpiryAt || new Date(m.joinExpiryAt) > now);
+      return filtered.length === prev.length ? prev : filtered;
+    });
+  }, [tick]);
+
   // Generate dummy running battles; roll 5 out / 5 in every 30 sec with animation
   useEffect(() => {
     const n = Math.max(0, Number(ludoDummyRunningBattles) || 0);
@@ -303,9 +312,13 @@ export default function Ludo() {
       fetchWaitingList();
       fetchRunningBattles();
     });
+    socket.on('ludo:match-expired', ({ matchId }) => {
+      setWaitingList((prev) => prev.filter((m) => m._id.toString() !== matchId));
+    });
     return () => {
       socket.off('ludo:match-live');
       socket.off('ludo:waiting-updated');
+      socket.off('ludo:match-expired');
     };
   }, [socket, fetchMyMatches, fetchWaitingList, fetchRunningBattles]);
 
