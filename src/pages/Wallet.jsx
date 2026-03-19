@@ -36,7 +36,7 @@ const Wallet = () => {
   const [histPage, setHistPage] = useState(1);
   const [histTotalPages, setHistTotalPages] = useState(1);
   const [histTotalCount, setHistTotalCount] = useState(0);
-  const { user, updateBalance, refreshUser } = useAuth();
+  const { user, updateBalance, refreshUser, patchUser } = useAuth();
   const { socket } = useSocket();
 
   // Cancel request
@@ -103,7 +103,7 @@ const Wallet = () => {
   useEffect(() => {
     if (!socket) return;
     const handler = ({ kycStatus }) => {
-      refreshUser();
+      patchUser({ kycStatus });
       if (kycStatus === 'approved') toast.success('KYC approved! You can now withdraw.');
       else if (kycStatus === 'rejected') toast.error('KYC rejected. Check profile for reason.');
     };

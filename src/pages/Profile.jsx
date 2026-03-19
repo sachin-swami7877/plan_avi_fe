@@ -17,7 +17,7 @@ import TextField from '@mui/material/TextField';
 const inputCls = 'w-full bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-primary-500 transition-colors';
 
 const Profile = () => {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, patchUser } = useAuth();
   const { socket } = useSocket();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -48,7 +48,7 @@ const Profile = () => {
   useEffect(() => {
     if (!socket) return;
     const handler = ({ kycStatus, reason }) => {
-      refreshUser();
+      patchUser({ kycStatus });
       fetchKycStatus();
       if (kycStatus === 'approved') toast.success('KYC approved! Withdrawals enabled.');
       else if (kycStatus === 'rejected') toast.error(`KYC rejected: ${reason}`);

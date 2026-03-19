@@ -7,7 +7,7 @@ const AuthContext = createContext();
 // Fallback returned during Vite HMR when provider briefly unmounts
 const HMR_FALLBACK = {
   user: null, loading: true, login: () => {}, logout: () => {},
-  updateBalance: () => {}, refreshUser: async () => {},
+  updateBalance: () => {}, refreshUser: async () => {}, patchUser: () => {},
   isAuthenticated: false, isAdmin: false, isSubAdmin: false,
 };
 
@@ -74,6 +74,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Instantly merge partial fields into user state (e.g. kycStatus from socket)
+  const patchUser = (fields) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...fields };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const refreshUser = async () => {
     try {
       const res = await authAPI.getMe();
@@ -93,6 +103,7 @@ export const AuthProvider = ({ children }) => {
       logout, 
       updateBalance,
       refreshUser,
+      patchUser,
       isAuthenticated: !!user,
       isAdmin: user?.isAdmin || user?.role === 'admin',
       isSubAdmin: user?.isSubAdmin || user?.role === 'manager' || user?.role === 'admin',
