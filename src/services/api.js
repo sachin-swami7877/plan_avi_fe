@@ -234,6 +234,7 @@ export const adminAPI = {
   getKycRequests: (params) => api.get('/admin/kyc', { params }),
   approveKyc: (id) => api.put(`/admin/kyc/${id}/approve`),
   rejectKyc: (id, reason) => api.put(`/admin/kyc/${id}/reject`, { reason }),
+  deleteKyc: (id) => api.delete(`/admin/kyc/${id}`),
 };
 
 export default api;

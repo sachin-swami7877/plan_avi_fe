@@ -17,6 +17,7 @@ export default function AdminKyc() {
   const [expanded, setExpanded] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectingId, setRejectingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [acting, setActing] = useState(false);
 
   const fetchRequests = useCallback(async () => {
@@ -60,6 +61,19 @@ export default function AdminKyc() {
       setExpanded(null);
     } catch {
       toast.error('Failed to reject');
+    } finally { setActing(false); }
+  };
+
+  const handleDelete = async (id) => {
+    setActing(true);
+    try {
+      await adminAPI.deleteKyc(id);
+      toast.success('KYC deleted. User must resubmit.');
+      setDeletingId(null);
+      fetchRequests();
+      setExpanded(null);
+    } catch {
+      toast.error('Failed to delete');
     } finally { setActing(false); }
   };
 
@@ -116,10 +130,10 @@ export default function AdminKyc() {
 
               {expanded === r._id && (
                 <div className="border-t border-gray-100 px-4 py-3 space-y-3">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="space-y-2 text-sm">
                     <div><p className="text-xs text-gray-400">Email</p><p className="font-medium">{r.email || '—'}</p></div>
-                    <div><p className="text-xs text-gray-400">Aadhaar</p><p className="font-medium font-mono">{r.aadhaarNumber || '—'}</p></div>
-                    <div className="col-span-2"><p className="text-xs text-gray-400">Address</p><p className="font-medium">{r.address || '—'}</p></div>
+                    <div><p className="text-xs text-gray-400">Aadhaar Number</p><p className="font-medium font-mono">{r.aadhaarNumber || '—'}</p></div>
+                    <div><p className="text-xs text-gray-400">Address</p><p className="font-medium">{r.address || '—'}</p></div>
                   </div>
 
                   {r.aadhaarFrontUrl ? (
@@ -175,6 +189,23 @@ export default function AdminKyc() {
                   {r.status !== 'pending' && r.reviewedAt && (
                     <p className="text-xs text-gray-400">Reviewed on {new Date(r.reviewedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                   )}
+
+                  {/* Delete KYC — resets user to scratch */}
+                  <div className="pt-1 border-t border-gray-100">
+                    {deletingId === r._id ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-red-600 font-semibold">User ki KYC delete ho jaegi aur unhe dobara submit karni padegi. Confirm?</p>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleDelete(r._id)} disabled={acting} className="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50">Yes, Delete</button>
+                          <button onClick={() => setDeletingId(null)} className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold">Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => setDeletingId(r._id)} disabled={acting} className="w-full py-2 bg-gray-50 text-red-500 border border-red-200 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors">
+                        🗑 Delete KYC (Reset)
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
