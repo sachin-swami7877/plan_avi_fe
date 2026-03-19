@@ -127,6 +127,10 @@ const Wallet = () => {
 
   const handleWithdraw = async (e) => {
     e.preventDefault();
+    if (user?.kycStatus !== 'approved') {
+      navigate('/profile?kyc=open');
+      return;
+    }
     if (!user?.upiId && !user?.upiNumber) {
       setUpiPopupOpen(true);
       setMessage({ type: 'error', text: 'Please save your UPI details first' });

@@ -48,6 +48,7 @@ import AdminUserTransactions from './admin/AdminUserTransactions';
 import AdminProfile from './admin/AdminProfile';
 import AdminProfit from './admin/AdminProfit';
 import AdminDatabase from './admin/AdminDatabase';
+import AdminKyc from './admin/AdminKyc';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -252,6 +253,7 @@ function AppRoutes() {
         <Route path="ludo" element={<AdminLudo />} />
         <Route path="profile" element={<AdminProfile />} />
         <Route path="profit" element={<SubAdminBlock><AdminProfit /></SubAdminBlock>} />
+        <Route path="kyc" element={<SubAdminBlock><AdminKyc /></SubAdminBlock>} />
         <Route path="database" element={<SubAdminBlock><AdminDatabase /></SubAdminBlock>} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="settings" element={

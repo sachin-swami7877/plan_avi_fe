@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { walletAPI, gameAPI, authAPI, settingsAPI, spinnerAPI, ludoAPI } from '../services/api';
+import toast from 'react-hot-toast';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import Dialog from '@mui/material/Dialog';
@@ -14,6 +15,7 @@ import TextField from '@mui/material/TextField';
 const Profile = () => {
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [stats, setStats] = useState({ totalBets: 0, totalWins: 0, todayEarnings: 0, spinnerEarnings: 0, ludoEarnings: 0 });
   const [support, setSupport] = useState({ supportPhone: null, supportWhatsApp: null });
   const whatsAppNumber = support.supportWhatsApp || support.supportPhone;
@@ -24,12 +26,64 @@ const Profile = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [editMsg, setEditMsg] = useState('');
   const [balanceDetails, setBalanceDetails] = useState({ depositBalance: 0, earningsBalance: 0 });
+  const [kycData, setKycData] = useState(null);
+  const [kycModalOpen, setKycModalOpen] = useState(false);
+  const [kycForm, setKycForm] = useState({ email: '', aadhaarNumber: '', address: '' });
+  const [kycFile, setKycFile] = useState(null);
+  const [kycSubmitting, setKycSubmitting] = useState(false);
 
   useEffect(() => {
     fetchStats();
     fetchSupport();
     fetchBalanceDetails();
+    fetchKycStatus();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('kyc') === 'open') {
+      setKycModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const fetchKycStatus = async () => {
+    try {
+      const res = await authAPI.getKycStatus();
+      setKycData(res.data?.kyc || null);
+    } catch { /* silent */ }
+  };
+
+  const handleKycSubmit = async (e) => {
+    e.preventDefault();
+    if (!kycForm.email || !kycForm.aadhaarNumber || !kycForm.address) {
+      toast.error('All fields are required'); return;
+    }
+    if (!/^\d{12}$/.test(kycForm.aadhaarNumber.replace(/\s/g, ''))) {
+      toast.error('Aadhaar must be 12 digits'); return;
+    }
+    if (!kycFile && user?.kycStatus !== 'rejected') {
+      toast.error('Aadhaar front photo is required'); return;
+    }
+    setKycSubmitting(true);
+    try {
+      const fd = new FormData();
+      fd.append('email', kycForm.email);
+      fd.append('aadhaarNumber', kycForm.aadhaarNumber.replace(/\s/g, ''));
+      fd.append('address', kycForm.address);
+      if (kycFile) fd.append('aadhaarFront', kycFile);
+      await authAPI.submitKyc(fd);
+      toast.success('KYC submitted! Awaiting admin review.');
+      setKycModalOpen(false);
+      setKycForm({ email: '', aadhaarNumber: '', address: '' });
+      setKycFile(null);
+      await fetchKycStatus();
+      // Update user context so kycStatus reflects
+      window.location.reload();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit KYC');
+    } finally {
+      setKycSubmitting(false);
+    }
+  };
 
   const fetchBalanceDetails = async () => {
     try {
@@ -305,6 +359,52 @@ const Profile = () => {
             <button onClick={() => navigate('/wallet')} className="flex-shrink-0 bg-white bg-opacity-20 px-4 py-2 rounded-lg text-sm font-medium">Detail</button>
           </div>
         </div>
+
+        {/* KYC Verification */}
+        <div className="mb-6 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-gray-800">KYC Verification</h3>
+            {user?.kycStatus === 'approved' && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Verified ✓</span>}
+            {user?.kycStatus === 'pending' && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">Under Review</span>}
+            {user?.kycStatus === 'rejected' && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">Rejected</span>}
+            {(!user?.kycStatus || user?.kycStatus === 'none') && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold">Not Submitted</span>}
+          </div>
+          {user?.kycStatus === 'approved' && <p className="text-xs text-gray-500">Your identity is verified. Withdrawals are enabled.</p>}
+          {user?.kycStatus === 'pending' && <p className="text-xs text-gray-500">Your KYC is under review. You will be notified once approved.</p>}
+          {user?.kycStatus === 'rejected' && (
+            <div>
+              {kycData?.rejectionReason && <p className="text-xs text-red-600 mb-2">Reason: {kycData.rejectionReason}</p>}
+              <button onClick={() => setKycModalOpen(true)} className="w-full py-2 rounded-xl bg-red-500 text-white text-sm font-semibold">Re-submit KYC</button>
+            </div>
+          )}
+          {(!user?.kycStatus || user?.kycStatus === 'none') && (
+            <div>
+              <p className="text-xs text-gray-500 mb-3">Complete KYC to enable withdrawals.</p>
+              <button onClick={() => setKycModalOpen(true)} className="w-full py-2 rounded-xl bg-primary-700 text-white text-sm font-semibold">Complete KYC</button>
+            </div>
+          )}
+        </div>
+
+        {/* KYC Modal */}
+        <Dialog open={kycModalOpen} onClose={() => setKycModalOpen(false)} fullWidth maxWidth="sm">
+          <DialogTitle>KYC Verification</DialogTitle>
+          <DialogContent>
+            <form id="kyc-form" onSubmit={handleKycSubmit} className="space-y-3 pt-2">
+              <TextField fullWidth label="Email" type="email" value={kycForm.email} onChange={(e) => setKycForm({ ...kycForm, email: e.target.value })} required />
+              <TextField fullWidth label="Aadhaar Number (12 digits)" value={kycForm.aadhaarNumber} onChange={(e) => setKycForm({ ...kycForm, aadhaarNumber: e.target.value })} required inputProps={{ maxLength: 14 }} />
+              <TextField fullWidth label="Address" value={kycForm.address} onChange={(e) => setKycForm({ ...kycForm, address: e.target.value })} required multiline rows={2} />
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-1">Aadhaar Front Photo <span className="text-red-500">*</span></p>
+                <input type="file" accept="image/*" onChange={(e) => setKycFile(e.target.files[0])} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+                {kycFile && <p className="text-xs text-green-600 mt-1">✓ {kycFile.name}</p>}
+              </div>
+            </form>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setKycModalOpen(false)}>Cancel</Button>
+            <Button form="kyc-form" type="submit" variant="contained" disabled={kycSubmitting}>{kycSubmitting ? 'Submitting...' : 'Submit KYC'}</Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Common Functions */}
         <div className="mb-6">

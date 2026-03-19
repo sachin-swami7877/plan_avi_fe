@@ -21,6 +21,7 @@ const Settings = () => {
   const [dummyUserCount, setDummyUserCount] = useState(10);
   const [layout, setLayout] = useState(false);
   const [ludoDummyRunningBattles, setLudoDummyRunningBattles] = useState(15);
+  const [ludoDummyOpenBattles, setLudoDummyOpenBattles] = useState(4);
   // Ludo tiered commission
   const [ludoCommTier1Max, setLudoCommTier1Max] = useState(250);
   const [ludoCommTier1Pct, setLudoCommTier1Pct] = useState(10);
@@ -65,6 +66,7 @@ const Settings = () => {
       setLandingPlayers(d.landingPlayers || '1000+');
       setLandingWonToday(d.landingWonToday || '₹1K+');
       setLudoDummyRunningBattles(d.ludoDummyRunningBattles ?? 15);
+      setLudoDummyOpenBattles(d.ludoDummyOpenBattles ?? 4);
       setLudoCommTier1Max(d.ludoCommTier1Max ?? 250);
       setLudoCommTier1Pct(d.ludoCommTier1Pct ?? 10);
       setLudoCommTier2Max(d.ludoCommTier2Max ?? 600);
@@ -159,6 +161,7 @@ const Settings = () => {
     try {
       await adminAPI.updateSettings({
         ludoDummyRunningBattles: dummy,
+        ludoDummyOpenBattles: Math.min(20, Math.max(0, Number(ludoDummyOpenBattles) || 0)),
         ludoCommTier1Max: Number(ludoCommTier1Max),
         ludoCommTier1Pct: Number(ludoCommTier1Pct),
         ludoCommTier2Max: Number(ludoCommTier2Max),
@@ -327,13 +330,24 @@ const Settings = () => {
         <div className="space-y-3">
           <div className="flex flex-wrap items-end gap-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dummy Ludo live battles (running battles)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Dummy running battles</label>
               <input
                 type="number"
                 min={0}
                 max={50}
                 value={ludoDummyRunningBattles}
                 onChange={(e) => setLudoDummyRunningBattles(e.target.value)}
+                className="w-28 px-3 py-2 border rounded-lg text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Dummy open battles</label>
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={ludoDummyOpenBattles}
+                onChange={(e) => setLudoDummyOpenBattles(e.target.value)}
                 className="w-28 px-3 py-2 border rounded-lg text-sm"
               />
             </div>

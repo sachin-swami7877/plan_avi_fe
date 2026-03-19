@@ -60,6 +60,8 @@ export const authAPI = {
   updateProfile: (data) => api.put('/auth/profile', data),
   getMe: () => api.get('/auth/me'),
   findEmail: (phone) => api.post('/auth/find-email', { phone: String(phone || '').trim() }),
+  submitKyc: (formData) => api.post('/auth/kyc', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getKycStatus: () => api.get('/auth/kyc'),
 };
 
 // Admin Auth API (dedicated admin login endpoints)
@@ -228,6 +230,10 @@ export const adminAPI = {
   cleanupLudoMatches: (data) => api.post('/admin/cleanup/ludo-matches', data),
   // Export
   exportUsers: () => api.get('/admin/export/users'),
+  // KYC
+  getKycRequests: (params) => api.get('/admin/kyc', { params }),
+  approveKyc: (id) => api.put(`/admin/kyc/${id}/approve`),
+  rejectKyc: (id, reason) => api.put(`/admin/kyc/${id}/reject`, { reason }),
 };
 
 export default api;

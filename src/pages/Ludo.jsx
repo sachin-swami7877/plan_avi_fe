@@ -114,6 +114,7 @@ export default function Ludo() {
   const [confirmOpen, setConfirmOpen] = useState(null);
   const [confirmJoinMatch, setConfirmJoinMatch] = useState(null);
   const [ludoDummyRunningBattles, setLudoDummyRunningBattles] = useState(15);
+  const [ludoDummyOpenBattles, setLudoDummyOpenBattles] = useState(4);
   const [commTiers, setCommTiers] = useState({ tier1Max: 250, tier1Pct: 10, tier2Max: 600, tier2Pct: 8, tier3Pct: 5 });
   const [ludoEnabled, setLudoEnabled] = useState(true);
   const [ludoDisableReason, setLudoDisableReason] = useState('');
@@ -122,6 +123,10 @@ export default function Ludo() {
   const [exitingIds, setExitingIds] = useState(new Set());
   const [enteringIds, setEnteringIds] = useState(new Set());
   const dummyBattlesRef = useRef([]);
+  const [dummyOpenBattles, setDummyOpenBattles] = useState([]);
+  const [openExitingIds, setOpenExitingIds] = useState(new Set());
+  const [openEnteringIds, setOpenEnteringIds] = useState(new Set());
+  const dummyOpenRef = useRef([]);
   const [tick, setTick] = useState(() => Date.now());
   const [rulesOpen, setRulesOpen] = useState(false);
 
@@ -132,6 +137,7 @@ export default function Ludo() {
 
   // Keep refs in sync (avoids stale closure)
   useEffect(() => { dummyBattlesRef.current = dummyBattles; }, [dummyBattles]);
+  useEffect(() => { dummyOpenRef.current = dummyOpenBattles; }, [dummyOpenBattles]);
 
   // Generate dummy running battles; roll 5 out / 5 in every 30 sec with animation
   useEffect(() => {
@@ -172,6 +178,42 @@ export default function Ludo() {
     }, 30 * 1000);
     return () => clearInterval(t);
   }, [ludoDummyRunningBattles, commTiers]);
+
+  // Generate dummy open battles (only shown when no real open battles exist)
+  useEffect(() => {
+    const n = Math.max(0, Number(ludoDummyOpenBattles) || 0);
+    if (n === 0) { setDummyOpenBattles([]); return; }
+    const seed = Date.now();
+    const generate = (count) => Array.from({ length: count }, (_, i) => {
+      const entry = randomInt(50, 2000);
+      const prize = calcPrizeFrontend(entry, commTiers);
+      const name = Math.random() < 0.3 ? `Game${randomInt(1000, 9999)}` : pickRandom(INDIAN_MALE_NAMES);
+      return { _id: `dopen-${seed}-${i}-${Math.random()}`, entryAmount: entry, prize, creatorName: name, isDummyOpen: true };
+    });
+    const initial = generate(n);
+    setDummyOpenBattles(initial);
+    dummyOpenRef.current = initial;
+    const ANIM_MS = 400;
+    const t = setInterval(() => {
+      const prev = dummyOpenRef.current;
+      if (prev.length === 0) { const g = generate(n); setDummyOpenBattles(g); dummyOpenRef.current = g; return; }
+      const toExit = new Set(prev.filter((_, i) => i % 2 === 0).map((b) => b._id));
+      setOpenExitingIds(toExit);
+      setTimeout(() => {
+        setDummyOpenBattles((p) => p.map((item, i) => {
+          if (i % 2 !== 0) return item;
+          const entry = randomInt(50, 2000);
+          const prize = calcPrizeFrontend(entry, commTiers);
+          const name = Math.random() < 0.3 ? `Game${randomInt(1000, 9999)}` : pickRandom(INDIAN_MALE_NAMES);
+          return { _id: `dopen-${Date.now()}-${i}`, entryAmount: entry, prize, creatorName: name, isDummyOpen: true };
+        }));
+        setOpenExitingIds(new Set());
+        setDummyOpenBattles((p) => { setOpenEnteringIds(new Set(p.filter((_, i) => i % 2 === 0).map((b) => b._id))); return p; });
+        setTimeout(() => setOpenEnteringIds(new Set()), ANIM_MS);
+      }, ANIM_MS);
+    }, 10 * 1000);
+    return () => clearInterval(t);
+  }, [ludoDummyOpenBattles, commTiers]);
 
   const effectiveAmount = customAmount.trim() !== '' && !isNaN(Number(customAmount))
     ? Number(customAmount)
@@ -229,6 +271,7 @@ export default function Ludo() {
       ludoAPI.getSettings().then((r) => {
         const d = r.data || {};
         setLudoDummyRunningBattles(d.ludoDummyRunningBattles ?? 15);
+        setLudoDummyOpenBattles(d.ludoDummyOpenBattles ?? 4);
         setCommTiers({
           tier1Max: d.ludoCommTier1Max ?? 250,
           tier1Pct: d.ludoCommTier1Pct ?? 10,
@@ -515,15 +558,20 @@ export default function Ludo() {
               <div className="bg-gray-300 px-2 pb-4">
                 {loading ? (
                   <p className="text-gray-400 text-sm py-3">Loading...</p>
-                ) : waitingList.length === 0 ? (
-                  <p className="text-gray-600 text-sm py-3 text-center">No open battles right now.</p>
                 ) : (
                   <div className="space-y-3">
-                    {waitingList.map((m) => {
-                      const remaining = getRemainingDisplay(m.joinExpiryAt);
-                      const prize = calcPrizeFrontend(m.entryAmount, commTiers);
+                    {[...waitingList, ...(waitingList.length === 0 ? dummyOpenBattles : [])].map((m) => {
+                      const isDummyOpen = !!m.isDummyOpen;
+                      const prize = isDummyOpen ? m.prize : calcPrizeFrontend(m.entryAmount, commTiers);
+                      const animStyle = isDummyOpen
+                        ? openExitingIds.has(m._id)
+                          ? { animation: 'dummySlideOut 0.4s ease forwards' }
+                          : openEnteringIds.has(m._id)
+                            ? { animation: 'dummySlideIn 0.4s ease' }
+                            : undefined
+                        : undefined;
                       return (
-                        <div key={m._id} className="relative rounded-2xl overflow-hidden border border-gray-200">
+                        <div key={m._id} style={animStyle} className="relative rounded-2xl overflow-hidden border border-gray-200">
                           <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
                           <div className="absolute inset-0 bg-black/40" />
                           <div className="relative px-3 py-2">
@@ -533,7 +581,17 @@ export default function Ludo() {
                                 <p className="text-[11px] text-gray-300">Entry Fee</p>
                                 <p className="text-white font-extrabold text-base flex items-center gap-1"><span className="text-yellow-400">₹</span> {m.entryAmount}</p>
                               </div>
-                              <button onClick={() => openConfirmJoin(m)} className="bg-green-500 hover:bg-green-400 text-white px-5 py-1.5 rounded-full text-sm font-bold shadow-lg transition-colors">Play</button>
+                              <button
+                                onClick={() => {
+                                  if (isDummyOpen) {
+                                    toast.error('This battle has been taken by another user');
+                                    setDummyOpenBattles((prev) => prev.filter((b) => b._id !== m._id));
+                                    return;
+                                  }
+                                  openConfirmJoin(m);
+                                }}
+                                className="bg-green-500 hover:bg-green-400 text-white px-5 py-1.5 rounded-full text-sm font-bold shadow-lg transition-colors"
+                              >Play</button>
                               <div className="text-right">
                                 <p className="text-[11px] text-gray-300">Prize</p>
                                 <p className="text-white font-extrabold text-base flex items-center justify-end gap-1"><span className="text-green-400">₹</span> {prize}</p>
@@ -543,6 +601,9 @@ export default function Ludo() {
                         </div>
                       );
                     })}
+                    {waitingList.length === 0 && dummyOpenBattles.length === 0 && (
+                      <p className="text-gray-600 text-sm py-3 text-center">No open battles right now.</p>
+                    )}
                   </div>
                 )}
               </div>
