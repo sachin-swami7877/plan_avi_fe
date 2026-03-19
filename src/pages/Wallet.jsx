@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { walletAPI, authAPI } from '../services/api';
+import { compressImage } from '../utils/compressImage';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import { IoChevronBack, IoChevronForward, IoWarningOutline, IoCloseCircle } from 'react-icons/io5';
@@ -112,10 +113,11 @@ const Wallet = () => {
     if (!screenshot) { setMessage({ type: 'error', text: 'Screenshot is required' }); return; }
     setLoading(true);
     try {
+      const compressedScreenshot = await compressImage(screenshot, 1280, 0.6);
       const formData = new FormData();
       formData.append('amount', amount);
       formData.append('utrNumber', utrNumber);
-      formData.append('screenshot', screenshot);
+      formData.append('screenshot', compressedScreenshot);
       await walletAPI.deposit(formData);
       setMessage({ type: 'success', text: 'Deposit request submitted! Waiting for approval.' });
       setAmount(''); setUtrNumber(''); setScreenshot(null); setDepositStep('choose');

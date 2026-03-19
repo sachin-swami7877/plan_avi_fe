@@ -7,6 +7,7 @@ import { useCountdown } from '../hooks/useCountdown';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
+import { compressImage } from '../utils/compressImage';
 
 function calcPrizeFrontend(entry, tiers) {
   const pool = entry * 2;
@@ -413,11 +414,12 @@ export default function LudoMatchDetail() {
     if (!screenshotFile) { toast.error('Screenshot is required'); return; }
     setSubmittingResult(true);
     try {
+      const compressed = await compressImage(screenshotFile, 1280, 0.6);
       const formData = new FormData();
       formData.append('matchId', match._id);
       formData.append('winReasonCode', winResultReason);
       formData.append('winReasonCustom', winResultReasonCustom.trim());
-      formData.append('screenshot', screenshotFile);
+      formData.append('screenshot', compressed);
       await ludoAPI.submitResult(match._id, formData);
       toast.success('Result submitted for admin approval');
       setSubmitResultOpen(false);
@@ -430,11 +432,12 @@ export default function LudoMatchDetail() {
       if (err.response?.status === 500 && screenshotFile) {
         try {
           toast.loading('Retrying with alternate upload...', { id: 'b64retry' });
+          const compressedForB64 = await compressImage(screenshotFile, 800, 0.5);
           const reader = new FileReader();
           const base64 = await new Promise((resolve, reject) => {
             reader.onload = () => resolve(reader.result);
             reader.onerror = reject;
-            reader.readAsDataURL(screenshotFile);
+            reader.readAsDataURL(compressedForB64);
           });
           await ludoAPI.submitResultBase64(match._id, {
             matchId: match._id,

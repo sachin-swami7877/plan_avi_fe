@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { compressImage } from '../utils/compressImage';
 import { useAuth } from '../context/AuthContext';
 import { walletAPI, gameAPI, authAPI, settingsAPI, spinnerAPI, ludoAPI } from '../services/api';
 import toast from 'react-hot-toast';
@@ -11,6 +12,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+
+const inputCls = 'w-full bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-primary-500 transition-colors';
 
 const Profile = () => {
   const { user, logout, refreshUser } = useAuth();
@@ -69,7 +72,10 @@ const Profile = () => {
       fd.append('email', kycForm.email);
       fd.append('aadhaarNumber', kycForm.aadhaarNumber.replace(/\s/g, ''));
       fd.append('address', kycForm.address);
-      if (kycFile) fd.append('aadhaarFront', kycFile);
+      if (kycFile) {
+        const compressedKyc = await compressImage(kycFile, 1280, 0.6);
+        fd.append('aadhaarFront', compressedKyc);
+      }
       await authAPI.submitKyc(fd);
       toast.success('KYC submitted! Awaiting admin review.');
       setKycModalOpen(false);
@@ -386,25 +392,106 @@ const Profile = () => {
         </div>
 
         {/* KYC Modal */}
-        <Dialog open={kycModalOpen} onClose={() => setKycModalOpen(false)} fullWidth maxWidth="sm">
-          <DialogTitle>KYC Verification</DialogTitle>
-          <DialogContent>
-            <form id="kyc-form" onSubmit={handleKycSubmit} className="space-y-3 pt-2">
-              <TextField fullWidth label="Email" type="email" value={kycForm.email} onChange={(e) => setKycForm({ ...kycForm, email: e.target.value })} required />
-              <TextField fullWidth label="Aadhaar Number (12 digits)" value={kycForm.aadhaarNumber} onChange={(e) => setKycForm({ ...kycForm, aadhaarNumber: e.target.value })} required inputProps={{ maxLength: 14 }} />
-              <TextField fullWidth label="Address" value={kycForm.address} onChange={(e) => setKycForm({ ...kycForm, address: e.target.value })} required multiline rows={2} />
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Aadhaar Front Photo <span className="text-red-500">*</span></p>
-                <input type="file" accept="image/*" onChange={(e) => setKycFile(e.target.files[0])} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
-                {kycFile && <p className="text-xs text-green-600 mt-1">✓ {kycFile.name}</p>}
+        {kycModalOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-end justify-center">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setKycModalOpen(false)} />
+            {/* Sheet */}
+            <div className="relative w-full max-w-md bg-[#111827] rounded-t-3xl px-5 pt-5 pb-8 shadow-2xl animate-slide-up">
+              {/* Handle */}
+              <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-white font-bold text-lg">KYC Verification</h2>
+                  <p className="text-gray-400 text-xs mt-0.5">Required to enable withdrawals</p>
+                </div>
+                <button onClick={() => setKycModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
               </div>
-            </form>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setKycModalOpen(false)}>Cancel</Button>
-            <Button form="kyc-form" type="submit" variant="contained" disabled={kycSubmitting}>{kycSubmitting ? 'Submitting...' : 'Submit KYC'}</Button>
-          </DialogActions>
-        </Dialog>
+
+              <form onSubmit={handleKycSubmit} className="space-y-4">
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={kycForm.email}
+                    onChange={(e) => setKycForm({ ...kycForm, email: e.target.value })}
+                    className={inputCls}
+                    required
+                  />
+                </div>
+
+                {/* Aadhaar Number */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Aadhaar Number</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="XXXX XXXX XXXX"
+                    maxLength={14}
+                    value={kycForm.aadhaarNumber}
+                    onChange={(e) => setKycForm({ ...kycForm, aadhaarNumber: e.target.value })}
+                    className={inputCls}
+                    required
+                  />
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Full Address</label>
+                  <textarea
+                    rows={2}
+                    placeholder="House No., Street, City, State, PIN"
+                    value={kycForm.address}
+                    onChange={(e) => setKycForm({ ...kycForm, address: e.target.value })}
+                    className={`${inputCls} resize-none`}
+                    required
+                  />
+                </div>
+
+                {/* Aadhaar Photo */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                    Aadhaar Front Photo <span className="text-red-400">*</span>
+                  </label>
+                  <label className="flex flex-col items-center justify-center w-full border-2 border-dashed border-gray-700 rounded-xl py-4 px-3 cursor-pointer hover:border-primary-500 transition-colors bg-gray-800/40">
+                    {kycFile ? (
+                      <div className="flex items-center gap-2 text-green-400">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        <span className="text-sm font-medium truncate max-w-[200px]">{kycFile.name}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <p className="text-gray-400 text-sm">Tap to upload photo</p>
+                        <p className="text-gray-600 text-xs mt-0.5">JPG, PNG up to 5MB</p>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setKycFile(e.target.files[0])} />
+                  </label>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={kycSubmitting}
+                  className="w-full py-3.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {kycSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                      Submitting...
+                    </span>
+                  ) : 'Submit KYC'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Common Functions */}
         <div className="mb-6">
