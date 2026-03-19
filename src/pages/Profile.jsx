@@ -33,6 +33,7 @@ const Profile = () => {
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [kycForm, setKycForm] = useState({ email: '', aadhaarNumber: '', address: '' });
   const [kycFile, setKycFile] = useState(null);
+  const [kycPreview, setKycPreview] = useState(null);
   const [kycSubmitting, setKycSubmitting] = useState(false);
 
   useEffect(() => {
@@ -81,6 +82,7 @@ const Profile = () => {
       setKycModalOpen(false);
       setKycForm({ email: '', aadhaarNumber: '', address: '' });
       setKycFile(null);
+      setKycPreview(null);
       await fetchKycStatus();
       // Update user context so kycStatus reflects
       window.location.reload();
@@ -457,20 +459,25 @@ const Profile = () => {
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
                     Aadhaar Front Photo <span className="text-red-400">*</span>
                   </label>
-                  <label className="flex flex-col items-center justify-center w-full border-2 border-dashed border-gray-700 rounded-xl py-4 px-3 cursor-pointer hover:border-primary-500 transition-colors bg-gray-800/40">
-                    {kycFile ? (
-                      <div className="flex items-center gap-2 text-green-400">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                        <span className="text-sm font-medium truncate max-w-[200px]">{kycFile.name}</span>
+                  <label className="relative flex flex-col items-center justify-center w-full border-2 border-dashed border-gray-700 rounded-xl overflow-hidden cursor-pointer hover:border-primary-500 transition-colors bg-gray-800/40 min-h-[100px]">
+                    {kycPreview ? (
+                      <div className="w-full">
+                        <img src={kycPreview} alt="Aadhaar preview" className="w-full rounded-xl object-cover max-h-48" />
+                        <p className="text-center text-xs text-green-400 py-2">Tap to change photo</p>
                       </div>
                     ) : (
-                      <>
+                      <div className="flex flex-col items-center py-4 px-3">
                         <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         <p className="text-gray-400 text-sm">Tap to upload photo</p>
                         <p className="text-gray-600 text-xs mt-0.5">JPG, PNG up to 5MB</p>
-                      </>
+                      </div>
                     )}
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setKycFile(e.target.files[0])} />
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const f = e.target.files[0];
+                      if (!f) return;
+                      setKycFile(f);
+                      setKycPreview(URL.createObjectURL(f));
+                    }} />
                   </label>
                 </div>
 

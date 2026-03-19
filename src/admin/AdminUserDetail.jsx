@@ -16,6 +16,7 @@ const TABS = [
   { key: 'aviator', label: 'Aviator',  icon: '✈️' },
   { key: 'ludo',    label: 'Ludo',     icon: '🎲' },
   { key: 'spinner', label: 'Spinner',  icon: '🎡' },
+  { key: 'kyc',     label: 'KYC',      icon: '🪪' },
 ];
 
 const PAGE_SIZE = 25;
@@ -53,7 +54,7 @@ const AdminUserDetail = () => {
     return <div className="text-center py-12 text-red-500 font-medium">{error}</div>;
   }
 
-  const { user, walletRequests, aviatorBets, ludoMatches, spinnerRecords } = data;
+  const { user, walletRequests, aviatorBets, ludoMatches, spinnerRecords, kycRequest } = data;
 
   // Summary stats
   const totalDeposited = walletRequests
@@ -255,6 +256,7 @@ const AdminUserDetail = () => {
               {t.key === 'wallet' ? walletRequests.length :
                t.key === 'aviator' ? aviatorBets.length :
                t.key === 'ludo' ? ludoMatches.length :
+               t.key === 'kyc' ? (kycRequest ? 1 : 0) :
                spinnerRecords.length}
             </span>
           </button>
@@ -412,8 +414,85 @@ const AdminUserDetail = () => {
         </div>
       )}
 
+      {/* ── KYC Tab ── */}
+      {tab === 'kyc' && (
+        <div>
+          {!kycRequest ? (
+            <EmptyState icon="🪪" text="No KYC submitted" />
+          ) : (
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+              {/* Status badge */}
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-gray-800 text-base">KYC Details</h3>
+                <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                  kycRequest.status === 'approved' ? 'bg-green-100 text-green-700' :
+                  kycRequest.status === 'rejected' ? 'bg-red-100 text-red-600' :
+                  'bg-amber-100 text-amber-600'
+                }`}>
+                  {kycRequest.status === 'approved' ? '✅ Approved' :
+                   kycRequest.status === 'rejected' ? '❌ Rejected' : '⏳ Pending'}
+                </span>
+              </div>
+
+              {/* Info rows */}
+              <div className="space-y-2 text-sm">
+                {kycRequest.email && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Email</span>
+                    <span className="font-medium text-gray-800">{kycRequest.email}</span>
+                  </div>
+                )}
+                {kycRequest.aadhaarNumber && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Aadhaar</span>
+                    <span className="font-mono text-gray-800">{kycRequest.aadhaarNumber}</span>
+                  </div>
+                )}
+                {kycRequest.address && (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-gray-500">Address</span>
+                    <span className="text-gray-800">{kycRequest.address}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Submitted</span>
+                  <span className="text-gray-600">{fmt(kycRequest.createdAt)}</span>
+                </div>
+                {kycRequest.reviewedAt && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Reviewed</span>
+                    <span className="text-gray-600">{fmt(kycRequest.reviewedAt)}</span>
+                  </div>
+                )}
+                {kycRequest.rejectionReason && (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-gray-500">Rejection Reason</span>
+                    <span className="text-red-600">{kycRequest.rejectionReason}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Aadhaar photo */}
+              {kycRequest.aadhaarFrontUrl && (
+                <div>
+                  <p className="text-xs text-gray-500 font-medium mb-2 uppercase tracking-wide">Aadhaar Front Photo</p>
+                  <a href={kycRequest.aadhaarFrontUrl} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={kycRequest.aadhaarFrontUrl}
+                      alt="Aadhaar Front"
+                      className="w-full rounded-xl border border-gray-200 object-cover max-h-56 hover:opacity-90 transition-opacity"
+                    />
+                    <p className="text-xs text-center text-blue-500 mt-1">Tap to open full image</p>
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPages > 1 && tab !== 'kyc' && (
         <div className="flex items-center justify-between mt-4 bg-white rounded-xl p-3 shadow-sm border border-gray-100">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
