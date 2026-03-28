@@ -44,6 +44,10 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             setUser(null);
+            // If server says forceLogout (logged in from another device), show message
+            if (err.response?.data?.forceLogout) {
+              localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');
+            }
           }
         })
         .finally(() => setLoading(false));

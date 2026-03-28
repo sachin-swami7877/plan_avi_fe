@@ -409,13 +409,25 @@ export default function Ludo() {
   return (
     <div className="min-h-screen bg-gray-100 pb-[200px] overflow-x-hidden">
       <Header />
-      <div className="max-w-md mx-auto p-4 w-full min-w-0">
-        <h1 className="text-xl font-bold text-gray-800 mb-4">Ludo (Room Code)</h1>
-
-        <div className="flex gap-2 mb-4 bg-white rounded-xl p-1 shadow-sm">
-          <button onClick={() => setActiveTab('play')} className={`flex-1 py-2 rounded-lg text-sm font-medium ${activeTab === 'play' ? 'bg-primary-600 text-white' : 'text-gray-600'}`}>Play</button>
-          <button onClick={() => setActiveTab('history')} className={`flex-1 py-2 rounded-lg text-sm font-medium ${activeTab === 'history' ? 'bg-primary-600 text-white' : 'text-gray-600'}`}>History</button>
-        </div>
+      <div className="max-w-md mx-auto p-4 w-full min-w-0 relative">
+        {/* Floating toggle icon — top right corner */}
+        {activeTab === 'play' ? (
+          <button
+            onClick={() => setActiveTab('history')}
+            className="fixed top-20 right-3 z-40 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center active:scale-90 transition-transform"
+            title="History"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </button>
+        ) : (
+          <button
+            onClick={() => setActiveTab('play')}
+            className="fixed top-20 right-3 z-40 w-10 h-10 rounded-full bg-primary-600 shadow-lg flex items-center justify-center active:scale-90 transition-transform"
+            title="Play"
+          >
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        )}
 
         {activeTab === 'play' && (
           <div className="space-y-5">

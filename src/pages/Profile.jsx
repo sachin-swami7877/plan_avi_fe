@@ -340,8 +340,15 @@ const Profile = () => {
                     navigate(game.path);
                   }
                 }}
-                className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square"
+                className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square relative"
               >
+                {/* LIVE badge */}
+                {!game.isExternal && (
+                  <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                    <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide">Live</span>
+                  </div>
+                )}
                 {game.customRender ? (
                   game.customRender
                 ) : (
@@ -658,6 +665,13 @@ const Profile = () => {
           <button onClick={() => setShowInstallTip(false)} className="absolute top-2 right-3 text-gray-400 text-lg">&times;</button>
         </div>
       )}
+
+      <style>{`
+        @keyframes liveBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
 
       {/* Floating WhatsApp Icon - Absolute position above navbar */}
       {whatsAppNumber && (

@@ -24,10 +24,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Only force-redirect if user was logged in (has a stored token).
+      // Without this check, normal 401s on login pages (e.g. wrong admin password) would redirect.
+      const hadToken = !!localStorage.getItem('token');
       removeToken();
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/';
+      if (hadToken) {
+        if (error.response?.data?.forceLogout) {
+          localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');
+        }
+        window.location.href = '/login';
+      }
     }
     // Force logout blocked users on any API call
     if (error.response?.status === 403 && error.response?.data?.blocked) {

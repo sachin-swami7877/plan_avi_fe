@@ -80,6 +80,18 @@ export const SocketProvider = ({ children }) => {
       setConnected(false);
     });
 
+    // If socket connection is rejected because token was invalidated (logged in elsewhere)
+    newSocket.on('connect_error', (err) => {
+      if (err?.message === 'SESSION_EXPIRED_OTHER_DEVICE') {
+        newSocket.disconnect(); // stop auto-reconnect
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');
+        window.location.href = '/login';
+      }
+    });
+
     // Game events — always spread prev to preserve betsEnabled and other fields
     newSocket.on('game:waiting', (data) => {
       if (goTimeoutRef.current) clearTimeout(goTimeoutRef.current);
@@ -161,11 +173,15 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
-    // Force logout when admin blocks the user
-    newSocket.on('force-logout', () => {
+    // Force logout when admin blocks user OR user logged in from another device
+    newSocket.on('force-logout', (data) => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      const reason = data?.reason || '';
+      if (reason.includes('another device')) {
+        localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');
+      }
       window.location.href = '/login';
     });
 

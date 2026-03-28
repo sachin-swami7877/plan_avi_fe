@@ -100,6 +100,16 @@ const Login = () => {
   const { login } = useAuth();
   const from = location.state?.from || '/dashboard';
 
+  // Show logout reason if redirected from another-device force-logout
+  const [logoutReason, setLogoutReason] = useState('');
+  useEffect(() => {
+    const reason = localStorage.getItem('logoutReason');
+    if (reason) {
+      setLogoutReason(reason);
+      localStorage.removeItem('logoutReason');
+    }
+  }, []);
+
   // 2-minute countdown timer for OTP expiry
   const startOtpTimer = useCallback(() => setOtpTimer(120), []);
 
@@ -348,6 +358,14 @@ const Login = () => {
         {/* Form container */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-8 lg:py-0">
           <div className="w-full max-w-md">
+            {/* Logout reason banner (e.g. logged in from another device) */}
+            {logoutReason && (
+              <div className="mb-5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <p className="text-amber-200 text-sm">{logoutReason}</p>
+              </div>
+            )}
+
             {/* Step indicator */}
             <div className="flex items-center gap-2 mb-8 justify-center lg:justify-start">
               {[1, 2, 3].map((s) => (
