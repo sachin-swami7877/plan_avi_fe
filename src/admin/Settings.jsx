@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+
+const AVIATOR_TOGGLE_PHONES = ['9166821247', '7877722306'];
 
 const Settings = () => {
   const { socket } = useSocket();
+  const { user } = useAuth();
+  const canSeeAviatorToggle = AVIATOR_TOGGLE_PHONES.includes(user?.phone);
   const [betsEnabled, setBetsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -40,6 +45,7 @@ const Settings = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [qrFile, setQrFile] = useState(null);
   const [qrUploading, setQrUploading] = useState(false);
+  const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -79,6 +85,7 @@ const Settings = () => {
       setLudoDisableReason(d.ludoDisableReason || '');
       setLudoWarning(d.ludoWarning || '');
       setQrCodeUrl(d.qrCodeUrl || null);
+      setAviatorComingSoon(d.aviatorComingSoon ?? false);
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to load settings' });
     } finally { setLoading(false); }
@@ -204,6 +211,30 @@ const Settings = () => {
           <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${betsEnabled ? 'translate-x-8' : 'translate-x-1'}`} />
         </button>
       </Section>
+
+      {/* Aviator Coming Soon Toggle — visible only to specific phones */}
+      {canSeeAviatorToggle && (
+        <Section title="Aviator — Coming Soon" desc={aviatorComingSoon ? 'Aviator is hidden. Users see "Coming Soon".' : 'Aviator is live and playable.'}>
+          <button
+            onClick={async () => {
+              const newValue = !aviatorComingSoon;
+              setAviatorComingSoon(newValue);
+              setSaving(true);
+              try {
+                await adminAPI.updateSettings({ aviatorComingSoon: newValue });
+                toast.success(`Aviator ${newValue ? 'set to Coming Soon' : 'is now live'}`);
+              } catch (error) {
+                setAviatorComingSoon(!newValue);
+                toast.error('Failed to update Aviator setting');
+              } finally { setSaving(false); }
+            }}
+            disabled={saving}
+            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${aviatorComingSoon ? 'bg-amber-500' : 'bg-emerald-600'} ${saving ? 'opacity-50' : ''}`}
+          >
+            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${aviatorComingSoon ? 'translate-x-8' : 'translate-x-1'}`} />
+          </button>
+        </Section>
+      )}
 
       {/* Withdrawals Toggle */}
       <Section title="Withdrawals" desc={withdrawalsEnabled ? 'Users can submit withdrawal requests.' : 'Withdrawals are disabled — users cannot request withdrawals.'}>

@@ -24,20 +24,21 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Only force-redirect if user was logged in (has a stored token).
-      // Without this check, normal 401s on login pages (e.g. wrong admin password) would redirect.
+      // Clear stale tokens and notify AuthContext via storage event
       const hadToken = !!localStorage.getItem('token');
       removeToken();
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      if (error.response?.data?.forceLogout) {
+        localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');
+      }
+      // Dispatch a custom event so AuthContext can react without a full page reload
       if (hadToken) {
-        if (error.response?.data?.forceLogout) {
-          localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');
-        }
-        window.location.href = '/login';
+        window.dispatchEvent(new Event('auth:logout'));
       }
     }
-    // Force logout blocked users on any API call
+    // Force logout blocked users on any API call — must hard redirect since
+    // no React state management handles blocked status
     if (error.response?.status === 403 && error.response?.data?.blocked) {
       removeToken();
       localStorage.removeItem('token');
@@ -150,6 +151,7 @@ export const settingsAPI = {
   getLayout: () => api.get('/settings/layout'),
   getUserWarning: () => api.get('/settings/user-warning'),
   getLandingStats: () => api.get('/settings/landing-stats'),
+  getAviatorStatus: () => api.get('/settings/aviator-status'),
 };
 
 // Ludo API (user)

@@ -3,12 +3,14 @@ import { useState, useEffect } from 'react';
 import { settingsAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
+import toast from 'react-hot-toast';
 
 const Home = () => {
   const navigate = useNavigate();
   const [userWarning, setUserWarning] = useState('');
   const [supportWhatsApp, setSupportWhatsApp] = useState('');
   const [showInstallTip, setShowInstallTip] = useState(false);
+  const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
 
   const handleDownload = () => {
     if (window.deferredPrompt) {
@@ -26,6 +28,9 @@ const Home = () => {
     }).catch(() => {});
     settingsAPI.getSupport().then(res => {
       if (res.data?.supportWhatsApp) setSupportWhatsApp(res.data.supportWhatsApp);
+    }).catch(() => {});
+    settingsAPI.getAviatorStatus().then(res => {
+      if (res.data?.aviatorComingSoon) setAviatorComingSoon(true);
     }).catch(() => {});
   }, []);
 
@@ -136,14 +141,23 @@ const Home = () => {
                 onClick={() => {
                   if (game.isExternal) {
                     window.location.href = supportWhatsApp ? `https://wa.me/${supportWhatsApp}` : 'https://wa.me/';
+                  } else if (game.id === 'aviator' && aviatorComingSoon) {
+                    toast('Aviator is coming soon! Stay tuned.', { icon: '✈️' });
                   } else {
                     navigate(game.path);
                   }
                 }}
                 className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square relative"
               >
+                {/* Coming Soon overlay for Aviator */}
+                {game.id === 'aviator' && aviatorComingSoon && (
+                  <div className="absolute inset-0 z-30 bg-black/60 flex flex-col items-center justify-center">
+                    <p className="text-white font-black text-lg">Coming Soon</p>
+                    <p className="text-white/50 text-xs mt-1">Stay tuned!</p>
+                  </div>
+                )}
                 {/* LIVE badge */}
-                {!game.isExternal && (
+                {!game.isExternal && !(game.id === 'aviator' && aviatorComingSoon) && (
                   <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
                     <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
                     <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide">Live</span>

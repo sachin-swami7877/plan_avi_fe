@@ -92,8 +92,8 @@ const AdminPublicRoute = ({ children }) => {
   return children;
 };
 
-// Public Route (redirect if authenticated, but allow landing page)
-const PublicRoute = ({ children, allowLanding = false }) => {
+// Public Route (redirect if authenticated)
+const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading, isAdmin, isSubAdmin } = useAuth();
 
   if (loading) {
@@ -104,14 +104,9 @@ const PublicRoute = ({ children, allowLanding = false }) => {
     );
   }
 
-  // For login/find-email pages, redirect if authenticated (don't allow access)
-  if (isAuthenticated && !allowLanding) {
+  // Redirect logged-in users to dashboard
+  if (isAuthenticated) {
     return <Navigate to={(isAdmin || isSubAdmin) ? "/admin" : "/dashboard"} replace />;
-  }
-
-  // Allow landing page even if authenticated (user can still view it)
-  if (allowLanding && isAuthenticated) {
-    return children;
   }
 
   return children;
@@ -170,10 +165,13 @@ function AppRoutes() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={
-        <LandingRoute><Landing /></LandingRoute>
+        <PublicRoute><Login /></PublicRoute>
       } />
       <Route path="/login" element={
         <PublicRoute><Login /></PublicRoute>
+      } />
+      <Route path="/landing" element={
+        <LandingRoute><Landing /></LandingRoute>
       } />
       <Route path="/find-email" element={
         <PublicRoute><FindEmail /></PublicRoute>

@@ -270,7 +270,7 @@ const Login = () => {
 
         {/* Top — logo */}
         <div className="relative z-10">
-          <Link to="/" className="inline-flex items-center gap-2.5 group">
+          <Link to="/landing" className="inline-flex items-center gap-2.5 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
               🎲
             </div>
@@ -345,7 +345,7 @@ const Login = () => {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(16,185,129,0.15),transparent)]" />
           <Particles />
           <div className="relative z-10 flex flex-col items-center pt-8 pb-6 px-4">
-            <Link to="/" className="inline-flex items-center gap-2.5 mb-4">
+            <Link to="/landing" className="inline-flex items-center gap-2.5 mb-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
                 🎲
               </div>
@@ -353,6 +353,14 @@ const Login = () => {
             </Link>
             <p className="text-white/40 text-sm">Ludo, Aviator & Spinner — Win Real Cash!</p>
           </div>
+        </div>
+
+        {/* Home icon — go to landing page */}
+        <div className="flex justify-end px-4 pt-3 lg:hidden">
+          <Link to="/landing" className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" /></svg>
+            Home
+          </Link>
         </div>
 
         {/* Form container */}

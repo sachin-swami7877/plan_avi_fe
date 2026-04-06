@@ -243,7 +243,7 @@ const Landing = () => {
       {/* ═══ Navbar ═══ */}
       <header className="relative z-30 border-b border-white/5">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/landing" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:shadow-red-500/40 transition-shadow">
               <LogoSvg className="w-7 h-7" />
             </div>
@@ -771,7 +771,7 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
       {/* Navbar */}
       <header className="relative z-30 border-b border-white/5">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/landing" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
               <span className="text-lg">📜</span>
             </div>

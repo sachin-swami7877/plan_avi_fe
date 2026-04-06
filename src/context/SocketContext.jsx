@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback } f
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { gameAPI } from '../services/api';
-import { getToken } from '../utils/cookies';
+import { getToken, removeToken } from '../utils/cookies';
 import { playNotificationSound } from '../utils/audioSounds';
 
 export const SocketContext = createContext();
@@ -84,9 +84,9 @@ export const SocketProvider = ({ children }) => {
     newSocket.on('connect_error', (err) => {
       if (err?.message === 'SESSION_EXPIRED_OTHER_DEVICE') {
         newSocket.disconnect(); // stop auto-reconnect
+        removeToken();
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');
         window.location.href = '/login';
       }
@@ -175,9 +175,9 @@ export const SocketProvider = ({ children }) => {
 
     // Force logout when admin blocks user OR user logged in from another device
     newSocket.on('force-logout', (data) => {
+      removeToken();
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       const reason = data?.reason || '';
       if (reason.includes('another device')) {
         localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');

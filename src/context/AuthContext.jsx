@@ -31,8 +31,9 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem('user');
 
     if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-      // Verify token in background; only logout on 401 (invalid/expired)
+      // Don't set user from localStorage yet — verify the token first.
+      // This prevents a flash where stale tokens briefly make the user appear authenticated,
+      // causing PublicRoute to redirect away from the login page before getMe() fails.
       authAPI.getMe()
         .then(res => {
           setUser(res.data);
@@ -44,14 +45,19 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             setUser(null);
-            // If server says forceLogout (logged in from another device), show message
             if (err.response?.data?.forceLogout) {
               localStorage.setItem('logoutReason', 'You have been logged out because your account was logged in from another device.');
             }
+          } else {
+            // Network error or server down — trust cached data so user isn't logged out
+            try { setUser(JSON.parse(savedUser)); } catch { /* ignore */ }
           }
         })
         .finally(() => setLoading(false));
     } else {
+      // No token — clean up any leftover data
+      if (token && !savedUser) { removeToken(); localStorage.removeItem('token'); }
+      if (!token && savedUser) { localStorage.removeItem('user'); }
       setLoading(false);
     }
   }, []);
@@ -69,6 +75,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setUser(null);
   };
+
+  // Listen for forced logout from API interceptor (401 on any API call)
+  useEffect(() => {
+    const handleForceLogout = () => setUser(null);
+    window.addEventListener('auth:logout', handleForceLogout);
+    return () => window.removeEventListener('auth:logout', handleForceLogout);
+  }, []);
 
   const updateBalance = (newBalance) => {
     if (user) {
