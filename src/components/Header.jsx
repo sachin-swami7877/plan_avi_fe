@@ -37,8 +37,8 @@ const Header = () => {
                 </svg>
               </Link>
             ) : null}
-            <Link to="/dashboard">
-              <img src="/icon-192.png" alt="RushkroLudo" className="w-8 h-8" />
+            <Link to="/dashboard" className="flex items-center">
+              <img src="/icon-192.png" alt="RushkroLudo" className="w-7 h-7" />
             </Link>
           </div>
 

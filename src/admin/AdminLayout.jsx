@@ -128,7 +128,7 @@ const AdminLayout = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center min-w-0">
           <div className="flex items-center gap-2">
             <img src="/ludo.jpeg" alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
-            <h1 className="text-xl font-bold">Rushkro<span className="text-emerald-300">Ludo</span> <span className="text-white/50 text-sm font-normal">{role === 'superadmin' ? 'Super Admin' : 'Admin'}</span></h1>
+            <h1 className="text-xl font-bold">Rushkro<span className="text-emerald-300">Ludo</span> <span className="text-white/50 text-sm font-normal">{role === 'superadmin' ? 'Super' : 'Admin'}</span></h1>
           </div>
           <div className="flex items-center gap-3">
             <Link
