@@ -407,7 +407,7 @@ export default function Ludo() {
 
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-[200px] overflow-x-hidden">
+    <div className="min-h-screen bg-[#E3F2FD] pb-[200px] overflow-x-hidden">
       <Header />
       <div className="max-w-md mx-auto p-4 w-full min-w-0 relative">
         {/* Floating toggle icon — top right corner */}

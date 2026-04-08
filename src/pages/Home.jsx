@@ -1,9 +1,39 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { settingsAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import toast from 'react-hot-toast';
+
+/* ── Auto-sliding Ad Carousel ── */
+const AD_SLIDES = ['/slider1.png', '/slider2.png'];
+const AdCarousel = () => {
+  const [current, setCurrent] = useState(0);
+  const timerRef = useRef(null);
+
+  const startTimer = useCallback(() => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => setCurrent(p => (p + 1) % AD_SLIDES.length), 3000);
+  }, []);
+
+  useEffect(() => { startTimer(); return () => clearInterval(timerRef.current); }, [startTimer]);
+
+  return (
+    <div className="relative rounded-xl overflow-hidden shadow-sm mb-3">
+      <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${current * 100}%)` }}>
+        {AD_SLIDES.map((src, i) => (
+          <img key={i} src={src} alt={`Slide ${i + 1}`} className="w-full flex-shrink-0 h-auto object-cover" draggable={false} />
+        ))}
+      </div>
+      {/* Dots */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+        {AD_SLIDES.map((_, i) => (
+          <button key={i} onClick={() => { setCurrent(i); startTimer(); }}
+            className={`w-2 h-2 rounded-full transition-all ${i === current ? 'bg-white w-4' : 'bg-white/50'}`} />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -11,6 +41,7 @@ const Home = () => {
   const [supportWhatsApp, setSupportWhatsApp] = useState('');
   const [showInstallTip, setShowInstallTip] = useState(false);
   const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
+  const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
 
   const handleDownload = () => {
     if (window.deferredPrompt) {
@@ -31,6 +62,7 @@ const Home = () => {
     }).catch(() => {});
     settingsAPI.getAviatorStatus().then(res => {
       if (res.data?.aviatorComingSoon) setAviatorComingSoon(true);
+      if (res.data?.spinnerComingSoon) setSpinnerComingSoon(true);
     }).catch(() => {});
   }, []);
 
@@ -42,7 +74,7 @@ const Home = () => {
       path: '/ludo',
       gradient: 'from-green-500 to-emerald-600',
       // Add ludo-king.png to public folder for real Ludo King logo, or use external URL
-      image: '/ludo.jpeg',
+      image: '/ludo-classic1.png',
       fallbackIcon: (
         <svg className="w-full h-full" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 12h16v16H12V12zm24 0h16v16H36V12zM12 36h16v16H12V52zm24 0h16v16H36V52z" fill="currentColor" />
@@ -90,35 +122,21 @@ const Home = () => {
       gradient: 'from-black to-gray-900',
       image: null,
       isExternal: true,
-      customRender: (
-        <div className="w-full h-full relative overflow-hidden flex flex-col items-center justify-center">
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <rect width="200" height="200" fill="#1565C0"/>
-            {[0,30,60,90,120,150,180,210,240,270,300,330].map((deg, i) => (
-              <polygon key={i} points="100,100 0,-10 200,-10" fill="rgba(255,255,255,0.07)" transform={`rotate(${deg} 100 100)`}/>
-            ))}
-            <circle cx="100" cy="100" r="55" fill="rgba(255,255,255,0.06)"/>
-          </svg>
-          <svg className="relative z-10 w-20 h-20 drop-shadow-lg" viewBox="0 0 24 24" fill="white">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-          </svg>
-          <span className="relative z-10 text-white font-bold text-base mt-1">Support</span>
-        </div>
-      ),
+      image: '/ludosupport.png',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-24 overflow-x-hidden">
+    <div className="min-h-screen bg-[#E3F2FD] pb-28 overflow-x-hidden">
       <Header />
 
-      <div className="max-w-md mx-auto p-4 w-full min-w-0">
-        {/* Welcome Section */}
-        <div className="mb-6">
-        </div>
+      <div className="max-w-md mx-auto p-3 w-full min-w-0">
+        {/* Ad Carousel */}
+        <AdCarousel />
+
         {/* User Warning */}
         {userWarning && (
-          <div className="mb-4 bg-white border-2 border-red-500 rounded-xl px-4 py-3 flex items-start gap-2">
+          <div className="mb-3 bg-white border-2 border-red-500 rounded-xl px-4 py-3 flex items-start gap-2">
             <span className="text-red-500 text-xl mt-0.5">&#9888;</span>
             <p className="text-gray-900 text-base font-semibold">{userWarning}</p>
           </div>
@@ -131,36 +149,30 @@ const Home = () => {
           </div>
         )}
 
-        {/* Games */}
-        <div className="mb-6">
-          <h3 className="font-bold text-gray-800 mb-3">Games</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {gameCards.map((game) => (
+        {/* Games — hide cards when super admin toggles Coming Soon */}
+        <div className="mb-4">
+          <div className="grid grid-cols-2 gap-4 pt-3">
+            {gameCards.filter((g) => {
+              if (g.id === 'aviator' && aviatorComingSoon) return false;
+              if (g.id === 'lucky-draw' && spinnerComingSoon) return false;
+              return true;
+            }).map((game) => (
               <button
                 key={game.id}
                 onClick={() => {
                   if (game.isExternal) {
                     window.location.href = supportWhatsApp ? `https://wa.me/${supportWhatsApp}` : 'https://wa.me/';
-                  } else if (game.id === 'aviator' && aviatorComingSoon) {
-                    toast('Aviator is coming soon! Stay tuned.', { icon: '✈️' });
                   } else {
                     navigate(game.path);
                   }
                 }}
                 className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square relative"
               >
-                {/* Coming Soon overlay for Aviator */}
-                {game.id === 'aviator' && aviatorComingSoon && (
-                  <div className="absolute inset-0 z-30 bg-black/60 flex flex-col items-center justify-center">
-                    <p className="text-white font-black text-lg">Coming Soon</p>
-                    <p className="text-white/50 text-xs mt-1">Stay tuned!</p>
-                  </div>
-                )}
-                {/* LIVE badge */}
-                {!game.isExternal && !(game.id === 'aviator' && aviatorComingSoon) && (
-                  <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
-                    <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                    <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide">Live</span>
+                {/* LIVE badge — positioned above the card like addaking */}
+                {!game.isExternal && (
+                  <div className="absolute -top-2 left-2 z-20 flex items-center gap-1 px-2 py-0.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                    <span className="text-xs font-bold text-red-500 uppercase">LIVE</span>
                   </div>
                 )}
                 {game.customRender ? (
@@ -195,7 +207,7 @@ const Home = () => {
           {/* Download App button */}
           <button
             onClick={handleDownload}
-            className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-bold text-sm shadow-lg active:scale-[0.98] transition-all"
+            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-sm shadow-md active:scale-[0.98] transition-all"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
             Download App

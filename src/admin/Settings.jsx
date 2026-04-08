@@ -4,12 +4,10 @@ import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
-const AVIATOR_TOGGLE_PHONES = ['9166821247', '7877722306'];
-
 const Settings = () => {
   const { socket } = useSocket();
-  const { user } = useAuth();
-  const canSeeAviatorToggle = AVIATOR_TOGGLE_PHONES.includes(user?.phone);
+  const { user, isSuperAdmin } = useAuth();
+  const canSeeAviatorToggle = isSuperAdmin;
   const [betsEnabled, setBetsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,6 +44,7 @@ const Settings = () => {
   const [qrFile, setQrFile] = useState(null);
   const [qrUploading, setQrUploading] = useState(false);
   const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
+  const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -86,6 +85,7 @@ const Settings = () => {
       setLudoWarning(d.ludoWarning || '');
       setQrCodeUrl(d.qrCodeUrl || null);
       setAviatorComingSoon(d.aviatorComingSoon ?? false);
+      setSpinnerComingSoon(d.spinnerComingSoon ?? false);
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to load settings' });
     } finally { setLoading(false); }
@@ -211,30 +211,6 @@ const Settings = () => {
           <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${betsEnabled ? 'translate-x-8' : 'translate-x-1'}`} />
         </button>
       </Section>
-
-      {/* Aviator Coming Soon Toggle — visible only to specific phones */}
-      {canSeeAviatorToggle && (
-        <Section title="Aviator — Coming Soon" desc={aviatorComingSoon ? 'Aviator is hidden. Users see "Coming Soon".' : 'Aviator is live and playable.'}>
-          <button
-            onClick={async () => {
-              const newValue = !aviatorComingSoon;
-              setAviatorComingSoon(newValue);
-              setSaving(true);
-              try {
-                await adminAPI.updateSettings({ aviatorComingSoon: newValue });
-                toast.success(`Aviator ${newValue ? 'set to Coming Soon' : 'is now live'}`);
-              } catch (error) {
-                setAviatorComingSoon(!newValue);
-                toast.error('Failed to update Aviator setting');
-              } finally { setSaving(false); }
-            }}
-            disabled={saving}
-            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${aviatorComingSoon ? 'bg-amber-500' : 'bg-emerald-600'} ${saving ? 'opacity-50' : ''}`}
-          >
-            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${aviatorComingSoon ? 'translate-x-8' : 'translate-x-1'}`} />
-          </button>
-        </Section>
-      )}
 
       {/* Withdrawals Toggle */}
       <Section title="Withdrawals" desc={withdrawalsEnabled ? 'Users can submit withdrawal requests.' : 'Withdrawals are disabled — users cannot request withdrawals.'}>
@@ -594,6 +570,57 @@ const Settings = () => {
           </div>
         </div>
       </Section>
+
+      {/* ═══ Super Admin Only — Game Visibility ═══ */}
+      {isSuperAdmin && (
+        <>
+          <div className="border-t border-gray-200 pt-4 mt-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Super Admin Only</p>
+          </div>
+
+          <Section title="Aviator — Coming Soon" desc={aviatorComingSoon ? 'Aviator is HIDDEN from users (Dashboard, Profile, Landing). Direct URL shows "Coming Soon".' : 'Aviator is live and visible to all users.'}>
+            <button
+              onClick={async () => {
+                const newValue = !aviatorComingSoon;
+                setAviatorComingSoon(newValue);
+                setSaving(true);
+                try {
+                  await adminAPI.updateSettings({ aviatorComingSoon: newValue });
+                  toast.success(`Aviator ${newValue ? 'hidden from users' : 'is now live'}`);
+                } catch (error) {
+                  setAviatorComingSoon(!newValue);
+                  toast.error('Failed to update');
+                } finally { setSaving(false); }
+              }}
+              disabled={saving}
+              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${aviatorComingSoon ? 'bg-amber-500' : 'bg-emerald-600'} ${saving ? 'opacity-50' : ''}`}
+            >
+              <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${aviatorComingSoon ? 'translate-x-8' : 'translate-x-1'}`} />
+            </button>
+          </Section>
+
+          <Section title="Spinner — Coming Soon" desc={spinnerComingSoon ? 'Spinner is HIDDEN from users (Dashboard, Profile, Landing). Direct URL shows "Coming Soon".' : 'Spinner is live and visible to all users.'}>
+            <button
+              onClick={async () => {
+                const newValue = !spinnerComingSoon;
+                setSpinnerComingSoon(newValue);
+                setSaving(true);
+                try {
+                  await adminAPI.updateSettings({ spinnerComingSoon: newValue });
+                  toast.success(`Spinner ${newValue ? 'hidden from users' : 'is now live'}`);
+                } catch (error) {
+                  setSpinnerComingSoon(!newValue);
+                  toast.error('Failed to update');
+                } finally { setSaving(false); }
+              }}
+              disabled={saving}
+              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${spinnerComingSoon ? 'bg-amber-500' : 'bg-emerald-600'} ${saving ? 'opacity-50' : ''}`}
+            >
+              <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${spinnerComingSoon ? 'translate-x-8' : 'translate-x-1'}`} />
+            </button>
+          </Section>
+        </>
+      )}
     </div>
   );
 };

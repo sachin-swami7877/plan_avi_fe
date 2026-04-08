@@ -90,7 +90,7 @@ const Notifications = () => {
       case 'wallet': return 'bg-green-100';
       case 'game': return 'bg-primary-100';
       case 'admin': return 'bg-yellow-100';
-      default: return 'bg-gray-100';
+      default: return 'bg-[#E3F2FD]';
     }
   };
 

@@ -122,9 +122,11 @@ export const AuthProvider = ({ children }) => {
       refreshUser,
       patchUser,
       isAuthenticated: !!user,
-      isAdmin: user?.isAdmin || user?.role === 'admin',
-      isSubAdmin: user?.isSubAdmin || user?.role === 'manager' || user?.role === 'admin',
-      role: (user?.role === 'admin' || user?.isAdmin) ? 'admin'
+      isSuperAdmin: user?.isSuperAdmin || user?.role === 'superadmin',
+      isAdmin: user?.isAdmin || user?.role === 'admin' || user?.role === 'superadmin',
+      isSubAdmin: user?.isSubAdmin || user?.role === 'manager' || user?.role === 'admin' || user?.role === 'superadmin',
+      role: (user?.role === 'superadmin' || user?.isSuperAdmin) ? 'superadmin'
+        : (user?.role === 'admin' || user?.isAdmin) ? 'admin'
         : (user?.role === 'manager' || user?.isSubAdmin) ? 'manager'
         : 'user'
     }}>

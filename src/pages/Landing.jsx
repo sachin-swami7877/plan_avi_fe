@@ -243,10 +243,8 @@ const Landing = () => {
       {/* ═══ Navbar ═══ */}
       <header className="relative z-30 border-b border-white/5">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
-          <Link to="/landing" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:shadow-red-500/40 transition-shadow">
-              <LogoSvg className="w-7 h-7" />
-            </div>
+          <Link to="/landing" className="flex items-center gap-2 group">
+            <img src="/icon-192.png" alt="RushkroLudo" className="w-10 h-10" />
             <span className="text-xl font-extrabold tracking-tight">Rushkro<span className="text-red-500">Ludo</span></span>
           </Link>
 
@@ -266,125 +264,84 @@ const Landing = () => {
             </button>
           </nav>
 
-          {/* Mobile hamburger */}
-          <button type="button" onClick={() => setMenuOpen(!menuOpen)} className="sm:hidden p-2 rounded-lg hover:bg-white/10 transition-colors" aria-label="Menu">
-            {menuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-            )}
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="sm:hidden border-t border-white/5 bg-[#0d0d15]/95 backdrop-blur-xl px-4 py-3 space-y-1">
+          {/* Mobile: Login button or Play button */}
+          <div className="sm:hidden">
             {isAuthenticated ? (
-              <>
-                <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Play</Link>
-                <Link to="/wallet" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Wallet</Link>
-                <Link to="/profile" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Profile</Link>
-              </>
+              <Link to="/dashboard" className="px-5 py-2 rounded-lg text-sm font-bold bg-red-600 hover:bg-red-500 text-white">
+                Play
+              </Link>
             ) : (
-              <Link to="/login" onClick={() => setMenuOpen(false)} className="block px-4 py-3 rounded-lg text-white/80 hover:bg-white/5 font-medium">Login</Link>
+              <Link to="/login" className="px-5 py-2 rounded-lg text-sm font-bold border-2 border-white text-white hover:bg-white hover:text-black transition-colors">
+                LOGIN
+              </Link>
             )}
-            <button onClick={() => { setMenuOpen(false); handlePlay(); }} className="w-full mt-2 px-4 py-3 rounded-lg font-bold bg-red-600 hover:bg-red-500 text-center">
-              Play Now
-            </button>
           </div>
-        )}
+        </div>
       </header>
 
-      {/* ═══ Game Showcase — 2x2 grid ═══ */}
-      <section className="relative z-10 px-4 sm:px-6 pt-8 sm:pt-12">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-center text-sm font-semibold text-white/50 uppercase tracking-widest mb-5">Choose Your Game</h2>
-          <div className="grid grid-cols-2 gap-3 sm:gap-5">
-            {GAME_DATA.map((game) => (
-              <button
-                key={game.id}
-                onClick={() => handleGameClick(game.path)}
-                className={`group relative rounded-2xl overflow-hidden bg-gradient-to-br ${game.gradient} shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]`}
-              >
-                {/* LIVE badge */}
-                <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide">Live</span>
-                </div>
-                <div className="aspect-square relative overflow-hidden">
-                  <img
-                    src={game.image}
-                    alt={game.title}
-                    className="absolute inset-0 w-full h-full group-hover:scale-110 transition-transform duration-300"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextElementSibling.style.display = 'flex';
-                    }}
-                  />
-                  <div className="hidden absolute inset-0 items-center justify-center text-5xl sm:text-7xl">
-                    {game.fallbackEmoji}
-                  </div>
-                </div>
-                <div className="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-              </button>
-            ))}
-            {/* WhatsApp Support card */}
-            <button
-              onClick={() => whatsAppNumber && window.open(`https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}`, '_blank')}
-              className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]"
-            >
-              <div className="aspect-square relative overflow-hidden flex items-center justify-center">
-                {/* Blue radial burst background */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="200" height="200" fill="#1565C0"/>
-                  {[0,30,60,90,120,150,180,210,240,270,300,330].map((deg, i) => (
-                    <polygon key={i} points="100,100 0,-10 200,-10" fill="rgba(255,255,255,0.07)" transform={`rotate(${deg} 100 100)`}/>
-                  ))}
-                  <circle cx="100" cy="100" r="55" fill="rgba(255,255,255,0.06)"/>
-                </svg>
-                {/* White phone icon */}
-                <svg className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 drop-shadow-lg" viewBox="0 0 24 24" fill="white">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
-                <span className="relative z-10 text-white font-bold text-base sm:text-lg mt-1">Support</span>
+      {/* ═══ Ad Carousel ═══ */}
+      <section className="relative z-10 px-4 sm:px-6 pt-6">
+        <div className="max-w-md mx-auto rounded-xl overflow-hidden shadow-lg">
+          <img src="/slider1.png" alt="Withdrawals Within 2 Minutes" className="w-full h-auto" />
+        </div>
+      </section>
+
+      {/* ═══ Game Cards — addaking style ═══ */}
+      <section className="relative z-10 px-4 sm:px-6 pt-4">
+        <div className="max-w-md mx-auto">
+          <div className="grid grid-cols-2 gap-3 pt-4">
+            {/* Ludo Card */}
+            <div className="relative">
+              <div className="flex items-center gap-1 mb-1.5 px-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                <span className="text-xs font-bold text-red-500 uppercase">LIVE</span>
               </div>
-            </button>
-          </div>
+              <button
+                onClick={() => handleGameClick('/ludo')}
+                className="w-full rounded-xl overflow-hidden shadow-md hover:shadow-xl active:scale-[0.98] transition-all"
+              >
+                <img src="/ludo-classic1.png" alt="Ludo Classic" className="w-full h-auto" />
+              </button>
+            </div>
 
-          {/* Play Now button — above share/copy */}
-          <div className="flex justify-center mt-5">
-            <button
-              onClick={handlePlay}
-              className="group relative w-full max-w-sm px-8 py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-red-600 to-red-500 text-white shadow-2xl shadow-red-600/30 hover:shadow-red-500/50 transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                Play Now
-                <svg className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            </button>
+            {/* WhatsApp Support Card */}
+            <div className="relative">
+              <div className="flex items-center gap-1 mb-1.5 px-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                <span className="text-xs font-bold text-green-600 uppercase">LIVE</span>
+              </div>
+              <button
+                onClick={() => whatsAppNumber && window.open(`https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}`, '_blank')}
+                className="w-full rounded-xl overflow-hidden shadow-md hover:shadow-xl active:scale-[0.98] transition-all"
+              >
+                <img src="/ludosupport.png" alt="RushkroLudo Support" className="w-full h-auto" />
+              </button>
+            </div>
           </div>
+        </div>
+      </section>
 
-          {/* Share & Copy buttons */}
-          <div className="flex gap-3 mt-3 justify-center">
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent('Play Ludo, Aviator & Lucky Spinner! Win real cash. Join now: ' + window.location.origin)}`}
-              rel="noopener noreferrer"
-              className="flex-1 max-w-[200px] bg-[#25D366] text-white py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm hover:bg-[#20bd5a] transition-colors"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-              Share
-            </a>
-            <button
-              onClick={() => { navigator.clipboard.writeText(window.location.origin); alert('Link copied!'); }}
-              className="flex-1 max-w-[200px] bg-white/10 text-white py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm border border-white/10 hover:bg-white/20 transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              Copy Link
-            </button>
-          </div>
+      {/* ═══ Spacer ═══ */}
+      <div className="h-4" />
+
+      {/* Share & Copy buttons */}
+      <section className="relative z-10 px-4 sm:px-6">
+        <div className="max-w-md mx-auto flex gap-3 justify-center">
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent('Play Ludo, Aviator & Lucky Spinner! Win real cash. Join now: ' + window.location.origin)}`}
+            rel="noopener noreferrer"
+            className="flex-1 max-w-[200px] bg-[#25D366] text-white py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm hover:bg-[#20bd5a] transition-colors"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+            Share
+          </a>
+          <button
+            onClick={() => { navigator.clipboard.writeText(window.location.origin); alert('Link copied!'); }}
+            className="flex-1 max-w-[200px] bg-white/10 text-white py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm border border-white/10 hover:bg-white/20 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            Copy Link
+          </button>
         </div>
       </section>
 

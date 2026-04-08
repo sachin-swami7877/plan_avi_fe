@@ -17,7 +17,7 @@ const Support = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-[#E3F2FD] pb-20 overflow-x-hidden">
       <Header />
       <div className="max-w-md mx-auto p-4 w-full min-w-0">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Support</h1>

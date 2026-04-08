@@ -750,12 +750,13 @@ const Users = () => {
             label="Role"
             value={editModal.role}
             onChange={(e) => setEditModal({ ...editModal, role: e.target.value })}
-            disabled={actionLoading}
+            disabled={actionLoading || (editModal.role === 'superadmin' && myRole !== 'superadmin')}
             SelectProps={{ native: true }}
           >
             <option value="user">User</option>
             <option value="manager">Manager</option>
             <option value="admin">Admin</option>
+            {myRole === 'superadmin' && <option value="superadmin">Super Admin</option>}
           </TextField>
         </DialogContent>
         <DialogActions>

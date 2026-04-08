@@ -35,7 +35,7 @@ const Bonus = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-100 pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-[#E3F2FD] pb-20 overflow-x-hidden">
       <Header />
       <p className="text-center text-gray-400 py-8">Loading...</p>
       <Navbar />
@@ -45,7 +45,7 @@ const Bonus = () => {
   const progress = data ? Math.min(100, (data.progressToNext / data.threshold) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-[#E3F2FD] pb-20 overflow-x-hidden">
       <Header />
       <div className="max-w-md mx-auto p-4 w-full min-w-0">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Bonus & Cashback</h1>

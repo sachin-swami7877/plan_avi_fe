@@ -466,7 +466,7 @@ export default function LudoMatchDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#E3F2FD] flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-600 border-t-transparent" />
       </div>
     );
@@ -547,7 +547,7 @@ export default function LudoMatchDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-[200px] overflow-x-hidden">
+    <div className="min-h-screen bg-[#E3F2FD] pb-[200px] overflow-x-hidden">
       <Header />
       <div className="max-w-md mx-auto p-4 w-full min-w-0">
         <button onClick={() => navigate('/ludo')} className="text-primary-600 text-sm font-medium mb-4 flex items-center gap-1">
@@ -870,7 +870,7 @@ export default function LudoMatchDetail() {
           {resultRequest && match?.status !== 'completed' && (
             <div className="px-4 pb-2">
               {isResolved && !myRefundDecision && (
-                <div className="rounded-xl p-3 bg-gray-100 border border-gray-200">
+                <div className="rounded-xl p-3 bg-[#E3F2FD] border border-gray-200">
                   {iWon && <p className="text-green-700 font-medium">You won ✓</p>}
                   {iHadWinClaimButRejected && <p className="text-red-600 text-sm">Your request is rejected by the admin. Contact support.</p>}
                   {winnerId && !iWon && !iHadWinClaimButRejected && <p className="text-gray-600 text-sm">Match completed. Winner: {match.players?.find((p) => p.userId?.toString() === winnerId)?.userName || '—'} ✓</p>}

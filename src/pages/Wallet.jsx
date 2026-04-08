@@ -558,7 +558,7 @@ const Wallet = () => {
       <Dialog open={tcOpen} onClose={() => setTcOpen(false)} maxWidth="sm" fullWidth>
         <div className="flex items-center justify-between px-6 pt-5 pb-2">
           <h2 className="font-bold text-lg text-gray-800">भुगतान निर्देश / Payment Instructions</h2>
-          <button type="button" onClick={() => setTcOpen(false)} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
+          <button type="button" onClick={() => setTcOpen(false)} className="w-8 h-8 rounded-full hover:bg-[#E3F2FD] flex items-center justify-center transition-colors">
             <IoCloseCircle className="text-gray-400 text-xl" />
           </button>
         </div>
@@ -610,7 +610,7 @@ const Wallet = () => {
               <p className="text-sm text-gray-500 mb-3">Your deposit request will be cancelled.</p>
             )}
             <div className="flex gap-2">
-              <button onClick={() => setCancelConfirm(null)} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-medium text-sm">
+              <button onClick={() => setCancelConfirm(null)} className="flex-1 bg-[#E3F2FD] text-gray-700 py-2.5 rounded-lg font-medium text-sm">
                 Go Back
               </button>
               <button onClick={handleCancelRequest} disabled={cancelling} className="flex-1 bg-red-500 text-white py-2.5 rounded-lg font-medium text-sm disabled:opacity-60">

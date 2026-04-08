@@ -345,22 +345,11 @@ const Login = () => {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(16,185,129,0.15),transparent)]" />
           <Particles />
           <div className="relative z-10 flex flex-col items-center pt-8 pb-6 px-4">
-            <Link to="/landing" className="inline-flex items-center gap-2.5 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
-                🎲
-              </div>
-              <span className="text-2xl font-extrabold tracking-tight">Rushkro<span className="text-emerald-400">Ludo</span></span>
+            <Link to="/landing" className="mb-4">
+              <img src="/icon-192.png" alt="RushkroLudo" className="w-16 h-16" />
             </Link>
             <p className="text-white/40 text-sm">Ludo, Aviator & Spinner — Win Real Cash!</p>
           </div>
-        </div>
-
-        {/* Home icon — go to landing page */}
-        <div className="flex justify-end px-4 pt-3 lg:hidden">
-          <Link to="/landing" className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" /></svg>
-            Home
-          </Link>
         </div>
 
         {/* Form container */}
@@ -661,6 +650,34 @@ const Login = () => {
           18+ | Play Responsibly | <Link to="/terms" className="hover:text-white/40 transition-colors">Terms & Conditions</Link>
         </div>
       </div>
+
+      {/* ═══ Static bottom navbar (only Home clickable) ═══ */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1a1a2e] border-t border-white/10 lg:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="max-w-md mx-auto flex items-center justify-around px-2 relative">
+          <div className="flex flex-col items-center py-2 px-3 min-w-[56px]">
+            <svg className="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" /></svg>
+            <span className="text-[10px] mt-0.5 text-white/30">Money</span>
+          </div>
+          <div className="flex flex-col items-center py-2 px-3 min-w-[56px]">
+            <svg className="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+            <span className="text-[10px] mt-0.5 text-white/30">Ludo</span>
+          </div>
+          <Link to="/landing" className="relative -mt-6 flex flex-col items-center">
+            <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center shadow-lg">
+              <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </div>
+            <span className="text-[10px] mt-0.5 font-medium text-white/60">Home</span>
+          </Link>
+          <div className="flex flex-col items-center py-2 px-3 min-w-[56px]">
+            <svg className="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+            <span className="text-[10px] mt-0.5 text-white/30">Alerts</span>
+          </div>
+          <div className="flex flex-col items-center py-2 px-3 min-w-[56px]">
+            <svg className="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+            <span className="text-[10px] mt-0.5 text-white/30">Profile</span>
+          </div>
+        </div>
+      </nav>
 
       {/* ── CSS ── */}
       <style>{`

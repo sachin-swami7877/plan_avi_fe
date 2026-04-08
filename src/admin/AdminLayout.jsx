@@ -30,7 +30,7 @@ const AdminLayout = () => {
     { path: '/admin/bets', label: 'All Bets', icon: '🎰', subAdmin: false },
     { path: '/admin/wins-bets', label: 'Winning Bets', icon: '🏆', subAdmin: false },
     { path: '/admin/spinner-records', label: 'Spinner Records', icon: '🎡', subAdmin: false },
-    { path: '/admin/notifications', label: 'Notifications', icon: '🔔', subAdmin: true },
+    { path: '/admin/notifications', label: 'Notifications', icon: '🔔', badge: pendingCount.deposits + pendingCount.withdrawals + ludoAlertCount + kycAlertCount, subAdmin: true },
     { path: '/admin/bonus-records', label: 'Bonus Records', icon: '🎁', subAdmin: false },
     { path: '/admin/ludo', label: 'Ludo', icon: '🎲', badge: ludoAlertCount, subAdmin: true },
     { path: '/admin/profit', label: 'Profit', icon: '💹', subAdmin: false },
@@ -52,7 +52,7 @@ const AdminLayout = () => {
     { path: '/admin/users', label: 'Users', icon: IoPeopleOutline, activeIcon: IoPeople, subAdmin: true },
     { path: '/admin/money', label: 'Money', icon: HiOutlineCurrencyRupee, activeIcon: HiCurrencyRupee, badge: pendingCount.deposits + pendingCount.withdrawals, subAdmin: true },
     { path: '/admin/bets', label: 'Bets', icon: IoBarChartOutline, activeIcon: IoBarChart, subAdmin: false },
-    { path: '/admin/notifications', label: 'Alerts', icon: IoNotificationsOutline, activeIcon: IoNotifications, subAdmin: true },
+    { path: '/admin/notifications', label: 'Alerts', icon: IoNotificationsOutline, activeIcon: IoNotifications, badge: pendingCount.deposits + pendingCount.withdrawals + ludoAlertCount + kycAlertCount, subAdmin: true },
     { path: '/admin/ludo', label: 'Ludo', icon: IoGridOutline, activeIcon: IoGrid, badge: ludoAlertCount, subAdmin: true },
   ];
 
@@ -63,9 +63,10 @@ const AdminLayout = () => {
   // Fetch initial pending counts from API
   useEffect(() => {
     adminAPI.getPendingCounts().then(res => {
-      const { pendingDeposits, pendingWithdrawals, pendingLudo } = res.data;
+      const { pendingDeposits, pendingWithdrawals, pendingLudo, pendingKyc } = res.data;
       setPendingCount({ deposits: pendingDeposits || 0, withdrawals: pendingWithdrawals || 0 });
       setLudoAlertCount(pendingLudo || 0);
+      setKycAlertCount(pendingKyc || 0);
     }).catch(() => {});
   }, []);
 
@@ -127,7 +128,7 @@ const AdminLayout = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center min-w-0">
           <div className="flex items-center gap-2">
             <img src="/ludo.jpeg" alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
-            <h1 className="text-xl font-bold">Rushkro<span className="text-emerald-300">Ludo</span> <span className="text-white/50 text-sm font-normal">Admin</span></h1>
+            <h1 className="text-xl font-bold">Rushkro<span className="text-emerald-300">Ludo</span> <span className="text-white/50 text-sm font-normal">{role === 'superadmin' ? 'Super Admin' : 'Admin'}</span></h1>
           </div>
           <div className="flex items-center gap-3">
             <Link

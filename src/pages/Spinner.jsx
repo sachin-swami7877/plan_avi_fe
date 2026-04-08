@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { spinnerAPI } from '../services/api';
+import { spinnerAPI, settingsAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 
@@ -61,6 +61,7 @@ function wedgePath(cx, cy, r, startDeg, endDeg) {
 
 export default function Spinner() {
   const { user, updateBalance } = useAuth();
+  const [comingSoon, setComingSoon] = useState(false);
   const [spinCost, setSpinCost] = useState(50);
   const [spinning, setSpinning] = useState(false);
   const [waitingForApi, setWaitingForApi] = useState(false);
@@ -75,6 +76,12 @@ export default function Spinner() {
   const pendingResultRef = useRef(null);
   const resultDelayTimerRef = useRef(null);
   const rotationRef = useRef(0);
+
+  useEffect(() => {
+    settingsAPI.getAviatorStatus().then(res => {
+      if (res.data?.spinnerComingSoon) setComingSoon(true);
+    }).catch(() => {});
+  }, []);
 
   const balance = user?.walletBalance ?? 0;
   const SEGMENTS = spinCost === 100 ? SEGMENTS_100 : SEGMENTS_50;
@@ -201,6 +208,27 @@ export default function Spinner() {
   }).join(', ');
 
   const isBusy = spinning || waitingForApi;
+
+  if (comingSoon) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] pb-24 overflow-x-hidden">
+        <Header />
+        <div className="max-w-md mx-auto px-4 py-16 w-full flex flex-col items-center justify-center text-center">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center text-5xl mb-6">
+            🎡
+          </div>
+          <h2 className="text-3xl font-black text-white mb-3">Coming Soon</h2>
+          <p className="text-white/50 text-base leading-relaxed max-w-xs">
+            Lucky Spinner is coming soon! Get ready to spin and win big prizes.
+          </p>
+          <div className="mt-8 px-6 py-3 rounded-xl bg-white/5 border border-white/10">
+            <p className="text-white/40 text-sm">We're working on something amazing for you</p>
+          </div>
+        </div>
+        <Navbar />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] pb-24 w-full max-w-[100vw] overflow-x-hidden box-border">

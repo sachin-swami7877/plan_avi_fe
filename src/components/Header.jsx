@@ -38,13 +38,13 @@ const Header = () => {
               </Link>
             ) : null}
             <Link to="/dashboard">
-              <span className="text-base font-extrabold text-white leading-none">Rushkro<span className="text-red-500">Ludo</span></span>
+              <img src="/icon-192.png" alt="RushkroLudo" className="w-8 h-8" />
             </Link>
           </div>
 
           <div className="flex items-center gap-2">
             <Link
-              to="/"
+              to="/landing"
               className="p-1.5 text-amber-400 hover:text-amber-300 transition-transform hover:scale-110"
               aria-label="Landing Page"
             >
