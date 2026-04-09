@@ -42,6 +42,7 @@ const Home = () => {
   const [showInstallTip, setShowInstallTip] = useState(false);
   const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
   const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
+  const [gameStatusLoaded, setGameStatusLoaded] = useState(false);
 
   const handleDownload = () => {
     if (window.deferredPrompt) {
@@ -63,7 +64,7 @@ const Home = () => {
     settingsAPI.getAviatorStatus().then(res => {
       if (res.data?.aviatorComingSoon) setAviatorComingSoon(true);
       if (res.data?.spinnerComingSoon) setSpinnerComingSoon(true);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setGameStatusLoaded(true));
   }, []);
 
   const gameCards = [
@@ -136,9 +137,9 @@ const Home = () => {
 
         {/* User Warning */}
         {userWarning && (
-          <div className="mb-3 bg-white border-2 border-red-500 rounded-xl px-4 py-3 flex items-start gap-2">
-            <span className="text-red-500 text-xl mt-0.5">&#9888;</span>
-            <p className="text-gray-900 text-base font-semibold">{userWarning}</p>
+          <div className="mb-3 bg-[#7B1F3A] rounded-xl px-4 py-3 flex items-start gap-2">
+            <span className="text-yellow-300 text-xl mt-0.5">&#9888;</span>
+            <p className="text-white text-sm font-semibold">{userWarning}</p>
           </div>
         )}
 
@@ -149,8 +150,13 @@ const Home = () => {
           </div>
         )}
 
-        {/* Games — hide cards when super admin toggles Coming Soon */}
+        {/* Games — wait for status API, then filter hidden games */}
         <div className="mb-4">
+          {!gameStatusLoaded ? (
+            <div className="flex justify-center py-8">
+              <div className="w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-4 pt-3">
             {gameCards.filter((g) => {
               if (g.id === 'aviator' && aviatorComingSoon) return false;
@@ -168,11 +174,11 @@ const Home = () => {
                 }}
                 className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square relative"
               >
-                {/* LIVE badge — positioned above the card like addaking */}
+                {/* LIVE badge — inside image top-left */}
                 {!game.isExternal && (
-                  <div className="absolute -top-2 left-2 z-20 flex items-center gap-1 px-2 py-0.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                    <span className="text-xs font-bold text-red-500 uppercase">LIVE</span>
+                  <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                    <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
                   </div>
                 )}
                 {game.customRender ? (
@@ -203,15 +209,24 @@ const Home = () => {
               </button>
             ))}
           </div>
+          )}
 
-          {/* Download App button */}
-          <button
-            onClick={handleDownload}
-            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-sm shadow-md active:scale-[0.98] transition-all"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-            Download App
-          </button>
+          {/* Download App bar — addaking style */}
+          <div className="mt-3 bg-white rounded-xl p-3 shadow-sm flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src="/icon-192.png" alt="RushkroLudo" className="w-10 h-10" />
+              <div>
+                <p className="font-bold text-gray-800 text-sm">RushkroLudo App</p>
+                <p className="text-gray-400 text-xs">Play faster in the app</p>
+              </div>
+            </div>
+            <button
+              onClick={handleDownload}
+              className="px-5 py-2 rounded-lg bg-[#4DB6AC] text-white font-bold text-sm active:scale-95 transition-transform"
+            >
+              Install
+            </button>
+          </div>
         </div>
       </div>
 

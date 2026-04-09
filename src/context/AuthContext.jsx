@@ -31,9 +31,9 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem('user');
 
     if (token && savedUser) {
-      // Don't set user from localStorage yet — verify the token first.
-      // This prevents a flash where stale tokens briefly make the user appear authenticated,
-      // causing PublicRoute to redirect away from the login page before getMe() fails.
+      // Set cached user immediately so balance/UI shows instantly.
+      // But keep loading=true until getMe() confirms token is valid (for routing).
+      try { setUser(JSON.parse(savedUser)); } catch { /* ignore */ }
       authAPI.getMe()
         .then(res => {
           setUser(res.data);

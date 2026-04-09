@@ -291,32 +291,28 @@ const Landing = () => {
         <div className="max-w-md mx-auto">
           <div className="grid grid-cols-2 gap-3 pt-4">
             {/* Ludo Card */}
-            <div className="relative">
-              <div className="flex items-center gap-1 mb-1.5 px-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                <span className="text-xs font-bold text-red-500 uppercase">LIVE</span>
+            <button
+              onClick={() => handleGameClick('/ludo')}
+              className="relative w-full rounded-xl overflow-hidden shadow-md hover:shadow-xl active:scale-[0.98] transition-all"
+            >
+              <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
+                <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
               </div>
-              <button
-                onClick={() => handleGameClick('/ludo')}
-                className="w-full rounded-xl overflow-hidden shadow-md hover:shadow-xl active:scale-[0.98] transition-all"
-              >
-                <img src="/ludo-classic1.png" alt="Ludo Classic" className="w-full h-auto" />
-              </button>
-            </div>
+              <img src="/ludo-classic1.png" alt="Ludo Classic" className="w-full h-auto" />
+            </button>
 
             {/* WhatsApp Support Card */}
-            <div className="relative">
-              <div className="flex items-center gap-1 mb-1.5 px-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                <span className="text-xs font-bold text-green-600 uppercase">LIVE</span>
+            <button
+              onClick={() => whatsAppNumber && window.open(`https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}`, '_blank')}
+              className="relative w-full rounded-xl overflow-hidden shadow-md hover:shadow-xl active:scale-[0.98] transition-all"
+            >
+              <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
+                <span className="w-2 h-2 rounded-full bg-green-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
               </div>
-              <button
-                onClick={() => whatsAppNumber && window.open(`https://wa.me/${whatsAppNumber.replace(/[^0-9]/g, '')}`, '_blank')}
-                className="w-full rounded-xl overflow-hidden shadow-md hover:shadow-xl active:scale-[0.98] transition-all"
-              >
-                <img src="/ludosupport.png" alt="RushkroLudo Support" className="w-full h-auto" />
-              </button>
-            </div>
+              <img src="/ludosupport.png" alt="RushkroLudo Support" className="w-full h-auto" />
+            </button>
           </div>
         </div>
       </section>

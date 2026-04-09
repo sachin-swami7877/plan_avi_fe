@@ -27,6 +27,7 @@ const Profile = () => {
   const [showInstallTip, setShowInstallTip] = useState(false);
   const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
   const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
+  const [gameStatusLoaded, setGameStatusLoaded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', phone: '', upiId: '', upiNumber: '', bankAccountNumber: '', bankIfscCode: '', bankAccountHolder: '' });
   const [paymentTab, setPaymentTab] = useState('upi'); // 'upi' | 'bank'
@@ -35,9 +36,11 @@ const Profile = () => {
   const [balanceDetails, setBalanceDetails] = useState({ depositBalance: 0, earningsBalance: 0 });
   const [kycData, setKycData] = useState(null);
   const [kycModalOpen, setKycModalOpen] = useState(false);
-  const [kycForm, setKycForm] = useState({ email: '', aadhaarNumber: '', address: '' });
+  const [kycForm, setKycForm] = useState({ name: '', aadhaarNumber: '', address: '' });
   const [kycFile, setKycFile] = useState(null);
   const [kycPreview, setKycPreview] = useState(null);
+  const [kycBackFile, setKycBackFile] = useState(null);
+  const [kycBackPreview, setKycBackPreview] = useState(null);
   const [kycSubmitting, setKycSubmitting] = useState(false);
 
   useEffect(() => {
@@ -48,7 +51,7 @@ const Profile = () => {
     settingsAPI.getAviatorStatus().then(res => {
       if (res.data?.aviatorComingSoon) setAviatorComingSoon(true);
       if (res.data?.spinnerComingSoon) setSpinnerComingSoon(true);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setGameStatusLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -85,8 +88,8 @@ const Profile = () => {
 
   const handleKycSubmit = async (e) => {
     e.preventDefault();
-    if (!kycForm.email) {
-      toast.error('Email is required'); return;
+    if (!kycForm.name || !kycForm.name.trim()) {
+      toast.error('Name is required'); return;
     }
     if (!kycForm.address) {
       toast.error('Address is required'); return;
@@ -94,22 +97,31 @@ const Profile = () => {
     if (!kycFile) {
       toast.error('Aadhaar front photo is required'); return;
     }
+    if (!kycBackFile) {
+      toast.error('Aadhaar back photo is required'); return;
+    }
     setKycSubmitting(true);
     try {
       const fd = new FormData();
-      fd.append('email', kycForm.email);
+      fd.append('name', kycForm.name.trim());
       fd.append('aadhaarNumber', kycForm.aadhaarNumber.replace(/\s/g, ''));
       fd.append('address', kycForm.address);
       if (kycFile) {
         const compressedKyc = await compressImage(kycFile, 1280, 0.6);
         fd.append('aadhaarFront', compressedKyc);
       }
+      if (kycBackFile) {
+        const compressedBack = await compressImage(kycBackFile, 1280, 0.6);
+        fd.append('aadhaarBack', compressedBack);
+      }
       await authAPI.submitKyc(fd);
       toast.success('KYC submitted! Awaiting admin review.');
       setKycModalOpen(false);
-      setKycForm({ email: '', aadhaarNumber: '', address: '' });
+      setKycForm({ name: '', aadhaarNumber: '', address: '' });
       setKycFile(null);
       setKycPreview(null);
+      setKycBackFile(null);
+      setKycBackPreview(null);
       await fetchKycStatus();
       // Update user context so kycStatus reflects
       window.location.reload();
@@ -327,6 +339,11 @@ const Profile = () => {
         {/* Games - Show First */}
         <div className="mb-6">
           <h3 className="font-bold text-gray-800 mb-3">Games</h3>
+          {!gameStatusLoaded ? (
+            <div className="flex justify-center py-8">
+              <div className="w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-4">
             {gameCards.filter((g) => {
               if (g.id === 'aviator' && aviatorComingSoon) return false;
@@ -344,11 +361,11 @@ const Profile = () => {
                 }}
                 className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square relative"
               >
-                {/* LIVE badge */}
+                {/* LIVE badge — inside image */}
                 {!game.isExternal && (
-                  <div className="absolute -top-2 left-2 z-20 flex items-center gap-1 px-2 py-0.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                    <span className="text-xs font-bold text-red-500 uppercase">LIVE</span>
+                  <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                    <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
                   </div>
                 )}
                 {game.customRender ? (
@@ -379,6 +396,7 @@ const Profile = () => {
               </button>
             ))}
           </div>
+          )}
         </div>
 
         {/* Balance Card */}
@@ -423,8 +441,19 @@ const Profile = () => {
           )}
         </div>
 
-        {/* KYC Modal */}
-        {kycModalOpen && (
+        {/* KYC Modal — block if already approved */}
+        {kycModalOpen && user?.kycStatus === 'approved' && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/70" onClick={() => setKycModalOpen(false)} />
+            <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full text-center">
+              <p className="text-green-600 text-4xl mb-3">✓</p>
+              <h3 className="font-bold text-gray-800 text-lg mb-1">KYC Already Verified</h3>
+              <p className="text-gray-500 text-sm mb-4">Your identity is verified. No action needed.</p>
+              <button onClick={() => setKycModalOpen(false)} className="px-6 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold">OK</button>
+            </div>
+          </div>
+        )}
+        {kycModalOpen && user?.kycStatus !== 'approved' && (
           <div className="fixed inset-0 z-[9999] flex items-end justify-center">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setKycModalOpen(false)} />
@@ -444,14 +473,14 @@ const Profile = () => {
               </div>
 
               <form onSubmit={handleKycSubmit} className="space-y-4">
-                {/* Email */}
+                {/* Name */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Email Address</label>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Full Name <span className="text-red-400">*</span></label>
                   <input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={kycForm.email}
-                    onChange={(e) => setKycForm({ ...kycForm, email: e.target.value })}
+                    type="text"
+                    placeholder="As per Aadhaar"
+                    value={kycForm.name}
+                    onChange={(e) => setKycForm({ ...kycForm, name: e.target.value })}
                     className={inputCls}
                     required
                   />
@@ -507,6 +536,33 @@ const Profile = () => {
                       if (!f) return;
                       setKycFile(f);
                       setKycPreview(URL.createObjectURL(f));
+                    }} />
+                  </label>
+                </div>
+
+                {/* Aadhaar Back Photo */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                    Aadhaar Back Photo <span className="text-red-400">*</span>
+                  </label>
+                  <label className="relative flex flex-col items-center justify-center w-full border-2 border-dashed border-gray-700 rounded-xl overflow-hidden cursor-pointer hover:border-primary-500 transition-colors bg-gray-800/40 min-h-[100px]">
+                    {kycBackPreview ? (
+                      <div className="w-full">
+                        <img src={kycBackPreview} alt="Aadhaar back preview" className="w-full rounded-xl object-cover max-h-48" />
+                        <p className="text-center text-xs text-green-400 py-2">Tap to change photo</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center py-4 px-3">
+                        <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <p className="text-gray-400 text-sm">Tap to upload back photo</p>
+                        <p className="text-gray-600 text-xs mt-0.5">JPG, PNG up to 5MB</p>
+                      </div>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const f = e.target.files[0];
+                      if (!f) return;
+                      setKycBackFile(f);
+                      setKycBackPreview(URL.createObjectURL(f));
                     }} />
                   </label>
                 </div>

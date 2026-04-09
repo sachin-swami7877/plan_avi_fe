@@ -131,27 +131,45 @@ export default function AdminKyc() {
               {expanded === r._id && (
                 <div className="border-t border-gray-100 px-4 py-3 space-y-3">
                   <div className="space-y-2 text-sm">
-                    <div><p className="text-xs text-gray-400">Email</p><p className="font-medium">{r.email || '—'}</p></div>
+                    <div><p className="text-xs text-gray-400">Name</p><p className="font-medium">{r.name || r.email || '—'}</p></div>
                     <div><p className="text-xs text-gray-400">Aadhaar Number</p><p className="font-medium font-mono">{r.aadhaarNumber || '—'}</p></div>
                     <div><p className="text-xs text-gray-400">Address</p><p className="font-medium">{r.address || '—'}</p></div>
                   </div>
 
+                  {/* Aadhaar Front */}
                   {r.aadhaarFrontUrl ? (
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Aadhaar Photo</p>
+                      <p className="text-xs text-gray-400 mb-1">Aadhaar Front</p>
                       <a href={r.aadhaarFrontUrl} target="_blank" rel="noopener noreferrer">
                         <img
                           src={r.aadhaarFrontUrl}
-                          alt="Aadhaar"
+                          alt="Aadhaar Front"
                           className="w-full max-h-56 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                           onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
                         />
-                        <p style={{display:'none'}} className="text-xs text-red-400 mt-1">Image failed to load. <a href={r.aadhaarFrontUrl} target="_blank" rel="noopener noreferrer" className="underline">Open directly</a></p>
+                        <p style={{display:'none'}} className="text-xs text-red-400 mt-1">Image failed. <a href={r.aadhaarFrontUrl} target="_blank" rel="noopener noreferrer" className="underline">Open directly</a></p>
                       </a>
-                      <p className="text-xs text-blue-500 mt-1">Tap to open full image</p>
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-400">No photo uploaded</p>
+                    <p className="text-xs text-gray-400">No front photo</p>
+                  )}
+
+                  {/* Aadhaar Back */}
+                  {r.aadhaarBackUrl ? (
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">Aadhaar Back</p>
+                      <a href={r.aadhaarBackUrl} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={r.aadhaarBackUrl}
+                          alt="Aadhaar Back"
+                          className="w-full max-h-56 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                        />
+                        <p style={{display:'none'}} className="text-xs text-red-400 mt-1">Image failed. <a href={r.aadhaarBackUrl} target="_blank" rel="noopener noreferrer" className="underline">Open directly</a></p>
+                      </a>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400">No back photo</p>
                   )}
 
                   {r.status === 'rejected' && r.rejectionReason && (

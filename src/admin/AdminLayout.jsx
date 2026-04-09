@@ -36,6 +36,7 @@ const AdminLayout = () => {
     { path: '/admin/profit', label: 'Profit', icon: '💹', subAdmin: false },
     { path: '/admin/kyc', label: 'KYC', icon: '🪪', badge: kycAlertCount, subAdmin: false },
     { path: '/admin/database', label: 'Database', icon: '🗄️', subAdmin: false },
+    ...(role === 'superadmin' ? [{ path: '/admin/credit-log', label: 'Credit Log', icon: '📝', subAdmin: false }] : []),
     { path: '/admin/settings', label: 'Settings', icon: '⚙️', subAdmin: false },
     { path: '/admin/profile', label: 'Your Profile', icon: '👤', subAdmin: true },
   ];
