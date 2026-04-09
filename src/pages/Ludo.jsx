@@ -580,7 +580,7 @@ export default function Ludo() {
                   <button type="button" onClick={() => setRulesOpen(true)} className="text-xs text-green-600 font-bold flex items-center gap-1 uppercase tracking-wide">Rules <span className="inline-flex w-4 h-4 rounded-full border border-gray-500 items-center justify-center text-[10px] text-gray-600">i</span></button>
                 </div>
               </div>
-              <div className="bg-gray-300 px-2 pb-4">
+              <div className="bg-gray-300 px-3 pb-4">
                 {loading ? (
                   <p className="text-gray-400 text-sm py-3">Loading...</p>
                 ) : (
@@ -598,13 +598,16 @@ export default function Ludo() {
                       return (
                         <div key={m._id} style={animStyle} className="relative rounded-2xl overflow-hidden border border-gray-200">
                           <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
-                          <div className="absolute inset-0 bg-black/40" />
-                          <div className="relative px-3 py-2">
-                            <p className="text-sm text-gray-200 mb-0.5">Challange From <span className="font-bold text-white italic">{m.creatorName || 'Player'}</span></p>
+                          <div className="absolute inset-0 bg-black/50" />
+                          <div className="relative px-4 py-3">
+                            <p className="text-sm text-gray-200 mb-2">Challange From <span className="font-bold text-white italic">{m.creatorName || 'Player'}</span></p>
                             <div className="flex items-center justify-between gap-2">
                               <div>
-                                <p className="text-[11px] text-gray-300">Entry Fee</p>
-                                <p className="text-white font-extrabold text-base flex items-center gap-1"><span className="text-yellow-400">₹</span> {m.entryAmount}</p>
+                                <p className="text-[11px] text-gray-300 mb-1">Entry Fee</p>
+                                <p className="text-white font-extrabold text-lg flex items-center gap-1.5">
+                                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-[11px] font-black flex-shrink-0">₹</span>
+                                  {m.entryAmount}
+                                </p>
                               </div>
                               <button
                                 onClick={() => {
@@ -615,11 +618,14 @@ export default function Ludo() {
                                   }
                                   openConfirmJoin(m);
                                 }}
-                                className="bg-green-500 hover:bg-green-400 text-white px-5 py-1.5 rounded-full text-sm font-bold shadow-lg transition-colors"
+                                className="bg-green-500 hover:bg-green-400 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg transition-colors"
                               >Play</button>
                               <div className="text-right">
-                                <p className="text-[11px] text-gray-300">Prize</p>
-                                <p className="text-white font-extrabold text-base flex items-center justify-end gap-1"><span className="text-green-400">₹</span> {prize}</p>
+                                <p className="text-[11px] text-gray-300 mb-1">Prize</p>
+                                <p className="text-white font-extrabold text-lg flex items-center justify-end gap-1.5">
+                                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-[11px] font-black flex-shrink-0">₹</span>
+                                  {prize}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -648,13 +654,13 @@ export default function Ludo() {
                   )}
                 </h3>
               </div>
-              <div className="bg-gray-300 px-1 pb-4">
+              <div className="bg-gray-300 px-3 pb-4">
                 {loading ? (
                   <p className="text-gray-400 text-sm py-3">Loading...</p>
                 ) : (runningBattles.length === 0 && dummyBattles.length === 0) ? (
                   <p className="text-gray-400 text-sm py-3">No running battles.</p>
                 ) : (
-                  <div className="bg-gray-300 rounded-xl overflow-hidden flex flex-col gap-3 p-2">
+                  <div className="flex flex-col gap-3">
                     {[...runningBattles, ...dummyBattles].map((b) => {
                       const isDummy = b._id.startsWith('dummy-');
                       const amIIn = !isDummy && myLive.some((m) => m._id === b._id);
@@ -673,31 +679,39 @@ export default function Ludo() {
                             : undefined
                         : undefined;
                       return (
-                        <div key={b._id} className="relative overflow-hidden rounded-2xl" style={animStyle}>
+                        <div key={b._id} className="relative overflow-hidden rounded-2xl border border-white/20" style={animStyle}>
                           <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
-                          <div className="absolute inset-0 bg-black/40" />
+                          <div className="absolute inset-0 bg-black/50" />
                           <div className="relative px-4 py-3">
-                            {/* Playing For / Prize top row */}
-                            <div className="flex items-center justify-between mb-3">
-                              <p className="text-sm text-gray-200 font-medium">Playing For <span className="text-white font-extrabold text-base"><span className="text-yellow-400">₹</span> {amount}</span></p>
-                              <p className="text-sm text-gray-200 font-medium">Prize <span className="text-white font-extrabold text-base"><span className="text-green-400">₹</span> {b.prize}</span></p>
+                            {/* Playing For / Prize top row — green rupee coins */}
+                            <div className="flex items-center justify-between mb-3 border-b border-white/20 pb-2">
+                              <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                                Playing For
+                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-[11px] font-black flex-shrink-0">₹</span>
+                                <span className="text-base font-extrabold">{amount}</span>
+                              </p>
+                              <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                                Prize
+                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-[11px] font-black flex-shrink-0">₹</span>
+                                <span className="text-base font-extrabold">{b.prize}</span>
+                              </p>
                             </div>
                             {/* Players row */}
-                            <div className="flex items-center justify-between gap-1">
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <span className={`w-10 h-10 rounded-full bg-gradient-to-br ${p1Gradient} text-white flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-lg ring-2 ring-white/40`}>{p1Initial}</span>
-                                <span className="text-base font-bold text-white truncate max-w-[85px]" title={p1}>{p1}</span>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                                <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${p1Gradient} text-white flex items-center justify-center text-lg font-extrabold flex-shrink-0 shadow-lg ring-2 ring-white/50`}>{p1Initial}</span>
+                                <span className="text-xs font-bold text-white truncate max-w-[80px] text-center" title={p1}>{p1}</span>
                               </div>
-                              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-black flex items-center justify-center shadow-xl">
-                                <span className="text-lg font-black bg-gradient-to-b from-orange-400 to-red-600 bg-clip-text text-transparent" style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VS</span>
+                              <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-black flex items-center justify-center shadow-2xl border border-white/10">
+                                <span className="text-xl font-black" style={{ background: 'linear-gradient(180deg,#fb923c,#dc2626)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VS</span>
                               </div>
-                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                                <span className="text-base font-bold text-white truncate max-w-[85px]" title={p2}>{p2}</span>
-                                <span className={`w-10 h-10 rounded-full bg-gradient-to-br ${p2Gradient} text-white flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-lg ring-2 ring-white/40`}>{p2Initial}</span>
+                              <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                                <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${p2Gradient} text-white flex items-center justify-center text-lg font-extrabold flex-shrink-0 shadow-lg ring-2 ring-white/50`}>{p2Initial}</span>
+                                <span className="text-xs font-bold text-white truncate max-w-[80px] text-center" title={p2}>{p2}</span>
                               </div>
                             </div>
                             {amIIn && (
-                              <button onClick={() => navigate(`/ludo/match/${b._id}`)} className="w-full mt-2 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold shadow">View</button>
+                              <button onClick={() => navigate(`/ludo/match/${b._id}`)} className="w-full mt-3 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold shadow">View</button>
                             )}
                           </div>
                         </div>
