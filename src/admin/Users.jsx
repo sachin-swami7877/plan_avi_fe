@@ -26,7 +26,7 @@ const Users = () => {
   const navigate = useNavigate();
   const { role: myRole } = useAuth();
   const { socket } = useSocket();
-  const isFullAdmin = myRole === 'admin';
+  const isFullAdmin = myRole === 'admin' || myRole === 'superadmin';
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', phone: '', walletBalance: 0, role: 'user' });
