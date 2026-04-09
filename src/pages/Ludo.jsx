@@ -51,9 +51,45 @@ const AVATAR_GRADIENTS = [
   'from-sky-400 to-blue-600',
   'from-fuchsia-500 to-pink-600',
 ];
+const AVATAR_BORDER_COLORS = [
+  '#fb923c', '#60a5fa', '#34d399', '#c084fc',
+  '#facc15', '#2dd4bf', '#fb7185', '#a78bfa',
+  '#38bdf8', '#e879f9',
+];
 function getAvatarGradient(name, offset = 0) {
   const code = (name || 'A').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
   return AVATAR_GRADIENTS[(code + offset) % AVATAR_GRADIENTS.length];
+}
+function getAvatarBorderColor(name, offset = 0) {
+  const code = (name || 'A').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+  return AVATAR_BORDER_COLORS[(code + offset) % AVATAR_BORDER_COLORS.length];
+}
+
+// Avatar component with DiceBear cartoon image + gradient fallback
+function PlayerAvatar({ name, gradient, borderColor, initial }) {
+  const [imgErr, setImgErr] = useState(false);
+  const seed = encodeURIComponent(name + '_ludo');
+  if (imgErr) {
+    return (
+      <span
+        className={`w-14 h-14 rounded-full bg-gradient-to-br ${gradient} text-white flex items-center justify-center text-xl font-extrabold flex-shrink-0 shadow-lg`}
+        style={{ border: `3px solid ${borderColor}` }}
+      >{initial}</span>
+    );
+  }
+  return (
+    <div
+      className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 shadow-lg bg-white"
+      style={{ border: `3px solid ${borderColor}` }}
+    >
+      <img
+        src={`https://api.dicebear.com/8.x/adventurer/svg?seed=${seed}&backgroundColor=transparent`}
+        alt={name}
+        className="w-full h-full object-cover"
+        onError={() => setImgErr(true)}
+      />
+    </div>
+  );
 }
 
 function calcPrizeFrontend(entry, tiers) {
@@ -580,11 +616,11 @@ export default function Ludo() {
                   <button type="button" onClick={() => setRulesOpen(true)} className="text-xs text-green-600 font-bold flex items-center gap-1 uppercase tracking-wide">Rules <span className="inline-flex w-4 h-4 rounded-full border border-gray-500 items-center justify-center text-[10px] text-gray-600">i</span></button>
                 </div>
               </div>
-              <div className="bg-gray-300 px-3 pb-4">
+              <div className="bg-gray-300 px-1.5 pb-4">
                 {loading ? (
                   <p className="text-gray-400 text-sm py-3">Loading...</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {[...waitingList, ...(waitingList.length === 0 ? dummyOpenBattles : [])].map((m) => {
                       const isDummyOpen = !!m.isDummyOpen;
                       const prize = isDummyOpen ? m.prize : calcPrizeFrontend(m.entryAmount, commTiers);
@@ -654,7 +690,7 @@ export default function Ludo() {
                   )}
                 </h3>
               </div>
-              <div className="bg-gray-300 px-3 pb-4">
+              <div className="bg-gray-300 px-1.5 pb-4">
                 {loading ? (
                   <p className="text-gray-400 text-sm py-3">Loading...</p>
                 ) : (runningBattles.length === 0 && dummyBattles.length === 0) ? (
@@ -671,6 +707,8 @@ export default function Ludo() {
                       const p2Initial = p2.charAt(0).toUpperCase();
                       const p1Gradient = getAvatarGradient(p1, 0);
                       const p2Gradient = getAvatarGradient(p2, 5);
+                      const p1BorderColor = getAvatarBorderColor(p1, 0);
+                      const p2BorderColor = getAvatarBorderColor(p2, 5);
                       const animStyle = isDummy
                         ? exitingIds.has(b._id)
                           ? { animation: 'dummySlideOut 0.4s ease forwards' }
@@ -682,32 +720,30 @@ export default function Ludo() {
                         <div key={b._id} className="relative overflow-hidden rounded-2xl border border-white/20" style={animStyle}>
                           <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
                           <div className="absolute inset-0 bg-black/50" />
-                          <div className="relative px-4 py-3">
-                            {/* Playing For / Prize top row — green rupee coins */}
-                            <div className="flex items-center justify-between mb-3 border-b border-white/20 pb-2">
-                              <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                          <div className="relative px-3 py-2">
+                            {/* Playing For / Prize top row */}
+                            <div className="flex items-center justify-between mb-2 border-b border-white/20 pb-1.5">
+                              <p className="text-xs font-bold text-white flex items-center gap-1">
                                 Playing For
-                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-[11px] font-black flex-shrink-0">₹</span>
-                                <span className="text-base font-extrabold">{amount}</span>
+                                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-500 text-white text-[10px] font-black flex-shrink-0">₹</span>
+                                <span className="text-sm font-extrabold">{amount}</span>
                               </p>
-                              <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                              <p className="text-xs font-bold text-white flex items-center gap-1">
                                 Prize
-                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-[11px] font-black flex-shrink-0">₹</span>
-                                <span className="text-base font-extrabold">{b.prize}</span>
+                                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-500 text-white text-[10px] font-black flex-shrink-0">₹</span>
+                                <span className="text-sm font-extrabold">{b.prize}</span>
                               </p>
                             </div>
                             {/* Players row */}
-                            <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center justify-between gap-2 py-1">
                               <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                                <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${p1Gradient} text-white flex items-center justify-center text-lg font-extrabold flex-shrink-0 shadow-lg ring-2 ring-white/50`}>{p1Initial}</span>
-                                <span className="text-xs font-bold text-white truncate max-w-[80px] text-center" title={p1}>{p1}</span>
+                                <PlayerAvatar name={p1} gradient={p1Gradient} borderColor={p1BorderColor} initial={p1Initial} />
+                                <span className="text-[11px] font-bold text-white truncate max-w-[72px] text-center" title={p1}>{p1}</span>
                               </div>
-                              <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-black flex items-center justify-center shadow-2xl border border-white/10">
-                                <span className="text-xl font-black" style={{ background: 'linear-gradient(180deg,#fb923c,#dc2626)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VS</span>
-                              </div>
+                              <span className="text-3xl font-black italic flex-shrink-0" style={{ background: 'linear-gradient(180deg,#fb923c,#dc2626)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontStyle: 'italic' }}>VS</span>
                               <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                                <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${p2Gradient} text-white flex items-center justify-center text-lg font-extrabold flex-shrink-0 shadow-lg ring-2 ring-white/50`}>{p2Initial}</span>
-                                <span className="text-xs font-bold text-white truncate max-w-[80px] text-center" title={p2}>{p2}</span>
+                                <PlayerAvatar name={p2} gradient={p2Gradient} borderColor={p2BorderColor} initial={p2Initial} />
+                                <span className="text-[11px] font-bold text-white truncate max-w-[72px] text-center" title={p2}>{p2}</span>
                               </div>
                             </div>
                             {amIIn && (
