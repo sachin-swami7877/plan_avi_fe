@@ -114,6 +114,7 @@ const Profile = () => {
         const compressedBack = await compressImage(kycBackFile, 1280, 0.6);
         fd.append('aadhaarBack', compressedBack);
       }
+      console.log('[KYC] Submitting:', { name: kycForm.name, front: kycFile?.name, back: kycBackFile?.name, fdKeys: [...fd.keys()] });
       await authAPI.submitKyc(fd);
       toast.success('KYC submitted! Awaiting admin review.');
       setKycModalOpen(false);
@@ -126,7 +127,15 @@ const Profile = () => {
       // Update user context so kycStatus reflects
       window.location.reload();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit KYC');
+      console.error('[KYC Error]', err.response?.status, err.response?.data, err.message);
+      const msg = err.response?.data?.message;
+      if (msg) {
+        toast.error(msg);
+      } else if (err.message?.includes('Network')) {
+        toast.error('Network error. Check your connection.');
+      } else {
+        toast.error('Failed to submit KYC. Please try again.');
+      }
     } finally {
       setKycSubmitting(false);
     }

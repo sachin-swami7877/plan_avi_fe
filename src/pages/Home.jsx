@@ -132,16 +132,16 @@ const Home = () => {
       <Header />
 
       <div className="max-w-md mx-auto p-3 w-full min-w-0">
-        {/* Ad Carousel */}
-        <AdCarousel />
-
-        {/* User Warning */}
+        {/* User Warning — above carousel */}
         {userWarning && (
           <div className="mb-3 bg-[#7B1F3A] rounded-xl px-4 py-3 flex items-start gap-2">
             <span className="text-yellow-300 text-xl mt-0.5">&#9888;</span>
             <p className="text-white text-sm font-semibold">{userWarning}</p>
           </div>
         )}
+
+        {/* Ad Carousel */}
+        <AdCarousel />
 
         {/* Install tip toast */}
         {showInstallTip && (
@@ -212,7 +212,7 @@ const Home = () => {
           )}
 
           {/* Download App bar — addaking style */}
-          <div className="mt-3 bg-white rounded-xl p-3 shadow-sm flex items-center justify-between">
+          <div className="mt-[100px] bg-white rounded-xl p-3 shadow-sm flex items-center justify-between" style={{ animation: 'floatUpDown 2s ease-in-out infinite' }}>
             <div className="flex items-center gap-3">
               <img src="/icon-192.png" alt="RushkroLudo" className="w-10 h-10" />
               <div>
@@ -234,6 +234,10 @@ const Home = () => {
         @keyframes liveBlink {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
+        }
+        @keyframes floatUpDown {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
         }
       `}</style>
 
