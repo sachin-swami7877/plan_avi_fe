@@ -124,8 +124,8 @@ export const AuthProvider = ({ children }) => {
       patchUser,
       isAuthenticated: !!user,
       isSuperAdmin: user?.isSuperAdmin || user?.role === 'superadmin',
-      isAdmin: user?.isAdmin || user?.role === 'admin' || user?.role === 'superadmin',
-      isSubAdmin: user?.isSubAdmin || user?.role === 'manager' || user?.role === 'admin' || user?.role === 'superadmin',
+      isAdmin: user?.isAdmin || user?.isSuperAdmin || user?.role === 'admin' || user?.role === 'superadmin',
+      isSubAdmin: user?.isSubAdmin || user?.isSuperAdmin || user?.role === 'manager' || user?.role === 'admin' || user?.role === 'superadmin',
       role: (user?.role === 'superadmin' || user?.isSuperAdmin) ? 'superadmin'
         : (user?.role === 'admin' || user?.isAdmin) ? 'admin'
         : (user?.role === 'manager' || user?.isSubAdmin) ? 'manager'
