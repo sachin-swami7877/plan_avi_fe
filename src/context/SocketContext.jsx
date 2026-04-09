@@ -169,7 +169,7 @@ export const SocketProvider = ({ children }) => {
     // Real-time wallet balance update (admin approved/adjusted balance)
     newSocket.on('wallet:balance-updated', (data) => {
       if (data?.walletBalance != null) {
-        updateBalanceRef.current(data.walletBalance);
+        updateBalanceRef.current(data);
       }
     });
 

@@ -346,7 +346,7 @@ const Login = () => {
           <Particles />
           <div className="relative z-10 flex flex-col items-center pt-8 pb-6 px-4">
             <Link to="/landing" className="mb-4">
-              <img src="/icon-192.png" alt="RushkroLudo" className="w-16 h-16" />
+              <img src="/logo.jpeg" alt="RushkroLudo" className="w-16 h-16" />
             </Link>
             <p className="text-white/40 text-sm">Ludo, Aviator & Spinner — Win Real Cash!</p>
           </div>

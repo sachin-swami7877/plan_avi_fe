@@ -244,7 +244,13 @@ const Landing = () => {
       <header className="relative z-30 border-b border-white/5">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
           <Link to="/landing" className="flex items-center gap-2 group">
-            <img src="/icon-192.png" alt="RushkroLudo" className="w-10 h-10" />
+            <div className="relative">
+              <img src="/logo.jpeg" alt="RushkroLudo" className="w-10 h-10 rounded-full" />
+              <span className="absolute top-0 right-0 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border-2 border-[#060b14]" />
+              </span>
+            </div>
             <span className="text-xl font-extrabold tracking-tight">Rushkro<span className="text-red-500">Ludo</span></span>
           </Link>
 
@@ -846,12 +852,19 @@ const MotivationalLanding = ({ handlePlay, isAuthenticated, menuOpen, setMenuOpe
           </div>
 
           <div className="flex flex-col items-center mb-12">
-            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden border-4 border-violet-500/30 shadow-2xl shadow-violet-500/20 mb-6">
-              <img
-                src="/arijit.jpeg"
-                alt="Arijit Singh"
-                className="w-full h-full object-cover"
-              />
+            <div className="relative inline-flex mb-6">
+              <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden border-4 border-violet-500/30 shadow-2xl shadow-violet-500/20">
+                <img
+                  src="/arijit.jpeg"
+                  alt="Arijit Singh"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Online / Live dot */}
+              <span className="absolute top-3 right-3 flex h-5 w-5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-5 w-5 bg-green-500 border-2 border-[#0f0f1a]" />
+              </span>
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">Arijit Singh</h3>
             <p className="text-white/50 text-center max-w-2xl">

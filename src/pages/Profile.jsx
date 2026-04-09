@@ -331,9 +331,16 @@ const Profile = () => {
       <div className="max-w-md mx-auto p-4 w-full min-w-0">
         {/* User Info */}
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center">
-            <span className="text-white text-2xl font-bold">
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+          <div className="relative">
+            <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-2xl font-bold">
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            </div>
+            {/* Online indicator — WhatsApp style */}
+            <span className="absolute top-0 right-0 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-[#E3F2FD]" />
             </span>
           </div>
           <div className="flex-1 min-w-0">
@@ -371,12 +378,10 @@ const Profile = () => {
                 className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square relative"
               >
                 {/* LIVE badge — inside image */}
-                {!game.isExternal && (
-                  <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
-                    <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                    <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
-                  </div>
-                )}
+                <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                  <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
+                </div>
                 {game.customRender ? (
                   game.customRender
                 ) : (
@@ -466,10 +471,13 @@ const Profile = () => {
           <div className="fixed inset-0 z-[9999] flex items-end justify-center">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setKycModalOpen(false)} />
-            {/* Sheet */}
-            <div className="relative w-full max-w-md bg-[#111827] rounded-t-3xl px-5 pt-5 pb-8 shadow-2xl animate-slide-up">
+            {/* Sheet — scrollable, max 95vh */}
+            <div className="relative w-full max-w-md bg-[#111827] rounded-t-3xl shadow-2xl animate-slide-up flex flex-col" style={{ maxHeight: '95vh' }}>
               {/* Handle */}
-              <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+              <div className="px-5 pt-5">
+                <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+              </div>
+              <div className="overflow-y-auto px-5 pb-8 flex-1">
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -590,6 +598,7 @@ const Profile = () => {
                   ) : 'Submit KYC'}
                 </button>
               </form>
+              </div>
             </div>
           </div>
         )}

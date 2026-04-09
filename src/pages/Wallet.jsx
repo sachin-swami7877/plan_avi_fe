@@ -151,7 +151,10 @@ const Wallet = () => {
       navigate('/profile?kyc=open');
       return;
     }
-    if (!user?.upiId && !user?.upiNumber) {
+    // Re-fetch user to get latest UPI info before checking
+    const freshUser = await refreshUser().catch(() => null);
+    const checkUser = freshUser || user;
+    if (!checkUser?.upiId && !checkUser?.upiNumber) {
       setUpiPopupOpen(true);
       setMessage({ type: 'error', text: 'Please save your UPI details first' });
       return;

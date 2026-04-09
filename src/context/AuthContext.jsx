@@ -83,9 +83,10 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('auth:logout', handleForceLogout);
   }, []);
 
-  const updateBalance = (newBalance) => {
+  const updateBalance = (data) => {
     if (user) {
-      const updatedUser = { ...user, walletBalance: newBalance };
+      const patch = typeof data === 'object' ? data : { walletBalance: data };
+      const updatedUser = { ...user, ...patch };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
     }

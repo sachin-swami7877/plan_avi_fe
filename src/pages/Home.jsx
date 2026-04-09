@@ -175,12 +175,10 @@ const Home = () => {
                 className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square relative"
               >
                 {/* LIVE badge — inside image top-left */}
-                {!game.isExternal && (
-                  <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
-                    <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                    <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
-                  </div>
-                )}
+                <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
+                  <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
+                </div>
                 {game.customRender ? (
                   game.customRender
                 ) : (
@@ -212,9 +210,15 @@ const Home = () => {
           )}
 
           {/* Download App bar — addaking style */}
-          <div className="mt-[100px] bg-white rounded-xl p-3 shadow-sm flex items-center justify-between" style={{ animation: 'floatUpDown 2s ease-in-out infinite' }}>
+          <div className="fixed bottom-20 left-3 right-3 max-w-md mx-auto z-40 bg-white rounded-xl p-3 shadow-lg flex items-center justify-between" style={{ animation: 'floatUpDown 2s ease-in-out infinite' }}>
             <div className="flex items-center gap-3">
-              <img src="/icon-192.png" alt="RushkroLudo" className="w-10 h-10" />
+              <div className="relative">
+                <img src="/logo.jpeg" alt="RushkroLudo" className="w-10 h-10 rounded-full" />
+                <span className="absolute top-0 right-0 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-white" />
+                </span>
+              </div>
               <div>
                 <p className="font-bold text-gray-800 text-sm">RushkroLudo App</p>
                 <p className="text-gray-400 text-xs">Play faster in the app</p>
