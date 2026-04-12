@@ -155,7 +155,7 @@ const MoneyRequests = () => {
       <div className={`rounded-xl p-3 mb-3 flex items-center justify-between gap-3 ${tab === 'deposit' ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'}`}>
         <div className="flex items-center gap-4 min-w-0">
           <div>
-            <p className="text-[10px] text-gray-500 leading-tight">Count</p>
+            <p className="text-[10px] text-gray-500 leading-tight capitalize">{filter === 'all' ? 'All' : filter} Count</p>
             <p className={`text-lg font-bold leading-tight ${tab === 'deposit' ? 'text-emerald-700' : 'text-rose-700'}`}>{currentTotals.count}</p>
           </div>
           <div className="w-px h-8 bg-gray-200 flex-shrink-0" />

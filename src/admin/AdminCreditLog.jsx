@@ -64,7 +64,7 @@ const AdminCreditLog = () => {
                       {isCredit ? '+' : '-'}₹{r.amount}
                     </p>
                     <p className="text-[10px] text-gray-400 mt-0.5">
-                      ₹{r.balanceBefore} → ₹{r.balanceAfter}
+                      ₹{Number(r.balanceBefore).toFixed(2)} → ₹{Number(r.balanceAfter).toFixed(2)}
                     </p>
                   </div>
                 </div>
