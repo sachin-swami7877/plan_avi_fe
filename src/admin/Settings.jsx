@@ -40,6 +40,9 @@ const Settings = () => {
   const [ludoEnabled, setLudoEnabled] = useState(true);
   const [ludoDisableReason, setLudoDisableReason] = useState('');
   const [ludoWarning, setLudoWarning] = useState('');
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoUploading, setLogoUploading] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [qrFile, setQrFile] = useState(null);
   const [qrUploading, setQrUploading] = useState(false);
@@ -83,6 +86,7 @@ const Settings = () => {
       setLudoEnabled(d.ludoEnabled ?? true);
       setLudoDisableReason(d.ludoDisableReason || '');
       setLudoWarning(d.ludoWarning || '');
+      setLogoUrl(d.logoUrl || null);
       setQrCodeUrl(d.qrCodeUrl || null);
       setAviatorComingSoon(d.aviatorComingSoon ?? false);
       setSpinnerComingSoon(d.spinnerComingSoon ?? false);
@@ -182,6 +186,21 @@ const Settings = () => {
     finally { setSaving(false); }
   };
 
+  const handleUploadLogo = async () => {
+    if (!logoFile) return;
+    setLogoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('logo', logoFile);
+      const res = await adminAPI.uploadLogo(fd);
+      setLogoUrl(res.data.logoUrl);
+      setLogoFile(null);
+      toast.success('Logo uploaded successfully');
+    } catch {
+      toast.error('Failed to upload logo');
+    } finally { setLogoUploading(false); }
+  };
+
   const handleUploadQr = async () => {
     if (!qrFile) return;
     setQrUploading(true);
@@ -263,6 +282,19 @@ const Settings = () => {
             </button>
           </div>
         )}
+      </Section>
+
+      {/* App Logo */}
+      <Section title="App Logo" desc="Logo shown on home screen and install banner. Upload to replace the default logo.">
+        <div className="space-y-3">
+          {logoUrl && <img src={logoUrl} alt="App Logo" className="w-20 h-20 object-contain rounded-full border" />}
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+            <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files[0])} className="text-sm w-full sm:w-auto" />
+            <button onClick={handleUploadLogo} disabled={!logoFile || logoUploading} className="bg-primary-700 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50 w-full sm:w-auto">
+              {logoUploading ? 'Uploading...' : 'Upload Logo'}
+            </button>
+          </div>
+        </div>
       </Section>
 
       {/* Payment QR & UPI */}

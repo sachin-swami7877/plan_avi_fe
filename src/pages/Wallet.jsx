@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -32,6 +32,7 @@ const Wallet = () => {
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const withdrawingRef = useRef(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [histPage, setHistPage] = useState(1);
   const [histTotalPages, setHistTotalPages] = useState(1);
@@ -143,33 +144,38 @@ const Wallet = () => {
 
   const handleWithdraw = async (e) => {
     e.preventDefault();
-    if (user?.kycStatus === 'pending') {
-      toast('KYC under review. Please wait for admin approval.', { icon: '⏳' });
-      return;
-    }
-    if (user?.kycStatus !== 'approved') {
-      navigate('/profile?kyc=open');
-      return;
-    }
-    // Re-fetch user to get latest UPI info before checking
-    const freshUser = await refreshUser().catch(() => null);
-    const checkUser = freshUser || user;
-    if (!checkUser?.upiId && !checkUser?.upiNumber) {
-      setUpiPopupOpen(true);
-      setMessage({ type: 'error', text: 'Please save your UPI details first' });
-      return;
-    }
-    if (!amount || Number(amount) < 100) { setMessage({ type: 'error', text: 'Minimum withdrawal is ₹100' }); return; }
-    if (Number(amount) > earningsInfo.earnings) { setMessage({ type: 'error', text: `You can only withdraw earnings. Withdrawable: ₹${earningsInfo.earnings.toFixed(2)}` }); return; }
-    setLoading(true);
+    if (withdrawingRef.current) return; // block double-tap
+    withdrawingRef.current = true;
+    setLoading(true); // disable button immediately on first click
     try {
+      if (user?.kycStatus === 'pending') {
+        toast('KYC under review. Please wait for admin approval.', { icon: '⏳' });
+        return;
+      }
+      if (user?.kycStatus !== 'approved') {
+        navigate('/profile?kyc=open');
+        return;
+      }
+      // Re-fetch user to get latest UPI info before checking
+      const freshUser = await refreshUser().catch(() => null);
+      const checkUser = freshUser || user;
+      if (!checkUser?.upiId && !checkUser?.upiNumber) {
+        setUpiPopupOpen(true);
+        setMessage({ type: 'error', text: 'Please save your UPI details first' });
+        return;
+      }
+      if (!amount || Number(amount) < 100) { setMessage({ type: 'error', text: 'Minimum withdrawal is ₹100' }); return; }
+      if (Number(amount) > earningsInfo.earnings) { setMessage({ type: 'error', text: `You can only withdraw earnings. Withdrawable: ₹${earningsInfo.earnings.toFixed(2)}` }); return; }
       const res = await walletAPI.withdraw(Number(amount));
       updateBalance(res.data.newBalance);
       setMessage({ type: 'success', text: 'Withdrawal request submitted!' });
       setAmount(''); setHistPage(1); fetchHistory(); fetchEarningsInfo();
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to submit request' });
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+      withdrawingRef.current = false;
+    }
   };
 
   const validateUpiForm = () => {

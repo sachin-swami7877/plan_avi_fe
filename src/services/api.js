@@ -65,7 +65,7 @@ export const authAPI = {
     otp: String(otp || '').trim(),
     loginMode: 'mobile',
   }),
-  setUsername: (name) => api.put('/auth/set-username', { name }),
+  setUsername: (name, referralCode) => api.put('/auth/set-username', { name, ...(referralCode ? { referralCode } : {}) }),
   updateProfile: (data) => api.put('/auth/profile', data),
   getMe: () => api.get('/auth/me'),
   findEmail: (phone) => api.post('/auth/find-email', { phone: String(phone || '').trim() }),
@@ -152,6 +152,7 @@ export const settingsAPI = {
   getUserWarning: () => api.get('/settings/user-warning'),
   getLandingStats: () => api.get('/settings/landing-stats'),
   getAviatorStatus: () => api.get('/settings/aviator-status'),
+  getLogo: () => api.get('/settings/logo'),
 };
 
 // Ludo API (user)
@@ -219,6 +220,7 @@ export const adminAPI = {
   getSettings: () => api.get('/admin/settings'),
   updateSettings: (data) => api.put('/admin/settings', data),
   uploadQrCode: (formData) => api.post('/admin/settings/qr', formData),
+  uploadLogo: (formData) => api.post('/admin/settings/logo', formData),
   getBonusRecords: (params) => api.get('/admin/bonus-records', { params }),
   getUserTransactions: (id, params) => api.get(`/admin/users/${id}/transactions`, { params }),
   // Ludo admin
@@ -246,6 +248,11 @@ export const adminAPI = {
   approveKyc: (id) => api.put(`/admin/kyc/${id}/approve`),
   rejectKyc: (id, reason) => api.put(`/admin/kyc/${id}/reject`, { reason }),
   deleteKyc: (id) => api.delete(`/admin/kyc/${id}`),
+};
+
+export const referralAPI = {
+  getMyReferral: () => api.get('/referral/my'),
+  getAdminReferrals: (params) => api.get('/admin/referrals', { params }),
 };
 
 export default api;

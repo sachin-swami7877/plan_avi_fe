@@ -69,7 +69,12 @@ const AdminCreditLog = () => {
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <p className="text-xs text-gray-400">{r.description}</p>
+                  <div>
+                    <p className="text-xs text-gray-400">{r.description}</p>
+                    {r.adminId?.name && (
+                      <p className="text-xs text-blue-500 mt-0.5">By: {r.adminId.name}</p>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-400">{formatDate(r.createdAt)}</p>
                 </div>
               </div>

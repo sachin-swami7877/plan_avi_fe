@@ -8,7 +8,6 @@ import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
 
 const ENTRY_MIN = 50;
-const WAITING_EXPIRY_MIN = 10;
 
 
 function formatTime12hr(date) {
@@ -39,58 +38,6 @@ const INDIAN_MALE_NAMES = ['Rahul', 'Amit', 'Vikram', 'Arjun', 'Rohan', 'Suresh'
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-const AVATAR_GRADIENTS = [
-  'from-orange-400 to-red-500',
-  'from-blue-500 to-indigo-600',
-  'from-emerald-400 to-green-600',
-  'from-purple-500 to-pink-500',
-  'from-yellow-400 to-orange-500',
-  'from-teal-400 to-cyan-600',
-  'from-rose-500 to-red-600',
-  'from-violet-500 to-purple-700',
-  'from-sky-400 to-blue-600',
-  'from-fuchsia-500 to-pink-600',
-];
-const AVATAR_BORDER_COLORS = [
-  '#fb923c', '#60a5fa', '#34d399', '#c084fc',
-  '#facc15', '#2dd4bf', '#fb7185', '#a78bfa',
-  '#38bdf8', '#e879f9',
-];
-function getAvatarGradient(name, offset = 0) {
-  const code = (name || 'A').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
-  return AVATAR_GRADIENTS[(code + offset) % AVATAR_GRADIENTS.length];
-}
-function getAvatarBorderColor(name, offset = 0) {
-  const code = (name || 'A').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
-  return AVATAR_BORDER_COLORS[(code + offset) % AVATAR_BORDER_COLORS.length];
-}
-
-// Avatar component with DiceBear cartoon image + gradient fallback
-function PlayerAvatar({ name, gradient, borderColor, initial }) {
-  const [imgErr, setImgErr] = useState(false);
-  const seed = encodeURIComponent(name + '_ludo');
-  if (imgErr) {
-    return (
-      <span
-        className={`w-14 h-14 rounded-full bg-gradient-to-br ${gradient} text-white flex items-center justify-center text-xl font-extrabold flex-shrink-0 shadow-lg`}
-        style={{ border: `3px solid ${borderColor}` }}
-      >{initial}</span>
-    );
-  }
-  return (
-    <div
-      className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 shadow-lg bg-white"
-      style={{ border: `3px solid ${borderColor}` }}
-    >
-      <img
-        src={`https://api.dicebear.com/8.x/adventurer/svg?seed=${seed}&backgroundColor=transparent`}
-        alt={name}
-        className="w-full h-full object-cover"
-        onError={() => setImgErr(true)}
-      />
-    </div>
-  );
-}
 
 function calcPrizeFrontend(entry, tiers) {
   const pool = entry * 2;
@@ -147,7 +94,6 @@ export default function Ludo() {
   const [entryAmount] = useState(50);
   const [customAmount, setCustomAmount] = useState('');
   const [cancelling, setCancelling] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(null);
   const [confirmJoinMatch, setConfirmJoinMatch] = useState(null);
   const [ludoDummyRunningBattles, setLudoDummyRunningBattles] = useState(15);
   const [ludoDummyOpenBattles, setLudoDummyOpenBattles] = useState(4);
@@ -358,7 +304,7 @@ export default function Ludo() {
     };
   }, [socket, fetchMyMatches, fetchWaitingList, fetchRunningBattles]);
 
-  const handleCreateClick = () => {
+  const handleCreateClick = async () => {
     if (!ludoEnabled) {
       toast.error(ludoDisableReason || 'Ludo matches are currently disabled');
       return;
@@ -371,18 +317,12 @@ export default function Ludo() {
       toast.error('Insufficient balance');
       return;
     }
-    setConfirmOpen('create');
-  };
-
-  const handleCreateConfirm = async () => {
     setCreating(true);
-    setConfirmOpen(null);
     try {
-      const res = await ludoAPI.createMatch(effectiveAmount);
-      toast.success(res.data?.message || 'Match created');
+      await ludoAPI.createMatch(effectiveAmount);
+      toast.success('Match created! Waiting for opponent.');
       setCustomAmount('');
-      await refreshUser();
-      await loadAll();
+      await loadAll(); // balance unchanged at create time — no refreshUser needed
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create match');
     } finally {
@@ -703,12 +643,6 @@ export default function Ludo() {
                       const amount = b.playingFor ?? b.entryAmount;
                       const p1 = b.players?.[0]?.userName || '—';
                       const p2 = b.players?.[1]?.userName || '—';
-                      const p1Initial = p1.charAt(0).toUpperCase();
-                      const p2Initial = p2.charAt(0).toUpperCase();
-                      const p1Gradient = getAvatarGradient(p1, 0);
-                      const p2Gradient = getAvatarGradient(p2, 5);
-                      const p1BorderColor = getAvatarBorderColor(p1, 0);
-                      const p2BorderColor = getAvatarBorderColor(p2, 5);
                       const animStyle = isDummy
                         ? exitingIds.has(b._id)
                           ? { animation: 'dummySlideOut 0.4s ease forwards' }
@@ -720,34 +654,34 @@ export default function Ludo() {
                         <div key={b._id} className="relative overflow-hidden rounded-2xl border border-white/20" style={animStyle}>
                           <div className="absolute inset-0" style={{ backgroundImage: 'url(/ludoopen.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center 40%' }} />
                           <div className="absolute inset-0 bg-black/50" />
-                          <div className="relative px-3 py-2">
+                          <div className="relative px-2 py-1.5">
                             {/* Playing For / Prize top row */}
-                            <div className="flex items-center justify-between mb-2 border-b border-white/20 pb-1.5">
-                              <p className="text-xs font-bold text-white flex items-center gap-1">
+                            <div className="flex items-center justify-between mb-1 border-b border-white/20 pb-1">
+                              <p className="text-[11px] font-bold text-white flex items-center gap-1">
                                 Playing For
-                                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-500 text-white text-[10px] font-black flex-shrink-0">₹</span>
-                                <span className="text-sm font-extrabold">{amount}</span>
+                                <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-green-500 text-white text-[9px] font-black flex-shrink-0">₹</span>
+                                <span className="text-xs font-extrabold">{amount}</span>
                               </p>
-                              <p className="text-xs font-bold text-white flex items-center gap-1">
+                              <p className="text-[11px] font-bold text-white flex items-center gap-1">
                                 Prize
-                                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-500 text-white text-[10px] font-black flex-shrink-0">₹</span>
-                                <span className="text-sm font-extrabold">{b.prize}</span>
+                                <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-green-500 text-white text-[9px] font-black flex-shrink-0">₹</span>
+                                <span className="text-xs font-extrabold">{b.prize}</span>
                               </p>
                             </div>
                             {/* Players row */}
-                            <div className="flex items-center justify-between gap-2 py-1">
-                              <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                                <PlayerAvatar name={p1} gradient={p1Gradient} borderColor={p1BorderColor} initial={p1Initial} />
-                                <span className="text-[11px] font-bold text-white truncate max-w-[72px] text-center" title={p1}>{p1}</span>
+                            <div className="flex items-center justify-between gap-1">
+                              <div className="flex flex-col items-center gap-0.5 flex-1 min-w-0">
+                                <img src="/leftside.jpeg" alt={p1} className="w-10 h-10 rounded-full object-cover border-2 border-white/40" />
+                                <span className="text-[10px] font-bold text-white truncate max-w-[60px] text-center" title={p1}>{p1}</span>
                               </div>
-                              <span className="text-3xl font-black italic flex-shrink-0" style={{ background: 'linear-gradient(180deg,#fb923c,#dc2626)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontStyle: 'italic' }}>VS</span>
-                              <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                                <PlayerAvatar name={p2} gradient={p2Gradient} borderColor={p2BorderColor} initial={p2Initial} />
-                                <span className="text-[11px] font-bold text-white truncate max-w-[72px] text-center" title={p2}>{p2}</span>
+                              <span className="text-2xl font-black flex-shrink-0" style={{ background: 'linear-gradient(180deg,#fb923c,#dc2626)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontStyle: 'italic' }}>VS</span>
+                              <div className="flex flex-col items-center gap-0.5 flex-1 min-w-0">
+                                <img src="/rightside.jpeg" alt={p2} className="w-10 h-10 rounded-full object-cover border-2 border-white/40" />
+                                <span className="text-[10px] font-bold text-white truncate max-w-[60px] text-center" title={p2}>{p2}</span>
                               </div>
                             </div>
                             {amIIn && (
-                              <button onClick={() => navigate(`/ludo/match/${b._id}`)} className="w-full mt-3 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold shadow">View</button>
+                              <button onClick={() => navigate(`/ludo/match/${b._id}`)} className="w-full mt-1.5 py-1 rounded-lg bg-primary-600 text-white text-xs font-semibold shadow">View</button>
                             )}
                           </div>
                         </div>
@@ -786,20 +720,6 @@ export default function Ludo() {
           </div>
         )}
       </div>
-
-      {/* Confirm create */}
-      {confirmOpen === 'create' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-            <h3 className="font-bold text-gray-800 mb-2">Confirm</h3>
-            <p className="text-gray-600 text-sm mb-4">₹{effectiveAmount} will be deducted from your wallet. Continue?</p>
-            <div className="flex gap-2">
-              <button onClick={() => setConfirmOpen(null)} className="flex-1 py-2 rounded-lg border border-gray-300 text-gray-700">Cancel</button>
-              <button onClick={handleCreateConfirm} className="flex-1 py-2 rounded-lg bg-primary-600 text-white font-medium">Confirm</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Confirm and Start (join) popup */}
       {confirmJoinMatch && (

@@ -43,6 +43,7 @@ const Home = () => {
   const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
   const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
   const [gameStatusLoaded, setGameStatusLoaded] = useState(false);
+  const [appLogoUrl, setAppLogoUrl] = useState(null);
 
   const handleDownload = () => {
     if (window.deferredPrompt) {
@@ -65,6 +66,9 @@ const Home = () => {
       if (res.data?.aviatorComingSoon) setAviatorComingSoon(true);
       if (res.data?.spinnerComingSoon) setSpinnerComingSoon(true);
     }).catch(() => {}).finally(() => setGameStatusLoaded(true));
+    settingsAPI.getLogo().then(res => {
+      if (res.data?.logoUrl) setAppLogoUrl(res.data.logoUrl);
+    }).catch(() => {});
   }, []);
 
   const gameCards = [
@@ -213,7 +217,7 @@ const Home = () => {
           <div className="fixed bottom-20 left-3 right-3 max-w-md mx-auto z-40 bg-white rounded-xl p-3 shadow-lg flex items-center justify-between" style={{ animation: 'floatUpDown 2s ease-in-out infinite' }}>
             <div className="flex items-center gap-3">
               <div className="relative">
-                <img src="/logo.jpeg" alt="RushkroLudo" className="w-10 h-10 rounded-full" />
+                <img src={appLogoUrl || '/logo.jpeg'} alt="RushkroLudo" className="w-10 h-10 rounded-full" />
                 <span className="absolute top-0 right-0 flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-white" />

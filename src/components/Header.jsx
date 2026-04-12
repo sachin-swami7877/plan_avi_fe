@@ -55,11 +55,10 @@ const Header = () => {
           {/* Right — wallet balance in bordered box + menu */}
           <div className="flex items-center gap-2">
             <Link to="/wallet" className="flex items-center gap-1.5 border border-white/20 rounded-lg px-2.5 py-1.5">
-              {/* Wallet icon */}
-              <svg className="w-5 h-5 text-white/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-5z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 12a1 1 0 100 2 1 1 0 000-2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18" />
+              {/* Wallet icon — filled/colored */}
+              <svg className="w-5 h-5 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" />
+                <circle cx="17" cy="14" r="1.5" />
               </svg>
               <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400' : 'bg-red-400'}`} />
               {(isAdmin || isSubAdmin) && activeUserCount > 0 && (

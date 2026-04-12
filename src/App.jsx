@@ -24,6 +24,7 @@ import Terms from './pages/Terms';
 import Bonus from './pages/Bonus';
 import PaymentInfo from './pages/PaymentInfo';
 import WalletRecords from './pages/WalletRecords';
+import Referral from './pages/Referral';
 import AviatorPublic from './pages/AviatorPublic';
 import AboutUs from './pages/AboutUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -50,6 +51,7 @@ import AdminProfit from './admin/AdminProfit';
 import AdminDatabase from './admin/AdminDatabase';
 import AdminKyc from './admin/AdminKyc';
 import AdminCreditLog from './admin/AdminCreditLog';
+import AdminReferral from './admin/AdminReferral';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -228,6 +230,9 @@ function AppRoutes() {
       <Route path="/wallet-records" element={
         <ProtectedRoute><SocketProvider><WalletRecords /></SocketProvider></ProtectedRoute>
       } />
+      <Route path="/referral" element={
+        <ProtectedRoute><SocketProvider><Referral /></SocketProvider></ProtectedRoute>
+      } />
 
       {/* Admin Login */}
       <Route path="/admin/login" element={
@@ -255,6 +260,7 @@ function AppRoutes() {
         <Route path="kyc" element={<SubAdminBlock><AdminKyc /></SubAdminBlock>} />
         <Route path="database" element={<SubAdminBlock><AdminDatabase /></SubAdminBlock>} />
         <Route path="credit-log" element={<SubAdminBlock><AdminCreditLog /></SubAdminBlock>} />
+        <Route path="referrals" element={<SubAdminBlock><AdminReferral /></SubAdminBlock>} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="settings" element={
           <SubAdminBlock>

@@ -90,6 +90,7 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pendingData, setPendingData] = useState(null);
@@ -201,6 +202,7 @@ const Login = () => {
       await authAPI.updateProfile({
         name: trimmedName || pendingData.name,
         phone: trimmedPhone || pendingData.phone,
+        referralCode: referralCode.trim().toUpperCase() || undefined,
       });
       const res = await authAPI.getMe();
       login(res.data, pendingData.token);
@@ -231,7 +233,7 @@ const Login = () => {
     setError('');
     try {
       login(pendingData, pendingData.token);
-      const res = await authAPI.setUsername(trimmedName);
+      const res = await authAPI.setUsername(trimmedName, referralCode.trim().toUpperCase() || undefined);
       const updatedUser = { ...pendingData, ...res.data };
       login(updatedUser, pendingData.token);
       navigate(from, { replace: true });
@@ -535,6 +537,16 @@ const Login = () => {
                     </div>
                   </div>
                 )}
+                <div>
+                  <label className="block text-sm font-semibold text-white/80 mb-2">Referral Code <span className="text-white/30 font-normal">(Optional)</span></label>
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7))}
+                    placeholder="Friend's referral code"
+                    className="w-full px-4 py-3.5 rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-base tracking-widest"
+                  />
+                </div>
                 {pendingData?.needsPhone !== false && (
                   <div>
                     <label className="block text-sm font-semibold text-white/80 mb-2">Mobile Number</label>
@@ -597,6 +609,16 @@ const Login = () => {
                       className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-base"
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-white/80 mb-2">Referral Code <span className="text-white/30 font-normal">(Optional)</span></label>
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7))}
+                    placeholder="Friend's referral code"
+                    className="w-full px-4 py-3.5 rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-base tracking-widest"
+                  />
                 </div>
                 <button
                   type="submit"
