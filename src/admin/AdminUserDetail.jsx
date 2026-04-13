@@ -54,7 +54,7 @@ const AdminUserDetail = () => {
     return <div className="text-center py-12 text-red-500 font-medium">{error}</div>;
   }
 
-  const { user, walletRequests, aviatorBets, ludoMatches, spinnerRecords, kycRequest } = data;
+  const { user, walletRequests, aviatorBets, ludoMatches, spinnerRecords, kycRequest, adminTransactions = [] } = data;
 
   // Summary stats
   const totalDeposited = walletRequests
@@ -266,33 +266,77 @@ const AdminUserDetail = () => {
       {/* ── Wallet Tab ── */}
       {tab === 'wallet' && (
         <div className="space-y-2">
-          {walletRequests.length === 0 ? (
-            <EmptyState icon="💰" text="No wallet requests" />
-          ) : pagedData.map(r => (
-            <div key={r._id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-50 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    r.type === 'deposit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                  }`}>
-                    {r.type === 'deposit' ? '⬆ Deposit' : '⬇ Withdrawal'}
-                  </span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    r.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
-                    r.status === 'rejected' ? 'bg-red-50 text-red-500' :
-                    'bg-amber-50 text-amber-600'
-                  }`}>
-                    {r.status}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400">{fmt(r.createdAt)}</p>
-                {r.utrNumber && <p className="text-xs text-gray-500 mt-0.5">UTR: {r.utrNumber}</p>}
+          {/* Admin credit/debit transactions */}
+          {adminTransactions.length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">Admin Credits / Debits</p>
+              <div className="space-y-2">
+                {adminTransactions.map(t => (
+                  <div key={t._id} className="bg-white rounded-xl p-4 shadow-sm border border-blue-100 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          t.category === 'admin_credit' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {t.category === 'admin_credit' ? '⬆ Admin Credit' : '⬇ Admin Debit'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">{t.description}</p>
+                      {t.adminId?.name && (
+                        <p className="text-xs text-blue-500 mt-0.5">
+                          By: {t.adminId.name}
+                          {t.adminId.role === 'superadmin' && <span className="ml-1 text-amber-500 font-semibold">(Super Admin)</span>}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-0.5">{fmt(t.createdAt)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-lg font-bold ${t.category === 'admin_credit' ? 'text-blue-600' : 'text-orange-600'}`}>
+                        {t.category === 'admin_credit' ? '+' : '-'}₹{t.amount}
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        ₹{Number(t.balanceBefore).toFixed(2)} → ₹{Number(t.balanceAfter).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <p className={`text-lg font-bold ${r.type === 'deposit' ? 'text-green-600' : 'text-red-500'}`}>
-                ₹{r.amount}
-              </p>
             </div>
-          ))}
+          )}
+
+          {/* Deposit / Withdrawal requests */}
+          {walletRequests.length === 0 && adminTransactions.length === 0 ? (
+            <EmptyState icon="💰" text="No wallet history" />
+          ) : walletRequests.length > 0 && (
+            <>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">Deposits & Withdrawals</p>
+              {pagedData.map(r => (
+                <div key={r._id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-50 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        r.type === 'deposit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                      }`}>
+                        {r.type === 'deposit' ? '⬆ Deposit' : '⬇ Withdrawal'}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        r.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
+                        r.status === 'rejected' ? 'bg-red-50 text-red-500' :
+                        'bg-amber-50 text-amber-600'
+                      }`}>
+                        {r.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400">{fmt(r.createdAt)}</p>
+                    {r.utrNumber && <p className="text-xs text-gray-500 mt-0.5">UTR: {r.utrNumber}</p>}
+                  </div>
+                  <p className={`text-lg font-bold ${r.type === 'deposit' ? 'text-green-600' : 'text-red-500'}`}>
+                    ₹{r.amount}
+                  </p>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       )}
 

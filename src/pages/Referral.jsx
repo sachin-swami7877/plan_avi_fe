@@ -2,19 +2,23 @@ import { useState, useEffect } from 'react';
 import { referralAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
+import toast from 'react-hot-toast';
 
 const Referral = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openUser, setOpenUser] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [redeeming, setRedeeming] = useState(false);
 
-  useEffect(() => {
+  const fetchData = () => {
     referralAPI.getMyReferral()
       .then(res => setData(res.data))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const handleCopy = () => {
     if (!data?.referralCode) return;
@@ -22,6 +26,20 @@ const Referral = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  };
+
+  const handleRedeem = async () => {
+    if (redeeming || !data?.pendingAmount) return;
+    setRedeeming(true);
+    try {
+      const res = await referralAPI.redeemCommission();
+      toast.success(res.data.message || 'Commission redeemed!');
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to redeem');
+    } finally {
+      setRedeeming(false);
+    }
   };
 
   const formatDate = (d) => {
@@ -34,7 +52,7 @@ const Referral = () => {
       <Header />
       <div className="max-w-md mx-auto px-4 pt-4 pb-28">
         <h1 className="text-xl font-bold text-gray-800 mb-1">Refer & Earn</h1>
-        <p className="text-sm text-gray-500 mb-5">Earn 3-4% commission every time your referred friend wins a Ludo match</p>
+        <p className="text-sm text-gray-500 mb-4">Earn 2% commission when your referred friend wins a Ludo match</p>
 
         {loading ? (
           <div className="flex justify-center py-16">
@@ -59,7 +77,6 @@ const Referral = () => {
                 </button>
               </div>
               <p className="text-primary-200 text-xs mt-3 mb-3">Share this code with friends. When they register and win, you earn!</p>
-              {/* WhatsApp Share */}
               {data?.referralCode && (
                 <a
                   href={`https://wa.me/?text=${encodeURIComponent(`🎮 RushkroLudo pe khelo aur jeeto!\n\nMera referral code use karke register karo: *${data.referralCode}*\n\n👉 https://rushkroludo.com`)}`}
@@ -74,6 +91,31 @@ const Referral = () => {
                 </a>
               )}
             </div>
+
+            {/* Pending Redemption Card */}
+            {(data?.pendingAmount > 0 || data?.redeemedAmount > 0) && (
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-0.5">Pending Commission</p>
+                    <p className="text-2xl font-black text-amber-600">₹{data?.pendingAmount ?? 0}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Added to play balance only (non-withdrawable)</p>
+                  </div>
+                  <button
+                    onClick={handleRedeem}
+                    disabled={redeeming || !data?.pendingAmount}
+                    className="px-5 py-2.5 bg-amber-500 text-white rounded-xl font-bold text-sm disabled:opacity-40 active:scale-95 transition-transform"
+                  >
+                    {redeeming ? 'Redeeming...' : 'Redeem'}
+                  </button>
+                </div>
+                {data?.redeemedAmount > 0 && (
+                  <div className="pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500">Already Redeemed: <span className="font-semibold text-green-600">₹{data.redeemedAmount}</span></p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 gap-3 mb-5">
@@ -93,7 +135,9 @@ const Referral = () => {
               <ul className="space-y-1 text-xs list-disc list-inside">
                 <li>Friend registers using your code</li>
                 <li>Friend wins a Ludo match</li>
-                <li>You get <strong>2%</strong> of their prize instantly</li>
+                <li>You earn <strong>2%</strong> of their entry fee as pending commission</li>
+                <li>Tap <strong>Redeem</strong> to add it to your play balance</li>
+                <li>Redeemed balance can be used to play — <strong>not withdrawable</strong></li>
               </ul>
             </div>
 
@@ -105,6 +149,7 @@ const Referral = () => {
                   {data.referredUsers.map((ru, idx) => {
                     const uid = ru.user?._id?.toString() || idx;
                     const isOpen = openUser === uid;
+                    const pendingForUser = ru.commissions.filter(c => c.status === 'pending').reduce((s, c) => s + c.commissionAmount, 0);
                     return (
                       <div key={uid} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <button
@@ -117,7 +162,10 @@ const Referral = () => {
                             </div>
                             <div className="text-left">
                               <p className="text-sm font-semibold text-gray-800">{ru.user?.name || 'Unknown'}</p>
-                              <p className="text-xs text-gray-400">{ru.commissions.length} win{ru.commissions.length !== 1 ? 's' : ''} • Earned ₹{ru.totalEarned}</p>
+                              <p className="text-xs text-gray-400">
+                                {ru.commissions.length} win{ru.commissions.length !== 1 ? 's' : ''} • Earned ₹{ru.totalEarned}
+                                {pendingForUser > 0 && <span className="text-amber-500 ml-1">(₹{pendingForUser.toFixed(2)} pending)</span>}
+                              </p>
                             </div>
                           </div>
                           <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,6 +179,9 @@ const Referral = () => {
                                 <div>
                                   <span className="text-gray-600">Bet ₹{c.betAmount}</span>
                                   <span className="text-gray-400 ml-1.5">• {formatDate(c.createdAt)}</span>
+                                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${c.status === 'redeemed' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                                    {c.status}
+                                  </span>
                                 </div>
                                 <span className="text-green-600 font-semibold">+₹{c.commissionAmount} ({c.commissionPct}%)</span>
                               </div>

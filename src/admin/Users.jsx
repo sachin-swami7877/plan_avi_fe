@@ -798,6 +798,7 @@ const Users = () => {
                   <option value="user">User</option>
                   <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
+                  {myRole === 'superadmin' && <option value="superadmin">Super Admin</option>}
                 </select>
               </div>
               <div className="mb-4">

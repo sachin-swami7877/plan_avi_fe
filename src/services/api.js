@@ -252,7 +252,9 @@ export const adminAPI = {
 
 export const referralAPI = {
   getMyReferral: () => api.get('/referral/my'),
+  redeemCommission: () => api.post('/referral/redeem'),
   getAdminReferrals: (params) => api.get('/admin/referrals', { params }),
+  adjustCommission: (id, data) => api.put(`/admin/referrals/${id}/adjust`, data),
 };
 
 export default api;
