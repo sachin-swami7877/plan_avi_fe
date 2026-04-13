@@ -444,7 +444,7 @@ const Profile = () => {
                 Copy
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-2">Share this code — earn 2% when your friend wins a Ludo match</p>
+            <p className="text-xs text-gray-400 mt-2">Share this code — earn 3-4% when your friend wins a Ludo match</p>
           </div>
         )}
 
