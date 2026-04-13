@@ -34,6 +34,7 @@ const Referral = () => {
       <Header />
       <div className="max-w-md mx-auto px-4 pt-4 pb-28">
         <h1 className="text-xl font-bold text-gray-800 mb-1">Refer & Earn</h1>
+        <p className="text-sm text-gray-500 mb-5">Earn 3-4% commission every time your referred friend wins a Ludo match</p>
 
         {loading ? (
           <div className="flex justify-center py-16">
