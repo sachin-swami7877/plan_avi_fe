@@ -82,7 +82,7 @@ const Header = () => {
             {/* Commission box — only for normal users */}
             {!isAdmin && !isSubAdmin && (
               <Link to="/referral" className="flex items-center gap-1 border border-amber-400/40 rounded-lg px-2 py-1.5 bg-amber-500/10">
-                <img src="/commison.jpeg" alt="commission" className="w-5 h-5 rounded-sm object-cover flex-shrink-0" />
+                <img src="/commision.jpeg" alt="commission" className="w-5 h-5 rounded-sm object-cover flex-shrink-0" />
                 <span className="text-amber-400 font-bold text-sm">
                   ₹{totalCommission.toFixed(2)}
                 </span>
