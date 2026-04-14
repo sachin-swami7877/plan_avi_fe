@@ -123,7 +123,7 @@ const AdminReferral = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-1">Referral Commissions</h1>
-      <p className="text-sm text-gray-500 mb-4">2% commission on Ludo wins — pending until user redeems</p>
+      <p className="text-sm text-gray-500 mb-4">3-4% commission on Ludo wins — pending until user redeems</p>
 
       {/* Status Tabs */}
       <div className="flex bg-gray-100 rounded-xl p-1 mb-4 gap-1">

@@ -236,31 +236,33 @@ const AdminUserDetail = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm border border-gray-100 mb-4">
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => switchTab(t.key)}
-            className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
-              tab === t.key
-                ? 'bg-primary-700 text-white shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <span>{t.icon}</span>
-            <span>{t.label}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-              tab === t.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
-            }`}>
-              {t.key === 'wallet' ? walletRequests.length :
-               t.key === 'aviator' ? aviatorBets.length :
-               t.key === 'ludo' ? ludoMatches.length :
-               t.key === 'kyc' ? (kycRequest ? 1 : 0) :
-               spinnerRecords.length}
-            </span>
-          </button>
-        ))}
+      {/* Tabs — horizontal scroll so nothing gets hidden on small screens */}
+      <div className="bg-white rounded-xl p-1 shadow-sm border border-gray-100 mb-4 overflow-x-auto">
+        <div className="flex gap-1 min-w-max">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              onClick={() => switchTab(t.key)}
+              className={`py-2 px-3 rounded-lg text-xs font-medium transition-all flex items-center gap-1 whitespace-nowrap ${
+                tab === t.key
+                  ? 'bg-primary-700 text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                tab === t.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+              }`}>
+                {t.key === 'wallet' ? walletRequests.length :
+                 t.key === 'aviator' ? aviatorBets.length :
+                 t.key === 'ludo' ? ludoMatches.length :
+                 t.key === 'kyc' ? (kycRequest ? 1 : 0) :
+                 spinnerRecords.length}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Wallet Tab ── */}

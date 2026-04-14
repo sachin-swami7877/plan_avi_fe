@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, referralAPI } from '../services/api';
 import { getToken, setToken, removeToken } from '../utils/cookies';
 
 const AuthContext = createContext();
@@ -9,6 +9,7 @@ const HMR_FALLBACK = {
   user: null, loading: true, login: () => {}, logout: () => {},
   updateBalance: () => {}, refreshUser: async () => {}, patchUser: () => {},
   isAuthenticated: false, isAdmin: false, isSubAdmin: false,
+  totalCommission: 0, refreshCommission: async () => {},
 };
 
 export const useAuth = () => {
@@ -25,6 +26,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [totalCommission, setTotalCommission] = useState(0);
 
   useEffect(() => {
     const token = getToken() || localStorage.getItem('token');
@@ -38,6 +40,12 @@ export const AuthProvider = ({ children }) => {
         .then(res => {
           setUser(res.data);
           localStorage.setItem('user', JSON.stringify(res.data));
+          // Fetch commission for non-admin users (normal users have referral)
+          if (!res.data.isAdmin && res.data.role === 'user') {
+            referralAPI.getMyReferral().then(r => {
+              setTotalCommission(r.data.totalEarned ?? 0);
+            }).catch(() => {});
+          }
         })
         .catch((err) => {
           if (err.response?.status === 401) {
@@ -113,15 +121,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshCommission = async () => {
+    try {
+      const res = await referralAPI.getMyReferral();
+      setTotalCommission(res.data.totalEarned ?? 0);
+    } catch { /* silent — commission is non-critical */ }
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      logout,
       updateBalance,
       refreshUser,
       patchUser,
+      totalCommission,
+      refreshCommission,
       isAuthenticated: !!user,
       isSuperAdmin: user?.isSuperAdmin || user?.role === 'superadmin',
       isAdmin: user?.isAdmin || user?.isSuperAdmin || user?.role === 'admin' || user?.role === 'superadmin',

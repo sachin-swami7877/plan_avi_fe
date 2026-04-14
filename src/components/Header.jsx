@@ -6,8 +6,9 @@ import { HiOutlineBars3 } from 'react-icons/hi2';
 import SideDrawer from './SideDrawer';
 
 const Header = () => {
-  const { user, isAdmin, isSubAdmin } = useAuth();
-  const { connected, activeUserCount } = useSocket();
+  const { user, isAdmin, isSubAdmin, totalCommission } = useAuth();
+  const { connected, activeUserCount, unreadNotifCount } = useSocket();
+  const unreadCount = unreadNotifCount || 0;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -52,15 +53,24 @@ const Header = () => {
             </svg>
           </Link>
 
-          {/* Right — wallet balance in bordered box + menu */}
-          <div className="flex items-center gap-2">
-            <Link to="/wallet" className="flex items-center gap-1.5 border border-white/20 rounded-lg px-2.5 py-1.5">
-              {/* Wallet icon — filled/colored */}
-              <svg className="w-5 h-5 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" />
-                <circle cx="17" cy="14" r="1.5" />
+          {/* Right — notification bell + wallet + commission + menu */}
+          <div className="flex items-center gap-1.5">
+            {/* Notification bell with unread badge */}
+            <Link to="/notifications" className="relative p-1">
+              <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
               </svg>
-              <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400' : 'bg-red-400'}`} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Wallet balance box */}
+            <Link to="/wallet" className="flex items-center gap-1 border border-white/20 rounded-lg px-2 py-1.5">
+              <img src="/wallet.jpeg" alt="wallet" className="w-5 h-5 rounded-sm object-cover flex-shrink-0" />
+              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${connected ? 'bg-emerald-400' : 'bg-red-400'}`} />
               {(isAdmin || isSubAdmin) && activeUserCount > 0 && (
                 <span className="text-emerald-400/70 text-[10px] font-medium">{activeUserCount}</span>
               )}
@@ -68,6 +78,17 @@ const Header = () => {
                 ₹{user?.walletBalance?.toFixed(2) || '0.00'}
               </span>
             </Link>
+
+            {/* Commission box — only for normal users */}
+            {!isAdmin && !isSubAdmin && (
+              <Link to="/referral" className="flex items-center gap-1 border border-amber-400/40 rounded-lg px-2 py-1.5 bg-amber-500/10">
+                <img src="/commison.jpeg" alt="commission" className="w-5 h-5 rounded-sm object-cover flex-shrink-0" />
+                <span className="text-amber-400 font-bold text-sm">
+                  ₹{totalCommission.toFixed(2)}
+                </span>
+              </Link>
+            )}
+
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}

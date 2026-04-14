@@ -3,8 +3,10 @@ import { referralAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const Referral = () => {
+  const { refreshCommission } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openUser, setOpenUser] = useState(null);
@@ -35,6 +37,7 @@ const Referral = () => {
       const res = await referralAPI.redeemCommission();
       toast.success(res.data.message || 'Commission redeemed!');
       fetchData();
+      refreshCommission();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to redeem');
     } finally {
@@ -135,7 +138,7 @@ const Referral = () => {
               <ul className="space-y-1 text-xs list-disc list-inside">
                 <li>Friend registers using your code</li>
                 <li>Friend wins a Ludo match</li>
-                <li>You earn <strong>2%</strong> of their entry fee as pending commission</li>
+                <li>You earn <strong>3%</strong> of their entry fee as pending commission</li>
                 <li>Tap <strong>Redeem</strong> to add it to your play balance</li>
                 <li>Redeemed balance can be used to play — <strong>not withdrawable</strong></li>
               </ul>
