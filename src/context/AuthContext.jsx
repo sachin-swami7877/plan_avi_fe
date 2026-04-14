@@ -41,11 +41,9 @@ export const AuthProvider = ({ children }) => {
           setUser(res.data);
           localStorage.setItem('user', JSON.stringify(res.data));
           // Fetch commission for non-admin users (normal users have referral)
-          if (!res.data.isAdmin && res.data.role === 'user') {
-            referralAPI.getMyReferral().then(r => {
-              setTotalCommission(r.data.totalEarned ?? 0);
-            }).catch(() => {});
-          }
+          referralAPI.getMyReferral().then(r => {
+            setTotalCommission(r.data.totalEarned ?? 0);
+          }).catch(() => {});
         })
         .catch((err) => {
           if (err.response?.status === 401) {
@@ -128,6 +126,11 @@ export const AuthProvider = ({ children }) => {
     } catch { /* silent — commission is non-critical */ }
   };
 
+  // Called directly from socket event — no API call needed
+  const updateCommission = (totalEarned) => {
+    setTotalCommission(totalEarned ?? 0);
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -139,6 +142,7 @@ export const AuthProvider = ({ children }) => {
       patchUser,
       totalCommission,
       refreshCommission,
+      updateCommission,
       isAuthenticated: !!user,
       isSuperAdmin: user?.isSuperAdmin || user?.role === 'superadmin',
       isAdmin: user?.isAdmin || user?.isSuperAdmin || user?.role === 'admin' || user?.role === 'superadmin',

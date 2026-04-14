@@ -29,10 +29,12 @@ export const SocketProvider = ({ children }) => {
   const [newNotification, setNewNotification] = useState(null);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [activeUserCount, setActiveUserCount] = useState(0);
-  const { user, updateBalance } = useAuth();
+  const { user, updateBalance, updateCommission } = useAuth();
   const goTimeoutRef = useRef(null);
   const updateBalanceRef = useRef(updateBalance);
   updateBalanceRef.current = updateBalance;
+  const updateCommissionRef = useRef(updateCommission);
+  updateCommissionRef.current = updateCommission;
 
   const clearNotification = useCallback(() => setNewNotification(null), []);
 
@@ -170,6 +172,13 @@ export const SocketProvider = ({ children }) => {
     newSocket.on('wallet:balance-updated', (data) => {
       if (data?.walletBalance != null) {
         updateBalanceRef.current(data);
+      }
+    });
+
+    // Real-time referral commission update
+    newSocket.on('referral:commission-updated', (data) => {
+      if (data?.totalEarned != null) {
+        updateCommissionRef.current(data.totalEarned);
       }
     });
 

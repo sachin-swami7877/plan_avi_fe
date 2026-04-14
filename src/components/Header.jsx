@@ -35,7 +35,7 @@ const Header = () => {
                 </svg>
               </Link>
             )}
-            <Link to="/dashboard" className="flex items-center">
+            <Link to="/landing" className="flex items-center">
               <div className="relative">
                 <img src="/logo.jpeg" alt="RushkroLudo" className="w-9 h-9 rounded-full" />
                 <span className="absolute top-0 right-0 flex h-3 w-3">
@@ -46,12 +46,6 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Center — home icon */}
-          <Link to="/landing" className="text-amber-400 hover:text-amber-300">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          </Link>
 
           {/* Right — notification bell + wallet + commission + menu */}
           <div className="flex items-center gap-1.5">
@@ -79,12 +73,12 @@ const Header = () => {
               </span>
             </Link>
 
-            {/* Commission box — only for normal users */}
-            {!isAdmin && !isSubAdmin && (
+            {/* Commission box — all logged-in users */}
+            {user && (
               <Link to="/referral" className="flex items-center gap-1 border border-amber-400/40 rounded-lg px-2 py-1.5 bg-amber-500/10">
                 <img src="/commision.jpeg" alt="commission" className="w-5 h-5 rounded-sm object-cover flex-shrink-0" />
                 <span className="text-amber-400 font-bold text-sm">
-                  ₹{totalCommission.toFixed(2)}
+                  ₹{(totalCommission || 0).toFixed(2)}
                 </span>
               </Link>
             )}
