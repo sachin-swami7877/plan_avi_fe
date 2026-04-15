@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { referralAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
@@ -6,7 +7,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 const Referral = () => {
-  const { refreshCommission } = useAuth();
+  const { refreshCommission, user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openUser, setOpenUser] = useState(null);
@@ -82,7 +83,7 @@ const Referral = () => {
               <p className="text-primary-200 text-xs mt-3 mb-3">Share this code with friends. When they register and win, you earn!</p>
               {data?.referralCode && (
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`🎮 RushkroLudo pe khelo aur jeeto!\n\nMera referral code use karke register karo: *${data.referralCode}*\n\n👉 https://rushkroludo.com`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(`🎮 RushkroLudo pe khelo aur jeeto!\n\nMera referral code use karke register karo: *${data.referralCode}*\n\n👉 https://rushkroludo.com/login?referral_code=${data.referralCode}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full bg-[#25D366] text-white py-2.5 rounded-xl text-sm font-semibold active:scale-95 transition-transform"
@@ -118,6 +119,27 @@ const Referral = () => {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Spinner CTA — show when user has redeemed commission AND still has wallet balance to play */}
+            {(data?.redeemedAmount || 0) > 0 && (user?.walletBalance || 0) > 0 && (
+              <Link
+                to="/spinner"
+                className="flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 mb-4 shadow-md active:scale-95 transition-transform"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
+                    <img src="/spinner.jpeg" alt="Spinner" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-sm">Play Spinner</p>
+                    <p className="text-white/70 text-xs">Use your redeemed balance to spin & win!</p>
+                  </div>
+                </div>
+                <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
             )}
 
             {/* Stats Row */}

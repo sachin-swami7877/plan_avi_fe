@@ -11,7 +11,7 @@ import { HiOutlineBars3 } from 'react-icons/hi2';
 import AdminSideDrawer from './AdminSideDrawer';
 import toast from 'react-hot-toast';
 import { playNotificationSound } from '../utils/audioSounds';
-import { adminAPI } from '../services/api';
+import { adminAPI, settingsAPI } from '../services/api';
 
 const AdminLayout = () => {
   const { user, logout, isAdmin, isSubAdmin, role } = useAuth();
@@ -21,6 +21,7 @@ const AdminLayout = () => {
   const [ludoAlertCount, setLudoAlertCount] = useState(0);
   const [kycAlertCount, setKycAlertCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [appLogoUrl, setAppLogoUrl] = useState(null);
 
   // All available menu items
   const allSidebarItems = [
@@ -60,6 +61,13 @@ const AdminLayout = () => {
   const mobileNavItems = isManager
     ? allMobileNavItems.filter(item => item.subAdmin)
     : allMobileNavItems;
+
+  // Fetch dynamic logo
+  useEffect(() => {
+    settingsAPI.getLogo().then(res => {
+      if (res.data?.logoUrl) setAppLogoUrl(res.data.logoUrl);
+    }).catch(() => {});
+  }, []);
 
   // Fetch initial pending counts from API
   useEffect(() => {
@@ -128,7 +136,7 @@ const AdminLayout = () => {
       <header className="bg-primary-800 text-white px-4 py-3 sticky top-0 z-50 overflow-hidden">
         <div className="max-w-7xl mx-auto flex justify-between items-center min-w-0">
           <div className="flex items-center gap-2">
-            <img src="/logo.jpeg" alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
+            <img src={appLogoUrl || '/logo.jpeg'} alt="Logo" className="w-8 h-8 rounded-lg object-cover ring-2 ring-white/20" />
             <h1 className="text-xl font-bold">Rushkro<span className="text-emerald-300">Ludo</span> <span className="text-white/50 text-sm font-normal">{role === 'superadmin' ? 'Super' : 'Admin'}</span></h1>
           </div>
           <div className="flex items-center gap-3">

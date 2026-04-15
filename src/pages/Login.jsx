@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -98,8 +98,19 @@ const Login = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const from = location.state?.from || '/dashboard';
+
+  // Auto-fill referral code from URL ?referral_code=... when reaching registration step
+  useEffect(() => {
+    if (step === 'profile' || step === 'username') {
+      const codeFromUrl = searchParams.get('referral_code');
+      if (codeFromUrl && !referralCode) {
+        setReferralCode(codeFromUrl.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7));
+      }
+    }
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show logout reason if redirected from another-device force-logout
   const [logoutReason, setLogoutReason] = useState('');

@@ -9,7 +9,7 @@ function getToday() { return toISODate(new Date()); }
 function QuickDateButtons({ onSelect, active }) {
   const buttons = [
     { key: 'last7', label: 'Last 7 Days', getRange: () => { const d = new Date(); d.setDate(d.getDate() - 7); return { start: toISODate(d), end: getToday() }; } },
-    { key: 'lastMonth', label: 'Last Month', getRange: () => { const d = new Date(); d.setMonth(d.getMonth() - 1); return { start: toISODate(d), end: getToday() }; } },
+    { key: 'lastMonth', label: 'Last Month', getRange: () => { const now = new Date(); const start = new Date(now.getFullYear(), now.getMonth() - 1, 1); const end = new Date(now.getFullYear(), now.getMonth(), 0); return { start: toISODate(start), end: toISODate(end) }; } },
   ];
   return (
     <div className="flex flex-wrap gap-2">
