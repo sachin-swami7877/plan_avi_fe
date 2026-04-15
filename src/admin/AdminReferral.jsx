@@ -7,10 +7,31 @@ import toast from 'react-hot-toast';
 function toISODate(d) { return d.toISOString().slice(0, 10); }
 function getToday() { return toISODate(new Date()); }
 
-const AdminReferral = () => {
-  const { role } = useAuth();
-  const isSuperAdmin = role === 'superadmin';
+/* ── Shared search input ── */
+const SearchInput = ({ value, onChange, placeholder }) => (
+  <div className="relative mb-4">
+    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <input
+      type="text"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+    />
+    {value && (
+      <button onClick={() => onChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    )}
+  </div>
+);
 
+/* ══════════════════════════════════════════════════════
+   TAB 1 — Commission Records (existing)
+══════════════════════════════════════════════════════ */
+const CommissionsTab = ({ isSuperAdmin }) => {
   const [groups, setGroups] = useState([]);
   const [topEarners, setTopEarners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,16 +41,14 @@ const AdminReferral = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [pendingStats, setPendingStats] = useState({ total: 0, count: 0 });
   const [redeemedStats, setRedeemedStats] = useState({ total: 0, count: 0 });
-
   const [openReferrer, setOpenReferrer] = useState(null);
-  const [statusTab, setStatusTab] = useState('all'); // all | pending | redeemed | top
+  const [statusTab, setStatusTab] = useState('all');
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [quickFilter, setQuickFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-
-  // Adjust modal
-  const [adjustModal, setAdjustModal] = useState(null); // { id, currentAmount, referrerName }
+  const [search, setSearch] = useState('');
+  const [adjustModal, setAdjustModal] = useState(null);
   const [adjustValue, setAdjustValue] = useState('');
   const [adjustNote, setAdjustNote] = useState('');
   const [adjusting, setAdjusting] = useState(false);
@@ -43,12 +62,6 @@ const AdminReferral = () => {
     setPage(1);
   };
 
-  const handleDateApply = (s, e) => {
-    setStartDate(s); setEndDate(e);
-    setQuickFilter('custom'); setPage(1);
-    setDatePickerOpen(false);
-  };
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -60,7 +73,6 @@ const AdminReferral = () => {
 
       const res = await referralAPI.getAdminReferrals(params);
       const d = res.data;
-
       if (statusTab === 'top') {
         setTopEarners(d.topEarners || []);
         setTotalCount(d.totalCount || 0);
@@ -106,13 +118,24 @@ const AdminReferral = () => {
       ' ' + dt.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
-  const tabs = [
+  // Client-side search filter on groups
+  const filteredGroups = search.trim()
+    ? groups.filter(g => {
+        const q = search.toLowerCase();
+        return (
+          g.referrer?.name?.toLowerCase().includes(q) ||
+          g.referrer?.phone?.includes(q) ||
+          g.referrer?.referralCode?.toLowerCase().includes(q)
+        );
+      })
+    : groups;
+
+  const subTabs = [
     { key: 'all', label: 'All' },
-    { key: 'pending', label: `Pending` },
+    { key: 'pending', label: 'Pending' },
     { key: 'redeemed', label: 'Redeemed' },
     { key: 'top', label: 'Top Earners' },
   ];
-
   const quickBtns = [
     { key: 'all', label: 'All Time' },
     { key: 'today', label: 'Today' },
@@ -122,12 +145,12 @@ const AdminReferral = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-1">Referral Commissions</h1>
-      <p className="text-sm text-gray-500 mb-4">3-4% commission on Ludo wins — pending until user redeems</p>
+      {/* Search */}
+      <SearchInput value={search} onChange={setSearch} placeholder="Search by referrer name, phone or code…" />
 
-      {/* Status Tabs */}
+      {/* Sub-tabs */}
       <div className="flex bg-gray-100 rounded-xl p-1 mb-4 gap-1">
-        {tabs.map(t => (
+        {subTabs.map(t => (
           <button key={t.key} onClick={() => { setStatusTab(t.key); setPage(1); setOpenReferrer(null); }}
             className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${statusTab === t.key ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}>
             {t.label}
@@ -176,7 +199,6 @@ const AdminReferral = () => {
           <div className="w-8 h-8 border-[3px] border-primary-600 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : statusTab === 'top' ? (
-        /* Top Earners View */
         <div className="space-y-3">
           {topEarners.length === 0 ? (
             <div className="bg-white rounded-xl p-8 text-center text-gray-500">No data found</div>
@@ -188,10 +210,7 @@ const AdminReferral = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-gray-800 text-sm">{e.referrer?.name || '—'}</p>
-                  <p className="text-xs text-gray-400">
-                    Code: <span className="font-mono text-primary-600">{e.referrer?.referralCode || '—'}</span>
-                    {' • '}{e.referrer?.phone || ''}
-                  </p>
+                  <p className="text-xs text-gray-400">Code: <span className="font-mono text-primary-600">{e.referrer?.referralCode || '—'}</span>{' • '}{e.referrer?.phone || ''}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-green-600">₹{e.totalEarned?.toFixed(2)}</p>
@@ -205,12 +224,13 @@ const AdminReferral = () => {
             </div>
           ))}
         </div>
-      ) : groups.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center text-gray-500">No referral commissions found</div>
+      ) : filteredGroups.length === 0 ? (
+        <div className="bg-white rounded-xl p-8 text-center text-gray-500">
+          {search ? 'No results match your search' : 'No referral commissions found'}
+        </div>
       ) : (
-        /* Grouped accordion view */
         <div className="space-y-3">
-          {groups.map((g, idx) => {
+          {filteredGroups.map((g, idx) => {
             const uid = g.referrer?._id?.toString() || idx;
             const isOpen = openReferrer === uid;
             return (
@@ -234,15 +254,12 @@ const AdminReferral = () => {
                     </div>
                   </div>
                   <div className="text-right flex items-center gap-2">
-                    <div>
-                      <p className="font-bold text-green-600 text-sm">+₹{g.totalEarned}</p>
-                    </div>
+                    <p className="font-bold text-green-600 text-sm">+₹{g.totalEarned}</p>
                     <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </button>
-
                 {isOpen && (
                   <div className="border-t border-gray-100 bg-gray-50 divide-y divide-gray-100">
                     {g.commissions.map((c) => (
@@ -258,9 +275,6 @@ const AdminReferral = () => {
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${c.status === 'redeemed' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
                               {c.status}
                             </span>
-                            {c.status === 'redeemed' && c.redeemedAt && (
-                              <span className="text-[10px] text-gray-400">Redeemed {formatDate(c.redeemedAt)}</span>
-                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -268,11 +282,212 @@ const AdminReferral = () => {
                           {isSuperAdmin && c.status === 'pending' && (
                             <button
                               onClick={() => { setAdjustModal({ id: c._id, currentAmount: c.commissionAmount, referrerName: g.referrer?.name }); setAdjustValue(String(c.commissionAmount)); setAdjustNote(''); }}
-                              className="text-[10px] px-2 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+                              className="text-[10px] px-2 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100"
                             >
                               Adjust
                             </button>
                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!search && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button onClick={() => setPage(p => p - 1)} disabled={page <= 1}
+            className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm font-medium disabled:opacity-30">Prev</button>
+          <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
+          <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages}
+            className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm font-medium disabled:opacity-30">Next</button>
+        </div>
+      )}
+
+      <DatePickerModal open={datePickerOpen} onClose={() => setDatePickerOpen(false)} onApply={(s, e) => { setStartDate(s); setEndDate(e); setQuickFilter('custom'); setPage(1); setDatePickerOpen(false); }} initialStart={startDate} initialEnd={endDate} />
+
+      {/* Adjust Commission Modal */}
+      {adjustModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5">
+            <h3 className="text-lg font-bold text-gray-800 mb-1">Adjust Commission</h3>
+            <p className="text-sm text-gray-500 mb-4">For <strong>{adjustModal.referrerName}</strong> — current: ₹{adjustModal.currentAmount}</p>
+            <div className="mb-3">
+              <label className="block text-xs text-gray-600 font-medium mb-1">New Amount (₹)</label>
+              <input type="number" value={adjustValue} onChange={e => setAdjustValue(e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" min="0" step="0.01" />
+            </div>
+            <div className="mb-4">
+              <label className="block text-xs text-gray-600 font-medium mb-1">Note (optional)</label>
+              <input type="text" value={adjustNote} onChange={e => setAdjustNote(e.target.value)} placeholder="Reason..."
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setAdjustModal(null)} disabled={adjusting} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl font-medium text-sm">Cancel</button>
+              <button onClick={handleAdjust} disabled={adjusting} className="flex-1 bg-primary-700 text-white py-2.5 rounded-xl font-medium text-sm disabled:opacity-60">
+                {adjusting ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════════════════════
+   TAB 2 — All Referred Users
+   Shows every user who registered with a referral code,
+   grouped by referrer, even if no commissions yet.
+══════════════════════════════════════════════════════ */
+const AllReferredUsersTab = () => {
+  const [referrers, setReferrers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [openReferrer, setOpenReferrer] = useState(null);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search to avoid hammering the server
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await referralAPI.getAllReferredUsers({ page, limit: 50, search: debouncedSearch });
+      const d = res.data;
+      setReferrers(d.referrers || []);
+      setTotalCount(d.totalCount || 0);
+      setTotalPages(d.totalPages || 1);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedSearch]);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const formatDate = (d) => {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
+  };
+
+  return (
+    <div>
+      {/* Search */}
+      <SearchInput value={search} onChange={setSearch} placeholder="Search referrer by name, phone or code…" />
+
+      {/* Summary */}
+      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 mb-4 inline-flex items-center gap-2">
+        <span className="text-lg font-bold text-primary-700">{totalCount}</span>
+        <span className="text-sm text-gray-500">Referrers with referred users</span>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="w-8 h-8 border-[3px] border-primary-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : referrers.length === 0 ? (
+        <div className="bg-white rounded-xl p-8 text-center text-gray-500">
+          {search ? 'No referrers match your search' : 'No referred users found'}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {referrers.map((g, idx) => {
+            const rid = g.referrer?._id?.toString() || idx;
+            const isOpen = openReferrer === rid;
+            return (
+              <div key={rid} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                {/* Referrer header */}
+                <button
+                  onClick={() => setOpenReferrer(isOpen ? null : rid)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm flex-shrink-0">
+                      {g.referrer?.name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-800 text-sm">{g.referrer?.name || '—'}</p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {g.referrer?.phone || '—'}
+                        {' • '}Code: <span className="font-mono text-primary-600">{g.referrer?.referralCode || '—'}</span>
+                      </p>
+                      {/* Commission summary */}
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full font-medium">
+                          {g.totalReferredCount} referred
+                        </span>
+                        {g.totalCommission > 0 && (
+                          <span className="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full font-medium">
+                            Total ₹{g.totalCommission}
+                          </span>
+                        )}
+                        {g.todayCommission > 0 && (
+                          <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">
+                            Today ₹{g.todayCommission}
+                          </span>
+                        )}
+                        {g.pending > 0 && (
+                          <span className="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full font-medium">
+                            Pending ₹{g.pending}
+                          </span>
+                        )}
+                        {g.redeemed > 0 && (
+                          <span className="text-[10px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-full font-medium">
+                            Redeemed ₹{g.redeemed}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <svg className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Referred users list */}
+                {isOpen && (
+                  <div className="border-t border-gray-100 bg-gray-50 divide-y divide-gray-100">
+                    {g.referredUsers.map((ru, i) => (
+                      <div key={ru.user?._id || i} className="px-4 py-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+                              {ru.user?.name?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-gray-800 truncate">{ru.user?.name || '—'}</p>
+                              <p className="text-xs text-gray-400">{ru.user?.phone || '—'} • Joined {formatDate(ru.user?.createdAt)}</p>
+                            </div>
+                          </div>
+                          {/* Per-user commission stats */}
+                          <div className="flex-shrink-0 text-right space-y-0.5">
+                            {ru.totalCommission > 0 ? (
+                              <>
+                                <p className="text-xs font-semibold text-green-600">₹{ru.totalCommission} total</p>
+                                <div className="flex gap-1.5 justify-end">
+                                  {ru.todayCommission > 0 && <span className="text-[10px] text-blue-500">Today ₹{ru.todayCommission}</span>}
+                                  {ru.pending > 0 && <span className="text-[10px] text-amber-500">Pen ₹{ru.pending}</span>}
+                                  {ru.redeemed > 0 && <span className="text-[10px] text-emerald-500">Red ₹{ru.redeemed}</span>}
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">No earnings yet</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -294,47 +509,43 @@ const AdminReferral = () => {
             className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm font-medium disabled:opacity-30">Next</button>
         </div>
       )}
+    </div>
+  );
+};
 
-      <DatePickerModal open={datePickerOpen} onClose={() => setDatePickerOpen(false)} onApply={handleDateApply} initialStart={startDate} initialEnd={endDate} />
+/* ══════════════════════════════════════════════════════
+   MAIN PAGE
+══════════════════════════════════════════════════════ */
+const AdminReferral = () => {
+  const { role } = useAuth();
+  const isSuperAdmin = role === 'superadmin';
+  const [mainTab, setMainTab] = useState('commissions');
 
-      {/* Adjust Commission Modal (super admin only) */}
-      {adjustModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5">
-            <h3 className="text-lg font-bold text-gray-800 mb-1">Adjust Commission</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              For <strong>{adjustModal.referrerName}</strong> — current: ₹{adjustModal.currentAmount}
-            </p>
-            <div className="mb-3">
-              <label className="block text-xs text-gray-600 font-medium mb-1">New Amount (₹)</label>
-              <input
-                type="number"
-                value={adjustValue}
-                onChange={e => setAdjustValue(e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-xs text-gray-600 font-medium mb-1">Note (optional)</label>
-              <input
-                type="text"
-                value={adjustNote}
-                onChange={e => setAdjustNote(e.target.value)}
-                placeholder="Reason for adjustment..."
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => setAdjustModal(null)} disabled={adjusting} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl font-medium text-sm">Cancel</button>
-              <button onClick={handleAdjust} disabled={adjusting} className="flex-1 bg-primary-700 text-white py-2.5 rounded-xl font-medium text-sm disabled:opacity-60">
-                {adjusting ? 'Saving...' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-gray-800 mb-1">Referral Management</h1>
+      <p className="text-sm text-gray-500 mb-4">3-4% commission on Ludo wins — track referrers and their referred users</p>
+
+      {/* Main page tabs */}
+      <div className="flex bg-gray-100 rounded-xl p-1 mb-5 gap-1">
+        <button
+          onClick={() => setMainTab('commissions')}
+          className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${mainTab === 'commissions' ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}
+        >
+          Commission Records
+        </button>
+        <button
+          onClick={() => setMainTab('all-referred')}
+          className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${mainTab === 'all-referred' ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}
+        >
+          All Referred Users
+        </button>
+      </div>
+
+      {mainTab === 'commissions'
+        ? <CommissionsTab isSuperAdmin={isSuperAdmin} />
+        : <AllReferredUsersTab />
+      }
     </div>
   );
 };
