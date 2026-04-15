@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { referralAPI } from '../services/api';
+import { referralAPI, settingsAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
@@ -13,6 +13,7 @@ const Referral = () => {
   const [openUser, setOpenUser] = useState(null);
   const [copied, setCopied] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
+  const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
 
   const fetchData = () => {
     referralAPI.getMyReferral()
@@ -21,7 +22,12 @@ const Referral = () => {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+    settingsAPI.getAviatorStatus().then(res => {
+      if (res.data?.spinnerComingSoon) setSpinnerComingSoon(true);
+    }).catch(() => {});
+  }, []);
 
   const handleCopy = () => {
     if (!data?.referralCode) return;
@@ -121,54 +127,9 @@ const Referral = () => {
               </div>
             )}
 
-            {/* Spinner CTA — show when user has redeemed commission AND still has wallet balance to play */}
-            {(data?.redeemedAmount || 0) > 0 && (user?.walletBalance || 0) > 0 && (
-              <Link
-                to="/spinner"
-                className="flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 mb-4 shadow-md active:scale-95 transition-transform"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
-                    <img src="/spinner.jpeg" alt="Spinner" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="text-white font-bold text-sm">Play Spinner</p>
-                    <p className="text-white/70 text-xs">Use your redeemed balance to spin & win!</p>
-                  </div>
-                </div>
-                <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
-            )}
-
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-                <p className="text-2xl font-bold text-gray-800">{data?.referredCount ?? 0}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Friends Referred</p>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-                <p className="text-2xl font-bold text-green-600">₹{data?.totalEarned ?? 0}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Total Earned</p>
-              </div>
-            </div>
-
-            {/* How it works */}
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-5 text-sm text-amber-800">
-              <p className="font-semibold mb-1">How it works</p>
-              <ul className="space-y-1 text-xs list-disc list-inside">
-                <li>Friend registers using your code</li>
-                <li>Friend wins a Ludo match</li>
-                <li>You earn <strong>3%</strong> of their entry fee as pending commission</li>
-                <li>Tap <strong>Redeem</strong> to add it to your play balance</li>
-                <li>Redeemed balance can be used to play — <strong>not withdrawable</strong></li>
-              </ul>
-            </div>
-
-            {/* Referred Users Accordion */}
+            {/* Referred Users Accordion — right after commission card */}
             {data?.referredUsers?.length > 0 ? (
-              <div>
+              <div className="mb-4">
                 <p className="text-sm font-semibold text-gray-700 mb-3">Referred Friends ({data.referredUsers.length})</p>
                 <div className="space-y-2">
                   {data.referredUsers.map((ru, idx) => {
@@ -219,11 +180,56 @@ const Referral = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-xl p-8 text-center text-gray-400 shadow-sm border border-gray-100">
+              <div className="bg-white rounded-xl p-8 text-center text-gray-400 shadow-sm border border-gray-100 mb-4">
                 <div className="text-4xl mb-3">🎯</div>
                 <p className="font-medium text-gray-600 mb-1">No referrals yet</p>
                 <p className="text-xs">Share your code to start earning</p>
               </div>
+            )}
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+                <p className="text-2xl font-bold text-gray-800">{data?.referredCount ?? 0}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Friends Referred</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+                <p className="text-2xl font-bold text-green-600">₹{data?.totalEarned ?? 0}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Total Earned</p>
+              </div>
+            </div>
+
+            {/* How it works */}
+            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-5 text-sm text-amber-800">
+              <p className="font-semibold mb-1">How it works</p>
+              <ul className="space-y-1 text-xs list-disc list-inside">
+                <li>Friend registers using your code</li>
+                <li>Friend wins a Ludo match</li>
+                <li>You earn <strong>3-4%</strong> of their entry fee as pending commission</li>
+                <li>Tap <strong>Redeem</strong> to add it to your play balance</li>
+                <li>Redeemed balance can be used to play </li>
+              </ul>
+            </div>
+
+            {/* Spinner CTA — only when redeemed balance in wallet AND spinner is live */}
+            {!spinnerComingSoon && (data?.redeemedAmount || 0) > 0 && (user?.walletBalance || 0) > 0 && (
+              <Link
+                to="/spinner"
+                className="flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 mb-4 shadow-md active:scale-95 transition-transform"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
+                    <img src="/spinner.jpeg" alt="Spinner" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-sm">Play Spinner</p>
+                    <p className="text-white/70 text-xs">Use your redeemed balance to spin & win!</p>
+                  </div>
+                </div>
+                <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
             )}
           </>
         )}
