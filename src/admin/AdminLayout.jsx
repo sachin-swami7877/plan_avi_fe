@@ -133,25 +133,29 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen bg-gray-100" style={{ overflowX: 'clip' }}>
       {/* Top Bar */}
-      <header className="bg-primary-800 text-white px-4 py-3 sticky top-0 z-50 overflow-hidden">
-        <div className="max-w-7xl mx-auto flex justify-between items-center min-w-0">
-          <div className="flex items-center gap-2">
-            <img src={appLogoUrl || '/logo.jpeg'} alt="Logo" className="w-8 h-8 rounded-lg object-cover ring-2 ring-white/20" />
-            <h1 className="text-xl font-bold">Rushkro<span className="text-emerald-300">Ludo</span> <span className="text-white/50 text-sm font-normal">{role === 'superadmin' ? 'Super' : 'Admin'}</span></h1>
+      <header className="bg-primary-800 text-white px-3 md:px-6 py-2.5 sticky top-0 z-50">
+        <div className="flex justify-between items-center h-12">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <img src={appLogoUrl || '/logo.jpeg'} alt="Logo" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 ring-2 ring-white/20" />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold leading-tight">Rushkro<span className="text-emerald-300">Ludo</span></h1>
+              <p className="text-white/60 text-xs leading-none">{role === 'superadmin' ? 'Super Admin' : 'Admin'}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <Link
               to="/dashboard"
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-medium flex items-center gap-1.5 transition-colors"
             >
               <span>🎮</span>
-              Play
+              <span className="hidden sm:inline">Play</span>
             </Link>
-            <span className="text-sm text-primary-200 hidden sm:inline">Welcome, {user?.name}</span>
+            <span className="text-xs text-primary-200 hidden lg:inline max-w-[120px] truncate">Welcome, {user?.name}</span>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="p-2 text-white/80 hover:text-white transition-colors"
+              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               aria-label="Menu"
             >
               <HiOutlineBars3 className="w-5 h-5" />
