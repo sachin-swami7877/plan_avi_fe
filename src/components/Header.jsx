@@ -22,22 +22,12 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-[#0d0d12] px-3 py-2 sticky top-0 z-40 overflow-hidden">
-        <div className="max-w-md mx-auto flex justify-between items-center min-w-0 w-full">
-          {/* Left — back + admin + logo */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="p-1 text-white/50 hover:text-white transition-colors"
-              aria-label="Go back"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+      <header className="bg-[#0d0d12] px-3 py-2 sticky top-0 z-40">
+        <div className="max-w-md mx-auto flex justify-between items-center w-full">
+          {/* Left — admin badge + logo */}
+          <div className="flex items-center gap-2">
             {(isAdmin || isSubAdmin) && (
-              <Link to="/admin" className="text-amber-400 hover:text-amber-300">
+              <Link to="/admin" className="text-amber-400 hover:text-amber-300 p-1" title="Admin Panel">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
                 </svg>
