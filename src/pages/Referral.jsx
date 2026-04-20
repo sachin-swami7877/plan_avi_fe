@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { referralAPI, settingsAPI } from '../services/api';
+import { referralAPI, spinnerAPI, settingsAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 const Referral = () => {
   const { refreshCommission, user } = useAuth();
   const [data, setData] = useState(null);
+  const [referralSpins, setReferralSpins] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openUser, setOpenUser] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -20,6 +21,10 @@ const Referral = () => {
       .then(res => setData(res.data))
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    spinnerAPI.getReferralStatus()
+      .then(res => setReferralSpins(res.data))
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -101,6 +106,33 @@ const Referral = () => {
                 </a>
               )}
             </div>
+
+            {/* Free Spins Card */}
+            {referralSpins && (referralSpins.remaining > 0 || referralSpins.offered > 0) && (
+              <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-4 shadow-sm text-white mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="text-xs text-white/80 mb-0.5">Free Spinner Spins</p>
+                    <p className="text-3xl font-black">
+                      {Math.floor(referralSpins.offered)}
+                      {referralSpins.fractional > 0 && <span className="text-lg">.{referralSpins.fractional.split('.')[1]}</span>}
+                    </p>
+                    <p className="text-[10px] text-white/70 mt-0.5">Earned from referrals • No payment needed</p>
+                  </div>
+                  <Link
+                    to="/spinner"
+                    className="px-4 py-2 bg-white text-purple-600 rounded-xl font-bold text-sm active:scale-95 transition-transform"
+                  >
+                    Use Spins →
+                  </Link>
+                </div>
+                {referralSpins.remaining > 0 && (
+                  <div className="pt-2 border-t border-white/30">
+                    <p className="text-xs text-white/80">Available: <span className="font-semibold">{referralSpins.remaining} full spin{referralSpins.remaining !== 1 ? 's' : ''}</span></p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Pending Redemption Card */}
             {(data?.pendingAmount > 0 || data?.redeemedAmount > 0) && (

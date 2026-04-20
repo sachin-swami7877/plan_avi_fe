@@ -5,7 +5,7 @@ import { spinnerAPI, settingsAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 
-// ── ₹50 spin segments (7) ──
+// ── Paid ₹50 spin segments (7) ──
 const SEGMENTS_50 = [
   { id: 0, label: '₹50', type: 'cash', value: 50, color: '#d1fae5', textColor: '#047857' },
   { id: 1, label: 'Thanks', type: 'thanks', color: '#fef9c3', textColor: '#92400e' },
@@ -16,7 +16,7 @@ const SEGMENTS_50 = [
   { id: 6, label: '₹5000', type: 'cash', value: 5000, color: '#fef3c7', textColor: '#b45309' },
 ];
 
-// ── ₹100 spin segments (8) — no ₹70, adds ₹170 & ₹200 ──
+// ── Paid ₹100 spin segments (8) — no ₹70, adds ₹170 & ₹200 ──
 const SEGMENTS_100 = [
   { id: 0, label: '₹50', type: 'cash', value: 50, color: '#d1fae5', textColor: '#047857' },
   { id: 1, label: 'Thanks', type: 'thanks', color: '#fef9c3', textColor: '#92400e' },
@@ -28,7 +28,16 @@ const SEGMENTS_100 = [
   { id: 7, label: '₹5000', type: 'cash', value: 5000, color: '#fff7ed', textColor: '#c2410c' },
 ];
 
+// ── Referral spinner segments (mostly small prizes) ──
+const SEGMENTS_REFERRAL = [
+  { id: 0, label: '₹20', type: 'cash', value: 20, color: '#e0f2fe', textColor: '#0369a1' },
+  { id: 1, label: 'Thanks', type: 'thanks', color: '#fef9c3', textColor: '#92400e' },
+  { id: 2, label: '₹50', type: 'cash', value: 50, color: '#d1fae5', textColor: '#047857' },
+  { id: 3, label: '₹100', type: 'cash', value: 100, color: '#ede9fe', textColor: '#7c3aed' },
+];
+
 function outcomeToSegmentIndex50(outcome) {
+  if (outcome === '20') return 0;
   if (outcome === '50') return 0;
   if (outcome === '70') return 2;
   if (outcome === '100') return 3;
@@ -38,11 +47,20 @@ function outcomeToSegmentIndex50(outcome) {
 }
 
 function outcomeToSegmentIndex100(outcome) {
+  if (outcome === '20') return 0;
   if (outcome === '50') return 0;
   if (outcome === '100') return 2;
   if (outcome === '120') return 3;
   if (outcome === '170') return 4;
   if (outcome === '200') return 5;
+  if (outcome === 'thank_you') return 1;
+  return 1;
+}
+
+function outcomeToSegmentIndexReferral(outcome) {
+  if (outcome === '20') return 0;
+  if (outcome === '50') return 2;
+  if (outcome === '100') return 3;
   if (outcome === 'thank_you') return 1;
   return 1;
 }
@@ -62,6 +80,7 @@ function wedgePath(cx, cy, r, startDeg, endDeg) {
 export default function Spinner() {
   const { user, updateBalance } = useAuth();
   const [comingSoon, setComingSoon] = useState(false);
+  const [spinnerTab, setSpinnerTab] = useState('paid'); // 'paid' or 'referral'
   const [spinCost, setSpinCost] = useState(50);
   const [spinning, setSpinning] = useState(false);
   const [waitingForApi, setWaitingForApi] = useState(false);
@@ -72,6 +91,7 @@ export default function Spinner() {
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [referralStatus, setReferralStatus] = useState({ offered: 0, remaining: 0 });
   const wheelRef = useRef(null);
   const pendingResultRef = useRef(null);
   const resultDelayTimerRef = useRef(null);
@@ -81,12 +101,21 @@ export default function Spinner() {
     settingsAPI.getAviatorStatus().then(res => {
       if (res.data?.spinnerComingSoon) setComingSoon(true);
     }).catch(() => {});
+    // Fetch referral status
+    spinnerAPI.getReferralStatus().then(res => {
+      setReferralStatus(res.data || { offered: 0, remaining: 0 });
+    }).catch(() => {});
   }, []);
 
   const balance = user?.walletBalance ?? 0;
-  const SEGMENTS = spinCost === 100 ? SEGMENTS_100 : SEGMENTS_50;
+  const isPaidSpinner = spinnerTab === 'paid';
+  const SEGMENTS = isPaidSpinner
+    ? (spinCost === 100 ? SEGMENTS_100 : SEGMENTS_50)
+    : SEGMENTS_REFERRAL;
   const SEGMENT_ANGLE = 360 / SEGMENTS.length;
-  const outcomeToIndex = spinCost === 100 ? outcomeToSegmentIndex100 : outcomeToSegmentIndex50;
+  const outcomeToIndex = isPaidSpinner
+    ? (spinCost === 100 ? outcomeToSegmentIndex100 : outcomeToSegmentIndex50)
+    : outcomeToSegmentIndexReferral;
 
   useEffect(() => {
     rotationRef.current = rotation;
@@ -115,7 +144,9 @@ export default function Spinner() {
     return () => clearInterval(t);
   }, [waitingForApi]);
 
-  const canSpin = balance >= spinCost && !spinning && !waitingForApi;
+  const canSpin = isPaidSpinner
+    ? (balance >= spinCost && !spinning && !waitingForApi)
+    : (referralStatus.remaining >= 1 && !spinning && !waitingForApi);
 
   useEffect(() => {
     const el = wheelRef.current;
@@ -149,16 +180,25 @@ export default function Spinner() {
     setWaitingForApi(true);
 
     try {
-      const res = await spinnerAPI.play(spinCost);
+      let res;
+      if (isPaidSpinner) {
+        res = await spinnerAPI.play(spinCost);
+      } else {
+        res = await spinnerAPI.playReferral();
+      }
+
       setWaitingForApi(false);
-      const { outcome, winAmount, newBalance, message } = res.data;
+      const { outcome, winAmount, newBalance, referralSpinsRemaining, message } = res.data;
       updateBalance(newBalance);
+      if (referralSpinsRemaining !== undefined) {
+        setReferralStatus(prev => ({ ...prev, remaining: referralSpinsRemaining }));
+      }
 
       const segmentIndex = outcomeToIndex(outcome);
       setLandedSegmentIndex(segmentIndex);
       setSpinning(true);
 
-      const segAngle = 360 / (spinCost === 100 ? SEGMENTS_100.length : SEGMENTS_50.length);
+      const segAngle = 360 / SEGMENTS.length;
       const fullTurns = 360 * 6;
       const segmentCenterAngle = (segmentIndex + 0.5) * segAngle;
       const targetAngle = (360 - segmentCenterAngle) % 360;
@@ -192,7 +232,7 @@ export default function Spinner() {
       setWaitingForApi(false);
       setSpinning(false);
     }
-  }, [canSpin, spinCost, updateBalance, fetchHistory, outcomeToIndex]);
+  }, [canSpin, spinCost, isPaidSpinner, updateBalance, fetchHistory, outcomeToIndex, SEGMENTS.length]);
 
   const showHighlight = result && !spinning && landedSegmentIndex != null;
   const conicStops = SEGMENTS.map((seg, i) => {
@@ -252,24 +292,48 @@ export default function Spinner() {
           </div>
 
           <div className="p-4 sm:p-6 flex flex-col items-center w-full min-w-0 overflow-hidden">
-            {/* Spin cost selector */}
+            {/* Spinner tab selector */}
             <div className="flex gap-2 mb-4 w-full max-w-[300px]">
-              {[50, 100].map((cost) => (
+              {[
+                { id: 'paid', label: 'Paid Spins' },
+                { id: 'referral', label: `Referral (${referralStatus.remaining})` }
+              ].map((tab) => (
                 <button
-                  key={cost}
+                  key={tab.id}
                   type="button"
                   disabled={isBusy}
-                  onClick={() => { setSpinCost(cost); setResult(null); setLandedSegmentIndex(null); }}
+                  onClick={() => { setSpinnerTab(tab.id); setResult(null); setLandedSegmentIndex(null); }}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    spinCost === cost
+                    spinnerTab === tab.id
                       ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
                       : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
                   } disabled:opacity-60`}
                 >
-                  ₹{cost} Spin
+                  {tab.label}
                 </button>
               ))}
             </div>
+
+            {/* Spin cost selector (paid spinner only) */}
+            {isPaidSpinner && (
+              <div className="flex gap-2 mb-4 w-full max-w-[300px]">
+                {[50, 100].map((cost) => (
+                  <button
+                    key={cost}
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() => { setSpinCost(cost); setResult(null); setLandedSegmentIndex(null); }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                      spinCost === cost
+                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                        : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
+                    } disabled:opacity-60`}
+                  >
+                    ₹{cost} Spin
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Wheel */}
             <div className="relative w-full max-w-[300px] aspect-square mx-auto flex-shrink-0">
@@ -396,8 +460,17 @@ export default function Spinner() {
 
             {/* Price & Balance */}
             <div className="w-full max-w-[300px] mt-4 flex justify-between items-center text-sm">
-              <span className="text-white/70">₹{spinCost} per spin</span>
-              <span className="text-emerald-400 font-semibold">Balance: ₹{balance.toFixed(2)}</span>
+              {isPaidSpinner ? (
+                <>
+                  <span className="text-white/70">₹{spinCost} per spin</span>
+                  <span className="text-emerald-400 font-semibold">Balance: ₹{balance.toFixed(2)}</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-white/70">Free from referrals</span>
+                  <span className="text-emerald-400 font-semibold">Remaining: {referralStatus.remaining}</span>
+                </>
+              )}
             </div>
 
             {error && (
@@ -436,10 +509,10 @@ export default function Spinner() {
                 </>
               ) : spinning ? (
                 'Spinning...'
-              ) : balance < spinCost ? (
-                `Min ₹${spinCost} to spin`
+              ) : isPaidSpinner ? (
+                balance < spinCost ? `Min ₹${spinCost} to spin` : `Spin for ₹${spinCost}`
               ) : (
-                `Spin for ₹${spinCost}`
+                referralStatus.remaining < 1 ? 'No referral spins' : `Spin Free`
               )}
             </button>
 
