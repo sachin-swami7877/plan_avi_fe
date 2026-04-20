@@ -226,6 +226,18 @@ const Home = () => {
           />
         </div>
 
+        {/* Logo Banner */}
+        <div className="rounded-xl overflow-hidden shadow-sm mb-4">
+          <img
+            src="/logo.jpeg"
+            alt="Logo Banner"
+            className="w-full h-auto object-cover"
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+        </div>
+
         <div>
           {/* Download App bar — addaking style */}
           <div className="fixed bottom-20 left-3 right-3 max-w-md mx-auto z-40 bg-white rounded-xl p-3 shadow-lg flex items-center justify-between" style={{ animation: 'floatUpDown 2s ease-in-out infinite' }}>

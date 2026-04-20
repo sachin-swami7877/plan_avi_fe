@@ -243,8 +243,20 @@ const Referral = () => {
               </ul>
             </div>
 
-            {/* Spinner CTA — only when redeemed balance in wallet AND spinner is live */}
-            {!spinnerComingSoon && (data?.redeemedAmount || 0) > 0 && (user?.walletBalance || 0) > 0 && (
+            {/* Ad Banner */}
+            <div className="rounded-xl overflow-hidden shadow-sm mb-4">
+              <img
+                src="/ad.jpeg"
+                alt="Promotional Banner"
+                className="w-full h-auto object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+
+            {/* Spinner CTA */}
+            {!spinnerComingSoon && (
               <Link
                 to="/spinner"
                 className="flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 mb-4 shadow-md active:scale-95 transition-transform"
@@ -255,7 +267,7 @@ const Referral = () => {
                   </div>
                   <div>
                     <p className="text-white font-bold text-sm">Play Spinner</p>
-                    <p className="text-white/70 text-xs">Use your redeemed balance to spin & win!</p>
+                    <p className="text-white/70 text-xs">Try your luck and win big!</p>
                   </div>
                 </div>
                 <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
