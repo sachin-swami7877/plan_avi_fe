@@ -250,6 +250,7 @@ export const adminAPI = {
   approveKyc: (id) => api.put(`/admin/kyc/${id}/approve`),
   rejectKyc: (id, reason) => api.put(`/admin/kyc/${id}/reject`, { reason }),
   deleteKyc: (id) => api.delete(`/admin/kyc/${id}`),
+  sendNotification: (formData) => api.post('/admin/notifications/send', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
 export const referralAPI = {

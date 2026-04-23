@@ -48,6 +48,13 @@ const Settings = () => {
   const [qrUploading, setQrUploading] = useState(false);
   const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
   const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationLink, setNotificationLink] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [notificationImage, setNotificationImage] = useState(null);
+  const [notificationImageUrl, setNotificationImageUrl] = useState(null);
+  const [sendingNotification, setSendingNotification] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -211,10 +218,44 @@ const Settings = () => {
       setQrCodeUrl(res.data.qrCodeUrl);
       setQrFile(null);
       toast.success('QR code uploaded successfully');
-    } catch { 
+    } catch {
       toast.error('Failed to upload QR code');
     }
     finally { setQrUploading(false); }
+  };
+
+  const handleSendNotification = async () => {
+    if (!notificationMessage.trim()) {
+      toast.error('Notification message is required');
+      return;
+    }
+    setSendingNotification(true);
+    try {
+      const fd = new FormData();
+      fd.append('title', notificationTitle || 'RushkroLudo');
+      fd.append('message', notificationMessage);
+      if (notificationLink) {
+        fd.append('link', notificationLink);
+      }
+      if (websiteUrl) {
+        fd.append('websiteUrl', websiteUrl);
+      }
+      if (notificationImage) {
+        fd.append('image', notificationImage);
+      }
+      await adminAPI.sendNotification(fd);
+      toast.success('Notification sent to all users!');
+      setNotificationTitle('');
+      setNotificationMessage('');
+      setNotificationLink('');
+      setWebsiteUrl('');
+      setNotificationImage(null);
+      setNotificationImageUrl(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send notification');
+    } finally {
+      setSendingNotification(false);
+    }
   };
 
   if (loading) return <div className="text-center py-8 text-gray-400">Loading settings...</div>;
@@ -651,6 +692,83 @@ const Settings = () => {
             >
               <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${spinnerComingSoon ? 'translate-x-8' : 'translate-x-1'}`} />
             </button>
+          </Section>
+
+          <Section title="Send Notification" desc="Send push notifications to all users with optional image.">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title (Optional)</label>
+                <input
+                  type="text"
+                  value={notificationTitle}
+                  onChange={(e) => setNotificationTitle(e.target.value)}
+                  placeholder="e.g., RushkroLudo (default if empty)"
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
+                <textarea
+                  rows={4}
+                  value={notificationMessage}
+                  onChange={(e) => setNotificationMessage(e.target.value)}
+                  placeholder="e.g., Refer RushkroLudo & earn 2 free spins + commission on every friend's win. Share your code now!"
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-1">{notificationMessage.length}/500 characters</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">In-App Link (Optional)</label>
+                  <input
+                    type="text"
+                    value={notificationLink}
+                    onChange={(e) => setNotificationLink(e.target.value)}
+                    placeholder="e.g., /referral or /spinner"
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">In-app page to navigate to</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Website URL (Optional)</label>
+                  <input
+                    type="url"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder="e.g., https://example.com"
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">External website URL to open</p>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image (Optional)</label>
+                {notificationImageUrl && (
+                  <div className="mb-2">
+                    <img src={notificationImageUrl} alt="Preview" className="w-32 h-32 object-cover rounded-lg border" />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files[0]) {
+                      setNotificationImage(e.target.files[0]);
+                      setNotificationImageUrl(URL.createObjectURL(e.target.files[0]));
+                    }
+                  }}
+                  className="text-sm w-full"
+                />
+                <p className="text-xs text-gray-400 mt-1">Upload a banner image to include in the notification</p>
+              </div>
+              <button
+                onClick={handleSendNotification}
+                disabled={sendingNotification || !notificationMessage.trim()}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm disabled:opacity-50 w-full font-medium"
+              >
+                {sendingNotification ? 'Sending...' : 'Send Notification to All Users'}
+              </button>
+            </div>
           </Section>
         </>
       )}
