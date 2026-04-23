@@ -241,11 +241,6 @@ const Settings = () => {
       }
       await adminAPI.sendNotification(fd);
       toast.success('Notification sent to all users!');
-      setNotificationTitle('');
-      setNotificationMessage('');
-      setWebsiteUrl('https://rushkroludo.com');
-      setNotificationImage(null);
-      setNotificationImageUrl(null);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to send notification');
     } finally {
