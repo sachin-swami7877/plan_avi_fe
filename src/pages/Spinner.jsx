@@ -275,18 +275,8 @@ export default function Spinner() {
       <div className="max-w-md mx-auto px-5 pt-4 pb-6 w-full min-w-0 box-border">
         <div className="bg-gradient-to-b from-[#1a1a24] to-[#0d0d12] rounded-2xl border border-white/10 shadow-xl overflow-hidden w-full min-w-0">
           {/* Top bar */}
-          <div className="flex justify-between items-center px-4 py-3 border-b border-white/10">
-            <Link
-              to="/profile"
-              className="p-2 text-white/60 hover:text-white rounded-full hover:bg-white/10"
-              aria-label="Back"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
+          <div className="flex justify-center items-center px-4 py-3 border-b border-white/10">
             <span className="text-lg font-bold text-white">Lucky Spinner</span>
-            <div className="w-9" />
           </div>
 
           <div className="p-4 sm:p-6 flex flex-col items-center w-full min-w-0 overflow-hidden">
