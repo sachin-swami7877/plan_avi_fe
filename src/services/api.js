@@ -124,8 +124,8 @@ export const gameAPI = {
 
 // Spinner API
 export const spinnerAPI = {
-  play: (spinCost = 50) => api.post('/spinner/play', { spinCost }),
-  playReferral: () => api.post('/spinner/play-referral'),
+  play: (spinCost = 50) => api.post('/spinner/play', { spinCost, type: 'paid' }),
+  playReferral: () => api.post('/spinner/play', { type: 'free' }),
   getReferralStatus: () => api.get('/spinner/referral-status'),
   getHistory: (params) => api.get('/spinner/history', { params }),
 };

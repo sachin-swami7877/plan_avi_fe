@@ -548,10 +548,10 @@ export default function Ludo() {
 
             {/* Open Battles */}
             <div className="rounded-xl overflow-hidden shadow-lg">
-              <div className="bg-gray-300 px-4 pt-4 pb-2 rounded-t-xl">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-gray-800 flex items-center gap-2 text-base">
-                    <span className="text-red-500 text-lg">❌</span> <span className="text-green-600">Open Battles</span>
+              <div className="bg-gray-300 px-4 pt-3 pb-1.5 rounded-t-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-gray-800 flex items-center gap-1.5 text-sm">
+                    <span className="text-red-500 text-base">❌</span> <span className="text-green-600">Open Battles</span>
                   </h3>
                   <button type="button" onClick={() => setRulesOpen(true)} className="text-xs text-green-600 font-bold flex items-center gap-1 uppercase tracking-wide">Rules <span className="inline-flex w-4 h-4 rounded-full border border-gray-500 items-center justify-center text-[10px] text-gray-600">i</span></button>
                 </div>
@@ -620,14 +620,9 @@ export default function Ludo() {
             <div className="rounded-xl overflow-hidden shadow-lg">
               {/* Red divider line + header */}
               <div className="h-1 bg-red-500" />
-              <div className="bg-gray-300 px-4 pt-3 pb-2">
-                <h3 className="font-bold flex items-center gap-2 text-base">
-                  <span className="text-red-500 text-lg">❌</span> <span className="text-green-600">Running Battles</span>
-                  {(runningBattles.length + dummyBattles.length) > 0 && (
-                    <span className="ml-1 text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-semibold">
-                      {runningBattles.length + dummyBattles.length}
-                    </span>
-                  )}
+              <div className="bg-gray-300 px-4 pt-3 pb-1.5">
+                <h3 className="font-bold flex items-center gap-1.5 text-sm text-gray-800">
+                  <span className="text-red-500 text-base">❌</span> <span className="text-green-600">Running Battles</span>
                 </h3>
               </div>
               <div className="bg-gray-300 px-1.5 pb-4">

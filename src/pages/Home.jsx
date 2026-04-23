@@ -165,6 +165,8 @@ const Home = () => {
             {gameCards.filter((g) => {
               if (g.id === 'aviator' && aviatorComingSoon) return false;
               if (g.id === 'lucky-draw' && spinnerComingSoon) return false;
+              if (g.id === 'ludo') return true;
+              if (g.id === 'whatsapp') return true;
               return true;
             }).map((game) => (
               <button

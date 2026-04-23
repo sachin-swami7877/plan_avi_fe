@@ -284,8 +284,8 @@ const Settings = () => {
         )}
       </Section>
 
-      {/* App Logo */}
-      <Section title="App Logo" desc="Logo shown on home screen and install banner. Upload to replace the default logo.">
+      {/* App Logo — Static Only */}
+      {/* <Section title="App Logo" desc="Logo shown on home screen and install banner. Upload to replace the default logo.">
         <div className="space-y-3">
           {logoUrl && <img src={logoUrl} alt="App Logo" className="w-20 h-20 object-contain rounded-full border" />}
           <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
@@ -295,7 +295,7 @@ const Settings = () => {
             </button>
           </div>
         </div>
-      </Section>
+      </Section> */}
 
       {/* Payment QR & UPI */}
       <Section title="Payment QR & UPI" desc="QR code and UPI details shown on user deposit page.">
@@ -349,20 +349,6 @@ const Settings = () => {
         }} disabled={saving} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save Warning</button>
       </Section>
 
-      {/* Bonus */}
-      <Section title="Bonus / Cashback" desc="Set cumulative bet threshold and cashback amount.">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bet Threshold (₹)</label>
-            <input type="number" value={bonusMinBet} onChange={(e) => setBonusMinBet(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cashback Amount (₹)</label>
-            <input type="number" value={bonusCashback} onChange={(e) => setBonusCashback(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
-          </div>
-        </div>
-        <button onClick={handleSaveBonus} disabled={saving} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save Bonus Settings</button>
-      </Section>
 
       {/* Ludo */}
       <Section title="Ludo Game" desc="Dummy running battles and commission tiers.">
@@ -603,12 +589,27 @@ const Settings = () => {
         </div>
       </Section>
 
-      {/* ═══ Super Admin Only — Game Visibility ═══ */}
+      {/* ═══ Super Admin Only — Game Visibility & Bonus ═══ */}
       {isSuperAdmin && (
         <>
           <div className="border-t border-gray-200 pt-4 mt-2">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Super Admin Only</p>
           </div>
+
+          {/* Bonus / Cashback — Super Admin Only */}
+          <Section title="Bonus / Cashback" desc="Set cumulative bet threshold and cashback amount.">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bet Threshold (₹)</label>
+                <input type="number" value={bonusMinBet} onChange={(e) => setBonusMinBet(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cashback Amount (₹)</label>
+                <input type="number" value={bonusCashback} onChange={(e) => setBonusCashback(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
+              </div>
+            </div>
+            <button onClick={handleSaveBonus} disabled={saving} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save Bonus Settings</button>
+          </Section>
 
           <Section title="Aviator — Coming Soon" desc={aviatorComingSoon ? 'Aviator is HIDDEN from users (Dashboard, Profile, Landing). Direct URL shows "Coming Soon".' : 'Aviator is live and visible to all users.'}>
             <button
