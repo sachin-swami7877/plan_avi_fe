@@ -148,6 +148,13 @@ export const SocketProvider = ({ children }) => {
       playNotificationSound();
     });
 
+    // Broadcast notification from admin
+    newSocket.on('notification:broadcast', (data) => {
+      setNewNotification(data);
+      setUnreadNotifCount((c) => c + 1);
+      playNotificationSound();
+    });
+
     newSocket.on('settings:bets-enabled', (data) => {
       setGameState((prev) => {
         const next = { ...prev, betsEnabled: data.enabled };
