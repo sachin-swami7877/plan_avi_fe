@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { spinnerAPI } from '../services/api';
 import Header from '../components/Header';
@@ -83,7 +83,9 @@ function outcomeToSegmentIndexReferral(outcome) {
 
 export default function Spinner() {
   const { user, updateBalance } = useAuth();
-  const [spinnerTab, setSpinnerTab] = useState('paid');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'free' ? 'referral' : 'paid';
+  const [spinnerTab, setSpinnerTab] = useState(initialTab);
   const [spinCost, setSpinCost] = useState(50);
   const [spinning, setSpinning] = useState(false);
   const [waitingForApi, setWaitingForApi] = useState(false);
@@ -521,7 +523,10 @@ export default function Spinner() {
                 <p className="text-white/40 text-sm text-center py-4">No spins yet.</p>
               ) : (
                 <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-                  {history.map((r) => {
+                  {history.filter(r => {
+                    if (isPaidSpinner) return r.spinType !== 'referral';
+                    return r.spinType === 'referral';
+                  }).map((r) => {
                     const isWin = r.winAmount > 0;
                     const cost = r.spinCost || 50;
                     return (

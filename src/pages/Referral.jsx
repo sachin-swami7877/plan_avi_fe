@@ -107,7 +107,7 @@ const Referral = () => {
             {/* Free Spins Card — Moved to Top */}
             {referralSpins && (
               <Link
-                to="/spinner"
+                to="/spinner?tab=free"
                 className="block bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-4 shadow-sm text-white mb-4 active:scale-95 transition-transform"
               >
                 <div className="flex items-center justify-between">
