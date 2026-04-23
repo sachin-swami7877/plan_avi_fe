@@ -50,7 +50,6 @@ const Settings = () => {
   const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState('RushkroLudo');
   const [notificationMessage, setNotificationMessage] = useState('Refer RushkroLudo & earn 2 free spins + commission on every friend\'s win. Share your code now!');
-  const [notificationLink, setNotificationLink] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('https://rushkroludo.com');
   const [notificationImage, setNotificationImage] = useState(null);
   const [notificationImageUrl, setNotificationImageUrl] = useState(null);
@@ -234,9 +233,6 @@ const Settings = () => {
       const fd = new FormData();
       fd.append('title', notificationTitle || 'RushkroLudo');
       fd.append('message', notificationMessage);
-      if (notificationLink) {
-        fd.append('link', notificationLink);
-      }
       if (websiteUrl) {
         fd.append('websiteUrl', websiteUrl);
       }
@@ -247,8 +243,7 @@ const Settings = () => {
       toast.success('Notification sent to all users!');
       setNotificationTitle('');
       setNotificationMessage('');
-      setNotificationLink('');
-      setWebsiteUrl('');
+      setWebsiteUrl('https://rushkroludo.com');
       setNotificationImage(null);
       setNotificationImageUrl(null);
     } catch (error) {
@@ -717,29 +712,16 @@ const Settings = () => {
                 />
                 <p className="text-xs text-gray-400 mt-1">{notificationMessage.length}/500 characters</p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">In-App Link (Optional)</label>
-                  <input
-                    type="text"
-                    value={notificationLink}
-                    onChange={(e) => setNotificationLink(e.target.value)}
-                    placeholder="e.g., /referral or /spinner"
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">In-app page to navigate to</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Website URL (Optional)</label>
-                  <input
-                    type="url"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder="e.g., https://example.com"
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">External website URL to open</p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
+                <input
+                  type="url"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  placeholder="e.g., https://rushkroludo.com"
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-1">Website URL users will go to when they tap notification</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Image (Optional)</label>
