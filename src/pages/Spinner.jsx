@@ -84,7 +84,8 @@ function outcomeToSegmentIndexReferral(outcome) {
 export default function Spinner() {
   const { user, updateBalance } = useAuth();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'free' ? 'referral' : 'paid';
+  const isFromReferralCard = searchParams.get('tab') === 'free';
+  const initialTab = isFromReferralCard ? 'referral' : 'paid';
   const [spinnerTab, setSpinnerTab] = useState(initialTab);
   const [spinCost, setSpinCost] = useState(50);
   const [spinning, setSpinning] = useState(false);
@@ -280,27 +281,29 @@ export default function Spinner() {
           </div>
 
           <div className="p-4 sm:p-6 flex flex-col items-center w-full min-w-0 overflow-hidden">
-            {/* Spinner tab selector */}
-            <div className="flex gap-2 mb-4 w-full max-w-[300px]">
-              {[
-                { id: 'paid', label: 'Paid Spins' },
-                { id: 'referral', label: `Free (${referralStatus.remaining})` }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  disabled={isBusy}
-                  onClick={() => { setSpinnerTab(tab.id); setResult(null); setLandedSegmentIndex(null); }}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    spinnerTab === tab.id
-                      ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                      : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
-                  } disabled:opacity-60`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {/* Spinner tab selector — hidden when coming from referral card */}
+            {!isFromReferralCard && (
+              <div className="flex gap-2 mb-4 w-full max-w-[300px]">
+                {[
+                  { id: 'paid', label: 'Paid Spins' },
+                  { id: 'referral', label: `Free (${referralStatus.remaining})` }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() => { setSpinnerTab(tab.id); setResult(null); setLandedSegmentIndex(null); }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                      spinnerTab === tab.id
+                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                        : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
+                    } disabled:opacity-60`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Spin cost selector (paid spinner only) */}
             {isPaidSpinner && (

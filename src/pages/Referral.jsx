@@ -152,6 +152,18 @@ const Referral = () => {
               </div>
             )}
 
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+                <p className="text-2xl font-bold text-gray-800">{data?.referredCount ?? 0}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Friends Referred</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
+                <p className="text-2xl font-bold text-green-600">₹{data?.totalEarned ?? 0}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Total Earned</p>
+              </div>
+            </div>
+
             {/* Referred Users Accordion — right after commission card */}
             {data?.referredUsers?.length > 0 ? (
               <div className="mb-4">
@@ -211,18 +223,6 @@ const Referral = () => {
                 <p className="text-xs">Share your code to start earning</p>
               </div>
             )}
-
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-                <p className="text-2xl font-bold text-gray-800">{data?.referredCount ?? 0}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Friends Referred</p>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-                <p className="text-2xl font-bold text-green-600">₹{data?.totalEarned ?? 0}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Total Earned</p>
-              </div>
-            </div>
 
             {/* How it works */}
             <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-5 text-sm text-amber-800">
