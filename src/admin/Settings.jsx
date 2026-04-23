@@ -48,10 +48,10 @@ const Settings = () => {
   const [qrUploading, setQrUploading] = useState(false);
   const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
   const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
-  const [notificationTitle, setNotificationTitle] = useState('');
-  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationTitle, setNotificationTitle] = useState('RushkroLudo');
+  const [notificationMessage, setNotificationMessage] = useState('Refer RushkroLudo & earn 2 free spins + commission on every friend\'s win. Share your code now!');
   const [notificationLink, setNotificationLink] = useState('');
-  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('https://rushkroludo.com');
   const [notificationImage, setNotificationImage] = useState(null);
   const [notificationImageUrl, setNotificationImageUrl] = useState(null);
   const [sendingNotification, setSendingNotification] = useState(false);
