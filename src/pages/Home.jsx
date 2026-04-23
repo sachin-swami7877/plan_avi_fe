@@ -228,8 +228,8 @@ const Home = () => {
           />
         </div>
 
-        {/* Logo Banner */}
-        <div className="rounded-xl overflow-hidden shadow-sm mb-4">
+        {/* Logo Banner — REMOVED (Static Only) */}
+        {/* <div className="rounded-xl overflow-hidden shadow-sm mb-4">
           <img
             src="/logo.jpeg"
             alt="Logo Banner"
@@ -238,7 +238,7 @@ const Home = () => {
               e.target.style.display = 'none';
             }}
           />
-        </div>
+        </div> */}
 
         <div>
           {/* Download App bar — addaking style */}
