@@ -6,23 +6,40 @@ import toast from 'react-hot-toast';
 
 // Helper to render screenshot — handles both Cloudinary URLs and base64 data URIs
 function ScreenshotView({ url }) {
+  const [imgError, setImgError] = useState(false);
   if (!url) return null;
   const isBase64 = url.startsWith('data:');
-  if (isBase64) {
+
+  // Fix Cloudinary HTTP URLs by upgrading to HTTPS
+  const safeUrl = !isBase64 && url.startsWith('http://') ? url.replace('http://', 'https://') : url;
+
+  if (imgError) {
     return (
       <div className="mt-1.5">
         <p className="text-xs text-gray-500 mb-1">📷 Screenshot:</p>
-        <img src={url} alt="Screenshot" className="max-w-[200px] max-h-[200px] rounded-lg border border-gray-300 cursor-pointer" onClick={() => {
-          const w = window.open();
-          w.document.write(`<img src="${url}" style="max-width:100%;"/>`);
-        }} />
+        <a href={safeUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-primary-600 text-xs underline font-medium">
+          Open in new tab →
+        </a>
       </div>
     );
   }
+
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-1.5 text-primary-600 text-xs underline font-medium">
-      📷 Screenshot देखें
-    </a>
+    <div className="mt-1.5">
+      <p className="text-xs text-gray-500 mb-1">📷 Screenshot:</p>
+      <img
+        src={safeUrl}
+        alt="Screenshot"
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={() => setImgError(true)}
+        className="max-w-[200px] max-h-[200px] rounded-lg border border-gray-300 cursor-pointer object-cover bg-gray-100"
+        onClick={() => {
+          // Open the image directly — safer than document.write (popup-blocker tolerant)
+          window.open(safeUrl, '_blank', 'noopener,noreferrer');
+        }}
+      />
+    </div>
   );
 }
 

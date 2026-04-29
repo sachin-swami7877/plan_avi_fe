@@ -3,7 +3,12 @@ import { adminAPI } from '../services/api';
 import DatePickerModal from '../components/DatePickerModal';
 import toast from 'react-hot-toast';
 
-function toISODate(d) { return d.toISOString().slice(0, 10); }
+function toISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
 function getToday() { return toISODate(new Date()); }
 
 function QuickDateButtons({ onSelect, active }) {

@@ -66,6 +66,8 @@ const Users = () => {
   const [balanceMin, setBalanceMin] = useState('');
   const [balanceMax, setBalanceMax] = useState('');
   const [balanceRangeActive, setBalanceRangeActive] = useState(false);
+  // FCM token filter: '' = all, 'true' = has token, 'false' = no token
+  const [fcmTokenFilter, setFcmTokenFilter] = useState('');
 
   // Raw fetched users (before online filtering)
   const [rawUsers, setRawUsers] = useState([]);
@@ -135,6 +137,7 @@ const Users = () => {
         if (balanceMin !== '') params.balanceMin = balanceMin;
         if (balanceMax !== '') params.balanceMax = balanceMax;
       }
+      if (fcmTokenFilter) params.hasFcmToken = fcmTokenFilter;
       const res = await adminAPI.getUsers(params);
       if (thisId !== fetchIdRef.current) return;
       const data = res.data;
@@ -145,7 +148,7 @@ const Users = () => {
     }
     catch (error) { if (thisId === fetchIdRef.current) console.error('Failed to fetch users:', error); }
     finally { if (thisId === fetchIdRef.current) setLoading(false); }
-  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, sortBy, balanceRangeActive, balanceMin, balanceMax]);
+  }, [startDate, endDate, search, statusTab, page, roleFilter, activeOnly, sortBy, balanceRangeActive, balanceMin, balanceMax, fcmTokenFilter]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -428,6 +431,17 @@ const Users = () => {
           <option value="topBalance">Top Balance</option>
           <option value="topEarnings">Top Earnings</option>
           <option value="topWithdrawable">Top Withdrawable</option>
+        </select>
+        {/* FCM token (push notification) filter */}
+        <select
+          value={fcmTokenFilter}
+          onChange={(e) => { setFcmTokenFilter(e.target.value); setPage(1); }}
+          className="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          title="Filter by push notification eligibility"
+        >
+          <option value="">🔔 All Users</option>
+          <option value="true">🔔 Has Push Token</option>
+          <option value="false">🔕 No Push Token</option>
         </select>
         <div className="flex items-center gap-1">
           <span className="text-xs text-gray-400">₹</span>

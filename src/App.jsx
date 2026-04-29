@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { SocketProvider } from './context/SocketContext';
+import { SocketProvider, useSocket } from './context/SocketContext';
 import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import usePushNotifications from './hooks/usePushNotifications';
+import NotificationPermissionPrompt from './components/NotificationPermissionPrompt';
 
 // User Pages
 import Login from './pages/Login';
@@ -160,11 +162,45 @@ const SubAdminBlock = ({ children }) => {
   return children;
 };
 
+// Global toast for broadcast notifications — works on any page
+function BroadcastToastListener() {
+  const { newNotification, clearNotification } = useSocket();
+
+  useEffect(() => {
+    if (newNotification?.type === 'broadcast') {
+      toast.custom((t) => (
+        <div
+          className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 max-w-sm cursor-pointer hover:shadow-xl transition-shadow"
+          onClick={() => {
+            if (newNotification.websiteUrl) {
+              window.open(newNotification.websiteUrl, '_blank', 'noopener,noreferrer');
+            }
+            toast.dismiss(t.id);
+          }}
+        >
+          {newNotification.imageUrl && (
+            <img src={newNotification.imageUrl} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
+          )}
+          <h3 className="font-bold text-gray-800">{newNotification.title}</h3>
+          <p className="text-sm text-gray-600 mt-1">{newNotification.message}</p>
+          {newNotification.websiteUrl && <p className="text-xs text-blue-500 mt-2">Tap to open →</p>}
+        </div>
+      ), { duration: 8000, position: 'top-center' });
+      clearNotification();
+    }
+  }, [newNotification, clearNotification]);
+
+  return null;
+}
+
 function AppRoutes() {
   const { user } = useAuth();
   usePushNotifications(user);
 
   return (
+    <>
+    <BroadcastToastListener />
+    <NotificationPermissionPrompt user={user} />
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={
@@ -277,6 +313,7 @@ function AppRoutes() {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 

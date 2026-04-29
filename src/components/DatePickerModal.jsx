@@ -18,7 +18,11 @@ function getCalendarDays(year, month) {
 }
 
 function toISODate(date) {
-  return date.toISOString().slice(0, 10);
+  // Format as YYYY-MM-DD in LOCAL time (not UTC) to avoid timezone day-shift
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function getToday() {
@@ -44,9 +48,18 @@ const PRESETS = [
   { label: 'All Records', getRange: () => ({ start: null, end: null }) },
 ];
 
+// Parse "YYYY-MM-DD" as a local-time date (avoids UTC timezone shift)
+function parseLocalDate(str) {
+  if (!str) return new Date();
+  const [y, m, d] = str.split('-').map(Number);
+  if (!y || !m || !d) return new Date();
+  return new Date(y, m - 1, d);
+}
+
 export default function DatePickerModal({ open, onClose, onApply, initialStartDate, initialEndDate, rangeMode = false, initialDate }) {
   const [viewDate, setViewDate] = useState(() => {
-    const d = initialStartDate || initialDate ? new Date(initialStartDate || initialDate) : new Date();
+    const seed = initialStartDate || initialDate;
+    const d = seed ? parseLocalDate(seed) : new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
 

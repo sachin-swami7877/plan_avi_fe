@@ -24,9 +24,12 @@ const MoneyRequests = () => {
   const [rejectDeductConfirm, setRejectDeductConfirm] = useState(null); // { id, amount, userName }
   const [depositTotals, setDepositTotals] = useState({ totalAmount: 0, count: 0 });
   const [withdrawalTotals, setWithdrawalTotals] = useState({ totalAmount: 0, count: 0 });
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Date filter state
-  const [datePreset, setDatePreset] = useState(''); // '', 'today', 'last5', 'custom'
+  // Date filter state — default to 'today'
+  const [datePreset, setDatePreset] = useState('today'); // '', 'today', 'last5', 'custom'
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -93,8 +96,52 @@ const MoneyRequests = () => {
     }
   };
 
-  const switchTab = (t) => { setTab(t); setPage(1); };
-  const switchFilter = (f) => { setFilter(f); setPage(1); };
+  const switchTab = (t) => { setTab(t); setPage(1); setSelectedIds([]); };
+  const switchFilter = (f) => { setFilter(f); setPage(1); setSelectedIds([]); };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAll = () => {
+    const visibleIds = requests.map((r) => r._id);
+    const allSelected = visibleIds.every((id) => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    } else {
+      setSelectedIds((prev) => [...new Set([...prev, ...visibleIds])]);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setDeleting(true);
+    try {
+      const res = await adminAPI.bulkDeleteWalletRequests(selectedIds);
+      toast.success(res.data?.message || `${selectedIds.length} deleted`);
+      setSelectedIds([]);
+      setConfirmDelete(false);
+      fetchRequests();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteOne = async (id) => {
+    setDeleting(true);
+    try {
+      const res = await adminAPI.bulkDeleteWalletRequests([id]);
+      toast.success(res.data?.message || 'Deleted');
+      setSelectedIds((prev) => prev.filter((x) => x !== id));
+      fetchRequests();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const setPreset = (preset) => {
     setDatePreset(preset);
@@ -222,6 +269,33 @@ const MoneyRequests = () => {
         ))}
       </div>
 
+      {/* Bulk actions for rejected tab */}
+      {filter === 'rejected' && requests.length > 0 && (
+        <div className="bg-white rounded-xl p-3 mb-3 flex items-center justify-between shadow-sm">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={requests.length > 0 && requests.every((r) => selectedIds.includes(r._id))}
+              onChange={toggleSelectAll}
+              className="w-4 h-4 accent-red-600"
+            />
+            <span className="text-sm font-medium text-gray-700">Select All</span>
+            {selectedIds.length > 0 && (
+              <span className="text-xs text-gray-500">({selectedIds.length} selected)</span>
+            )}
+          </label>
+          {selectedIds.length > 0 && (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleting}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+            >
+              {deleting ? 'Deleting...' : `Delete ${selectedIds.length}`}
+            </button>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center py-8 text-gray-400">Loading...</div>
       ) : requests.length === 0 ? (
@@ -232,11 +306,12 @@ const MoneyRequests = () => {
         <div className="space-y-3">
           {requests.map((request) => {
             const isExpanded = expandedId === request._id;
+            const isRejected = request.status === 'rejected';
+            const isSelected = selectedIds.includes(request._id);
             return (
             <div key={request._id} className="bg-white rounded-xl overflow-hidden shadow-sm">
               {/* Accordion header — always visible */}
-              <button
-                onClick={() => setExpandedId(isExpanded ? null : request._id)}
+              <div
                 className={`w-full p-4 ${
                   request.status === 'pending'
                     ? (tab === 'deposit' ? 'bg-yellow-50 border-l-4 border-yellow-500' : 'bg-orange-50 border-l-4 border-orange-500')
@@ -245,7 +320,16 @@ const MoneyRequests = () => {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 cursor-pointer flex-1" onClick={() => setExpandedId(isExpanded ? null : request._id)}>
+                    {filter === 'rejected' && isRejected && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={() => toggleSelect(request._id)}
+                        className="w-4 h-4 accent-red-600"
+                      />
+                    )}
                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow">
                       <span className="text-lg">{tab === 'deposit' ? '₹' : '💸'}</span>
                     </div>
@@ -266,7 +350,7 @@ const MoneyRequests = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="text-right">
+                    <div className="text-right cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : request._id)}>
                       <p className={`text-xl font-bold ${tab === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
                         ₹{editAmounts[request._id] !== undefined ? editAmounts[request._id] : request.amount}
                       </p>
@@ -278,10 +362,22 @@ const MoneyRequests = () => {
                         {request.status}
                       </span>
                     </div>
-                    <IoChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    {isRejected && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteOne(request._id); }}
+                        disabled={deleting}
+                        title="Delete this request"
+                        className="p-1.5 rounded-lg hover:bg-red-100 disabled:opacity-50"
+                      >
+                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V3a1 1 0 011-1h4a1 1 0 011 1v4" />
+                        </svg>
+                      </button>
+                    )}
+                    <IoChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''} cursor-pointer`} onClick={() => setExpandedId(isExpanded ? null : request._id)} />
                   </div>
                 </div>
-              </button>
+              </div>
 
               {/* Accordion body — expanded details */}
               {isExpanded && (
@@ -476,6 +572,33 @@ const MoneyRequests = () => {
           </div>
         </div>
       )}
+      {/* Bulk Delete Confirmation */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5">
+            <h3 className="text-lg font-bold text-red-600 mb-2">Delete {selectedIds.length} Request{selectedIds.length !== 1 ? 's' : ''}?</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              These rejected {tab} requests will be permanently deleted. This cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={deleting}
+                className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium text-sm disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Reject & Deduct Confirmation Modal */}
       {rejectDeductConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">

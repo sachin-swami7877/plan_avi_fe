@@ -3,8 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { settingsAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import { useSocket } from '../context/SocketContext';
-import toast from 'react-hot-toast';
 
 /* ── Auto-sliding Ad Carousel ── */
 const AD_SLIDES = ['/slider1.png', '/slider2.png'];
@@ -39,7 +37,6 @@ const AdCarousel = () => {
 
 const Home = () => {
   const navigate = useNavigate();
-  const { newNotification, clearNotification } = useSocket();
   const [userWarning, setUserWarning] = useState('');
   const [supportWhatsApp, setSupportWhatsApp] = useState('');
   const [showInstallTip, setShowInstallTip] = useState(false);
@@ -47,29 +44,6 @@ const Home = () => {
   const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
   const [gameStatusLoaded, setGameStatusLoaded] = useState(false);
   const [appLogoUrl, setAppLogoUrl] = useState(null);
-
-  // Show broadcast notifications as toast
-  useEffect(() => {
-    if (newNotification?.type === 'broadcast') {
-      toast.custom((t) => (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 max-w-sm cursor-pointer hover:shadow-xl transition-shadow"
-          onClick={() => {
-            if (newNotification.websiteUrl) {
-              window.open(newNotification.websiteUrl, '_blank');
-            }
-            toast.dismiss(t.id);
-          }}>
-          {newNotification.imageUrl && (
-            <img src={newNotification.imageUrl} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
-          )}
-          <h3 className="font-bold text-gray-800">{newNotification.title}</h3>
-          <p className="text-sm text-gray-600 mt-1">{newNotification.message}</p>
-          <p className="text-xs text-blue-500 mt-2">Tap to open →</p>
-        </div>
-      ), { duration: 8000, position: 'top-center' });
-      clearNotification();
-    }
-  }, [newNotification, clearNotification]);
 
   const handleDownload = () => {
     if (window.deferredPrompt) {

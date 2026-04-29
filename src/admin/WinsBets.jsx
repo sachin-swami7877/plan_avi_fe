@@ -5,8 +5,12 @@ import { IoChevronBack, IoChevronForward, IoCalendarOutline, IoFunnelOutline, Io
 const PER_PAGE = 20;
 
 const todayStr = () => {
+  // Use LOCAL time (not UTC) to avoid timezone day-shift in IST
   const d = new Date();
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 };
 
 const WinsBets = () => {

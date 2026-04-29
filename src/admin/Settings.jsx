@@ -54,6 +54,7 @@ const Settings = () => {
   const [notificationImage, setNotificationImage] = useState(null);
   const [notificationImageUrl, setNotificationImageUrl] = useState(null);
   const [sendingNotification, setSendingNotification] = useState(false);
+  const [notifReach, setNotifReach] = useState(null);
 
   useEffect(() => {
     fetchSettings();
@@ -332,12 +333,16 @@ const Settings = () => {
       <Section title="Payment QR & UPI" desc="QR code and UPI details shown on user deposit page.">
         <div className="space-y-3">
           {qrCodeUrl && <img src={qrCodeUrl} alt="QR" className="w-40 h-40 object-contain rounded-lg border" />}
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-            <input type="file" accept="image/*" onChange={(e) => setQrFile(e.target.files[0])} className="text-sm w-full sm:w-auto" />
-            <button onClick={handleUploadQr} disabled={!qrFile || qrUploading} className="bg-primary-700 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50 w-full sm:w-auto">
-              {qrUploading ? 'Uploading...' : 'Upload QR'}
-            </button>
-          </div>
+          {isSuperAdmin ? (
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+              <input type="file" accept="image/*" onChange={(e) => setQrFile(e.target.files[0])} className="text-sm w-full sm:w-auto" />
+              <button onClick={handleUploadQr} disabled={!qrFile || qrUploading} className="bg-primary-700 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50 w-full sm:w-auto">
+                {qrUploading ? 'Uploading...' : 'Upload QR'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400 italic">QR upload is restricted to Super Admin only.</p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">UPI ID</label>
@@ -686,6 +691,52 @@ const Settings = () => {
 
           <Section title="Send Notification" desc="Send push notifications to all users with optional image.">
             <div className="space-y-4">
+              {/* Reach stats */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-blue-700 uppercase">Push Reach</p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const res = await adminAPI.getNotificationReach();
+                        setNotifReach(res.data);
+                      } catch {
+                        toast.error('Failed to load reach stats');
+                      }
+                    }}
+                    className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-semibold"
+                  >
+                    {notifReach ? 'Refresh' : 'Check'}
+                  </button>
+                </div>
+                {notifReach ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    <div className="bg-white rounded-md p-2">
+                      <p className="text-[10px] text-gray-500">Active Users</p>
+                      <p className="text-sm font-bold text-gray-800">{notifReach.totalActiveUsers}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-2">
+                      <p className="text-[10px] text-gray-500">Reachable</p>
+                      <p className="text-sm font-bold text-green-600">{notifReach.usersWithPushEnabled}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-2">
+                      <p className="text-[10px] text-gray-500">Not Reachable</p>
+                      <p className="text-sm font-bold text-red-500">{notifReach.usersWithoutPushEnabled}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-2">
+                      <p className="text-[10px] text-gray-500">Reach %</p>
+                      <p className="text-sm font-bold text-blue-700">{notifReach.reachPercent}%</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">Click "Check" to see how many users will receive the notification.</p>
+                )}
+                <p className="text-[10px] text-gray-500 mt-2 italic">
+                  Only users who have granted notification permission in their browser will receive it.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title (Optional)</label>
                 <input

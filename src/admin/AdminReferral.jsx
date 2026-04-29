@@ -4,7 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import DatePickerModal from '../components/DatePickerModal';
 import toast from 'react-hot-toast';
 
-function toISODate(d) { return d.toISOString().slice(0, 10); }
+function toISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
 function getToday() { return toISODate(new Date()); }
 
 /* ── Shared search input ── */
@@ -354,6 +359,28 @@ const AllReferredUsersTab = () => {
   const [openReferrer, setOpenReferrer] = useState(null);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Commission history modal state
+  const [historyModal, setHistoryModal] = useState(null); // { referrerId, referrerName, referredUserId, referredUserName }
+  const [historyData, setHistoryData] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const openHistory = useCallback(async (ref) => {
+    setHistoryModal(ref);
+    setHistoryLoading(true);
+    setHistoryData(null);
+    try {
+      const res = await referralAPI.getCommissionHistory({
+        referrerId: ref.referrerId,
+        ...(ref.referredUserId && { referredUserId: ref.referredUserId }),
+      });
+      setHistoryData(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
 
   // Debounce search to avoid hammering the server
   useEffect(() => {
@@ -478,10 +505,21 @@ const AllReferredUsersTab = () => {
                             {ru.totalCommission > 0 ? (
                               <>
                                 <p className="text-xs font-semibold text-green-600">₹{ru.totalCommission} total</p>
-                                <div className="flex gap-1.5 justify-end">
+                                <div className="flex gap-1.5 justify-end items-center">
                                   {ru.todayCommission > 0 && <span className="text-[10px] text-blue-500">Today ₹{ru.todayCommission}</span>}
                                   {ru.pending > 0 && <span className="text-[10px] text-amber-500">Pen ₹{ru.pending}</span>}
                                   {ru.redeemed > 0 && <span className="text-[10px] text-emerald-500">Red ₹{ru.redeemed}</span>}
+                                  <button
+                                    onClick={() => openHistory({
+                                      referrerId: g.referrer?._id,
+                                      referrerName: g.referrer?.name,
+                                      referredUserId: ru.user?._id,
+                                      referredUserName: ru.user?.name,
+                                    })}
+                                    className="text-[10px] bg-primary-600 text-white px-2 py-0.5 rounded-full font-semibold ml-1"
+                                  >
+                                    History
+                                  </button>
                                 </div>
                               </>
                             ) : (
@@ -507,6 +545,85 @@ const AllReferredUsersTab = () => {
           <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
           <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages}
             className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm font-medium disabled:opacity-30">Next</button>
+        </div>
+      )}
+
+      {/* Commission History Modal */}
+      {historyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setHistoryModal(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800">Commission History</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Referrer: <strong>{historyModal.referrerName}</strong>
+                    {historyModal.referredUserName && <> • From: <strong>{historyModal.referredUserName}</strong></>}
+                  </p>
+                </div>
+                <button onClick={() => setHistoryModal(null)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+              {historyData?.summary && (
+                <div className="grid grid-cols-4 gap-2 mt-3">
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <p className="text-[10px] text-gray-500">Records</p>
+                    <p className="text-sm font-bold text-gray-800">{historyData.summary.totalRecords}</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-2 text-center">
+                    <p className="text-[10px] text-green-600">Total</p>
+                    <p className="text-sm font-bold text-green-700">₹{historyData.summary.totalEarned}</p>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-2 text-center">
+                    <p className="text-[10px] text-amber-600">Pending</p>
+                    <p className="text-sm font-bold text-amber-700">₹{historyData.summary.pending}</p>
+                  </div>
+                  <div className="bg-emerald-50 rounded-lg p-2 text-center">
+                    <p className="text-[10px] text-emerald-600">Redeemed</p>
+                    <p className="text-sm font-bold text-emerald-700">₹{historyData.summary.redeemed}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="p-4">
+              {historyLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-6 h-6 border-[3px] border-primary-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : !historyData?.records?.length ? (
+                <p className="text-sm text-gray-500 text-center py-6">No commission records found</p>
+              ) : (
+                <div className="space-y-2">
+                  {historyData.records.map((r) => (
+                    <div key={r._id} className={`rounded-lg border p-3 ${r.status === 'redeemed' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800">
+                            From: {r.referredUserId?.name || '—'} <span className="text-xs text-gray-400 font-normal">({r.referredUserId?.phone || '—'})</span>
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            Bet ₹{r.betAmount} • {r.commissionPct}% commission
+                            {r.matchId?.roomCode && <> • Room {r.matchId.roomCode}</>}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            {new Date(r.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            {r.redeemedAt && <> • Redeemed {new Date(r.redeemedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</>}
+                          </p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm font-bold text-green-600">+₹{r.commissionAmount}</p>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${r.status === 'redeemed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {r.status || 'pending'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

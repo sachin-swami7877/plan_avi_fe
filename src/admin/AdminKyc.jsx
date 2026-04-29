@@ -19,11 +19,22 @@ export default function AdminKyc() {
   const [rejectingId, setRejectingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [acting, setActing] = useState(false);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // Reset page when search changes
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminAPI.getKycRequests({ status: statusTab, page, limit: 30 });
+      const res = await adminAPI.getKycRequests({ status: statusTab, page, limit: 30, search: debouncedSearch });
       setRequests(res.data.requests || []);
       setTotalPages(res.data.totalPages || 1);
       setTotal(res.data.total || 0);
@@ -33,7 +44,7 @@ export default function AdminKyc() {
     } finally {
       setLoading(false);
     }
-  }, [statusTab, page]);
+  }, [statusTab, page, debouncedSearch]);
 
   useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
@@ -86,6 +97,31 @@ export default function AdminKyc() {
         {pendingCount > 0 && <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-semibold">{pendingCount} pending</span>}
       </div>
 
+      {/* Search bar */}
+      <div className="relative">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, phone, or Aadhaar number…"
+          className="w-full pl-10 pr-9 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            aria-label="Clear search"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
       {/* Status tabs */}
       <div className="flex gap-2 flex-wrap">
         {STATUS_TABS.map((t) => (
@@ -99,7 +135,7 @@ export default function AdminKyc() {
         ))}
       </div>
 
-      <div className="text-xs text-gray-400">{total} requests</div>
+      <div className="text-xs text-gray-400">{total} requests{debouncedSearch ? ` matching "${debouncedSearch}"` : ''}</div>
 
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600" /></div>

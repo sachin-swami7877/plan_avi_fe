@@ -40,10 +40,28 @@ export async function requestNotificationPermission() {
   }
 
   try {
+    // Register the FCM-dedicated SW (firebase-messaging-sw.js) — required for background push
+    let fcmReg;
+    try {
+      fcmReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/firebase-cloud-messaging-push-scope' });
+      // Wait for SW to be active
+      if (fcmReg.installing) {
+        await new Promise((resolve) => {
+          const sw = fcmReg.installing;
+          sw.addEventListener('statechange', () => {
+            if (sw.state === 'activated') resolve();
+          });
+        });
+      }
+    } catch (regErr) {
+      console.warn('[FCM] FCM SW register failed, falling back to default SW:', regErr.message);
+      fcmReg = await navigator.serviceWorker.getRegistration();
+    }
+
     const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
     const token = await getToken(m, {
       vapidKey,
-      serviceWorkerRegistration: await navigator.serviceWorker.getRegistration(),
+      serviceWorkerRegistration: fcmReg,
     });
     return token;
   } catch (err) {

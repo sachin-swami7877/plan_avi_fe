@@ -202,6 +202,7 @@ export const adminAPI = {
   getWalletRequests: (params) => api.get('/admin/wallet-requests', { params }),
   processWalletRequest: (id, action, editedAmount) =>
     api.put(`/admin/wallet-requests/${id}`, { action, ...(editedAmount !== undefined && { editedAmount }) }),
+  bulkDeleteWalletRequests: (ids) => api.post('/admin/wallet-requests/bulk-delete', { ids }),
   getBets: (params) => api.get('/admin/bets', { params }),
   deleteBets: (ids) => api.post('/admin/bets/delete', { ids }),
   bulkClearBets: (from, to, status) => api.post('/admin/bets/bulk-clear', { from, to, status }),
@@ -251,6 +252,7 @@ export const adminAPI = {
   rejectKyc: (id, reason) => api.put(`/admin/kyc/${id}/reject`, { reason }),
   deleteKyc: (id) => api.delete(`/admin/kyc/${id}`),
   sendNotification: (formData) => api.post('/admin/notifications/send', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getNotificationReach: () => api.get('/admin/notifications/reach'),
 };
 
 export const referralAPI = {
@@ -258,6 +260,7 @@ export const referralAPI = {
   redeemCommission: () => api.post('/referral/redeem'),
   getAdminReferrals: (params) => api.get('/admin/referrals', { params }),
   getAllReferredUsers: (params) => api.get('/admin/referrals/all-referred', { params }),
+  getCommissionHistory: (params) => api.get('/admin/referrals/history', { params }),
   adjustCommission: (id, data) => api.put(`/admin/referrals/${id}/adjust`, data),
 };
 
