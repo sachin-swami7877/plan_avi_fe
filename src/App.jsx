@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { SocketProvider, useSocket } from './context/SocketContext';
+import { SocketProvider, SocketContext } from './context/SocketContext';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import usePushNotifications from './hooks/usePushNotifications';
@@ -163,31 +163,34 @@ const SubAdminBlock = ({ children }) => {
 };
 
 // Global toast for broadcast notifications — works on any page
+// Uses useContext directly (not useSocket) so it gracefully no-ops on routes that
+// aren't wrapped in SocketProvider (login page, public routes, etc.)
 function BroadcastToastListener() {
-  const { newNotification, clearNotification } = useSocket();
+  const ctx = useContext(SocketContext);
+  const newNotification = ctx?.newNotification;
+  const clearNotification = ctx?.clearNotification;
 
   useEffect(() => {
-    if (newNotification?.type === 'broadcast') {
-      toast.custom((t) => (
-        <div
-          className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 max-w-sm cursor-pointer hover:shadow-xl transition-shadow"
-          onClick={() => {
-            if (newNotification.websiteUrl) {
-              window.open(newNotification.websiteUrl, '_blank', 'noopener,noreferrer');
-            }
-            toast.dismiss(t.id);
-          }}
-        >
-          {newNotification.imageUrl && (
-            <img src={newNotification.imageUrl} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
-          )}
-          <h3 className="font-bold text-gray-800">{newNotification.title}</h3>
-          <p className="text-sm text-gray-600 mt-1">{newNotification.message}</p>
-          {newNotification.websiteUrl && <p className="text-xs text-blue-500 mt-2">Tap to open →</p>}
-        </div>
-      ), { duration: 8000, position: 'top-center' });
-      clearNotification();
-    }
+    if (!newNotification || newNotification.type !== 'broadcast') return;
+    toast.custom((t) => (
+      <div
+        className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 max-w-sm cursor-pointer hover:shadow-xl transition-shadow"
+        onClick={() => {
+          if (newNotification.websiteUrl) {
+            window.open(newNotification.websiteUrl, '_blank', 'noopener,noreferrer');
+          }
+          toast.dismiss(t.id);
+        }}
+      >
+        {newNotification.imageUrl && (
+          <img src={newNotification.imageUrl} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
+        )}
+        <h3 className="font-bold text-gray-800">{newNotification.title}</h3>
+        <p className="text-sm text-gray-600 mt-1">{newNotification.message}</p>
+        {newNotification.websiteUrl && <p className="text-xs text-blue-500 mt-2">Tap to open →</p>}
+      </div>
+    ), { duration: 8000, position: 'top-center' });
+    if (typeof clearNotification === 'function') clearNotification();
   }, [newNotification, clearNotification]);
 
   return null;

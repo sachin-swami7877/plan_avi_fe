@@ -29,23 +29,37 @@ export default function usePushNotifications(user) {
       }
     })();
 
-    // Show foreground notifications as toast (when user has the page open)
+    // Show foreground notifications as rich toast (when user has the page open)
     const unsubscribe = onForegroundMessage((payload) => {
       const notif = payload.notification || {};
       const data = payload.data || {};
-      const title = notif.title || data.title;
-      const body = notif.body || data.body;
+      const title = notif.title || data.title || 'RushkroLudo';
+      const body = notif.body || data.body || '';
       const url = data.websiteUrl || data.link;
-      if (title || body) {
-        toast(body || title, {
-          icon: '🔔',
-          duration: 6000,
-          ...(url && {
-            // Click-to-open behavior is handled by the toast UI in App-level listener (broadcasts).
-            // For other foreground messages, simple toast is enough.
-          }),
-        });
-      }
+      const imageUrl = data.imageUrl || notif.image;
+      if (!title && !body) return;
+
+      toast.custom((t) => (
+        <div
+          className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 max-w-sm cursor-pointer hover:shadow-xl transition-shadow"
+          onClick={() => {
+            if (url) window.open(url, '_blank', 'noopener,noreferrer');
+            toast.dismiss(t.id);
+          }}
+        >
+          {imageUrl && (
+            <img src={imageUrl} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
+          )}
+          <div className="flex items-start gap-2">
+            <span className="text-xl">🔔</span>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-gray-800 text-sm">{title}</h3>
+              {body && <p className="text-sm text-gray-600 mt-0.5">{body}</p>}
+              {url && <p className="text-xs text-blue-500 mt-1">Tap to open →</p>}
+            </div>
+          </div>
+        </div>
+      ), { duration: 8000, position: 'top-center' });
     });
 
     return () => {
