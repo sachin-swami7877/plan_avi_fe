@@ -138,7 +138,7 @@ const Home = () => {
       <div className="max-w-md mx-auto p-3 w-full min-w-0">
         {/* User Warning — above carousel */}
         {userWarning && (
-          <div className="mb-3 bg-[#7B1F3A] rounded-xl px-4 py-3 flex items-start gap-2">
+          <div className="mb-3 rounded-xl px-4 py-3 flex items-start gap-2" style={{ backgroundColor: 'rgb(220, 53, 69)' }}>
             <span className="text-yellow-300 text-xl mt-0.5">&#9888;</span>
             <p className="text-white text-sm font-semibold">{userWarning}</p>
           </div>
@@ -161,7 +161,7 @@ const Home = () => {
               <div className="w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-          <div className="grid grid-cols-2 gap-4 pt-3">
+          <div className="grid grid-cols-2 gap-3 pt-3">
             {gameCards.filter((g) => {
               if (g.id === 'aviator' && aviatorComingSoon) return false;
               if (g.id === 'lucky-draw' && spinnerComingSoon) return false;
@@ -169,48 +169,49 @@ const Home = () => {
               if (g.id === 'whatsapp') return true;
               return true;
             }).map((game) => (
-              <button
-                key={game.id}
-                onClick={() => {
-                  if (game.isExternal) {
-                    window.location.href = supportWhatsApp ? `https://wa.me/${supportWhatsApp}` : 'https://wa.me/';
-                  } else {
-                    navigate(game.path);
-                  }
-                }}
-                className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-square relative"
-              >
-                {/* LIVE badge — inside image top-left */}
-                <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
+              <div key={game.id} className="flex flex-col">
+                {/* LIVE badge — above the box, outside */}
+                <div className="flex items-center gap-1 bg-black/70 rounded-full px-2 py-0.5 self-start mb-1 ml-1">
                   <span className="w-2 h-2 rounded-full bg-red-500" style={{ animation: 'liveBlink 1s ease-in-out infinite' }} />
-                  <span className="text-[10px] font-bold text-white uppercase">LIVE</span>
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wide">LIVE</span>
                 </div>
-                {game.customRender ? (
-                  game.customRender
-                ) : (
-                  <div className={`w-full h-full bg-gradient-to-br ${game.gradient} flex items-center justify-center text-white relative overflow-hidden`}>
-                    {game.image ? (
-                      <>
-                        <img
-                          src={game.image}
-                          alt={game.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            const el = e.target.nextElementSibling;
-                            if (el) el.style.display = 'flex';
-                          }}
-                        />
-                        <div className="absolute inset-0 hidden items-center justify-center" style={{ display: 'none' }}>
-                          <div className="w-14 h-14">{game.fallbackIcon}</div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="w-16 h-16 flex-shrink-0">{game.fallbackIcon || game.icon}</div>
-                    )}
-                  </div>
-                )}
-              </button>
+                <button
+                  onClick={() => {
+                    if (game.isExternal) {
+                      window.location.href = supportWhatsApp ? `https://wa.me/${supportWhatsApp}` : 'https://wa.me/';
+                    } else {
+                      navigate(game.path);
+                    }
+                  }}
+                  className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-[4/5]"
+                >
+                  {game.customRender ? (
+                    game.customRender
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-br ${game.gradient} flex items-center justify-center text-white relative overflow-hidden`}>
+                      {game.image ? (
+                        <>
+                          <img
+                            src={game.image}
+                            alt={game.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              const el = e.target.nextElementSibling;
+                              if (el) el.style.display = 'flex';
+                            }}
+                          />
+                          <div className="absolute inset-0 hidden items-center justify-center" style={{ display: 'none' }}>
+                            <div className="w-14 h-14">{game.fallbackIcon}</div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-16 h-16 flex-shrink-0">{game.fallbackIcon || game.icon}</div>
+                      )}
+                    </div>
+                  )}
+                </button>
+              </div>
             ))}
           </div>
           )}
