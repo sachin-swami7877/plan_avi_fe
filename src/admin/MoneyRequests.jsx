@@ -202,8 +202,8 @@ const MoneyRequests = () => {
         >
           Deposit Requests
           {tabPendingCounts.deposits > 0 && (
-            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === 'deposit' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
-              Pending({tabPendingCounts.deposits})
+            <span className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${tab === 'deposit' ? 'bg-white/30 text-white' : 'bg-emerald-600 text-white'}`}>
+              {tabPendingCounts.deposits}
             </span>
           )}
         </button>
@@ -215,8 +215,8 @@ const MoneyRequests = () => {
         >
           Withdrawal Requests
           {tabPendingCounts.withdrawals > 0 && (
-            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === 'withdrawal' ? 'bg-white/25 text-white' : 'bg-rose-100 text-rose-700'}`}>
-              Pending({tabPendingCounts.withdrawals})
+            <span className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${tab === 'withdrawal' ? 'bg-white/30 text-white' : 'bg-rose-600 text-white'}`}>
+              {tabPendingCounts.withdrawals}
             </span>
           )}
         </button>
