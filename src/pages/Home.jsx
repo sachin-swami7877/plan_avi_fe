@@ -217,7 +217,7 @@ const Home = () => {
         </div>
 
         {/* Ad Banner */}
-        <div className="rounded-xl overflow-hidden shadow-sm mb-4">
+        {/* <div className="rounded-xl overflow-hidden shadow-sm mb-4">
           <img
             src="/ad.jpeg"
             alt="Promotional Banner"
@@ -226,7 +226,7 @@ const Home = () => {
               e.target.style.display = 'none';
             }}
           />
-        </div>
+        </div> */}
 
         {/* Logo Banner — REMOVED (Static Only) */}
         {/* <div className="rounded-xl overflow-hidden shadow-sm mb-4">
