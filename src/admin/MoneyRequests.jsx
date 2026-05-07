@@ -27,6 +27,7 @@ const MoneyRequests = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [tabPendingCounts, setTabPendingCounts] = useState({ deposits: 0, withdrawals: 0 });
 
   // Date filter state — default to 'today'
   const [datePreset, setDatePreset] = useState('today'); // '', 'today', 'last5', 'custom'
@@ -67,6 +68,18 @@ const MoneyRequests = () => {
     fetchRequests();
   }, [fetchRequests]);
 
+  const fetchTabPendingCounts = useCallback(async () => {
+    try {
+      const res = await adminAPI.getPendingCounts();
+      setTabPendingCounts({
+        deposits: res.data.pendingDeposits || 0,
+        withdrawals: res.data.pendingWithdrawals || 0,
+      });
+    } catch {}
+  }, []);
+
+  useEffect(() => { fetchTabPendingCounts(); }, [fetchTabPendingCounts]);
+
   // Auto-refresh on new deposit/withdrawal socket events
   useEffect(() => {
     if (!socket) return;
@@ -89,6 +102,7 @@ const MoneyRequests = () => {
       toast.success(`Request ${action}d successfully`);
       setEditAmounts((prev) => { const copy = { ...prev }; delete copy[id]; return copy; });
       fetchRequests();
+      fetchTabPendingCounts();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to process request');
     } finally {
@@ -182,19 +196,29 @@ const MoneyRequests = () => {
       <div className="flex bg-white rounded-xl p-1 mb-3 shadow-sm">
         <button
           onClick={() => switchTab('deposit')}
-          className={`flex-1 py-3 rounded-lg font-semibold text-sm transition-colors ${
+          className={`flex-1 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
             tab === 'deposit' ? 'bg-emerald-600 text-white shadow' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Deposit Requests
+          {tabPendingCounts.deposits > 0 && (
+            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === 'deposit' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+              Pending({tabPendingCounts.deposits})
+            </span>
+          )}
         </button>
         <button
           onClick={() => switchTab('withdrawal')}
-          className={`flex-1 py-3 rounded-lg font-semibold text-sm transition-colors ${
+          className={`flex-1 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
             tab === 'withdrawal' ? 'bg-rose-600 text-white shadow' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Withdrawal Requests
+          {tabPendingCounts.withdrawals > 0 && (
+            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === 'withdrawal' ? 'bg-white/25 text-white' : 'bg-rose-100 text-rose-700'}`}>
+              Pending({tabPendingCounts.withdrawals})
+            </span>
+          )}
         </button>
       </div>
 

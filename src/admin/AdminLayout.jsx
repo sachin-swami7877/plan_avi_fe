@@ -13,13 +13,23 @@ import toast from 'react-hot-toast';
 import { playNotificationSound } from '../utils/audioSounds';
 import { adminAPI, settingsAPI } from '../services/api';
 
+// localStorage keys for "last viewed" timestamps
+const LS_MONEY   = 'adminViewedMoneyAt';
+const LS_ALERTS  = 'adminViewedAlertsAt';
+const LS_LUDO    = 'adminViewedLudoAt';
+const LS_KYC     = 'adminViewedKycAt';
+
 const AdminLayout = () => {
   const { user, logout, isAdmin, isSubAdmin, role } = useAuth();
   const { socket } = useSocket();
   const location = useLocation();
-  const [pendingCount, setPendingCount] = useState({ deposits: 0, withdrawals: 0 });
-  const [ludoAlertCount, setLudoAlertCount] = useState(0);
-  const [kycAlertCount, setKycAlertCount] = useState(0);
+
+  // Unread counts (survive refresh via localStorage timestamps)
+  const [unreadMoney, setUnreadMoney]   = useState(0); // deposits + withdrawals unread
+  const [unreadAlerts, setUnreadAlerts] = useState(0); // all 4 categories unread
+  const [unreadLudo, setUnreadLudo]     = useState(0);
+  const [unreadKyc, setUnreadKyc]       = useState(0);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [appLogoUrl, setAppLogoUrl] = useState(null);
 
@@ -27,15 +37,15 @@ const AdminLayout = () => {
   const allSidebarItems = [
     { path: '/admin', label: 'Dashboard', icon: '📊', subAdmin: true },
     { path: '/admin/users', label: 'Users', icon: '👥', subAdmin: true },
-    { path: '/admin/money', label: 'Money', icon: '💰', badge: pendingCount.deposits + pendingCount.withdrawals, subAdmin: true },
+    { path: '/admin/money', label: 'Money', icon: '💰', badge: unreadMoney, subAdmin: true },
     { path: '/admin/bets', label: 'All Bets', icon: '🎰', subAdmin: false },
     { path: '/admin/wins-bets', label: 'Winning Bets', icon: '🏆', subAdmin: false },
     { path: '/admin/spinner-records', label: 'Spinner Records', icon: '🎡', subAdmin: false },
-    { path: '/admin/notifications', label: 'Notifications', icon: '🔔', badge: pendingCount.deposits + pendingCount.withdrawals + ludoAlertCount + kycAlertCount, subAdmin: true },
+    { path: '/admin/notifications', label: 'Notifications', icon: '🔔', badge: unreadAlerts, subAdmin: true },
     { path: '/admin/bonus-records', label: 'Bonus Records', icon: '🎁', subAdmin: false },
-    { path: '/admin/ludo', label: 'Ludo', icon: '🎲', badge: ludoAlertCount, subAdmin: true },
+    { path: '/admin/ludo', label: 'Ludo', icon: '🎲', badge: unreadLudo, subAdmin: true },
     { path: '/admin/profit', label: 'Profit', icon: '💹', subAdmin: false },
-    { path: '/admin/kyc', label: 'KYC', icon: '🪪', badge: kycAlertCount, subAdmin: false },
+    { path: '/admin/kyc', label: 'KYC', icon: '🪪', badge: unreadKyc, subAdmin: false },
     { path: '/admin/database', label: 'Database', icon: '🗄️', subAdmin: false },
     ...(role === 'superadmin' ? [{ path: '/admin/credit-log', label: 'Credit Log', icon: '📝', subAdmin: false }] : []),
     { path: '/admin/settings', label: 'Settings', icon: '⚙️', subAdmin: false },
@@ -52,10 +62,10 @@ const AdminLayout = () => {
   const allMobileNavItems = [
     { path: '/admin', label: 'Home', icon: IoGridOutline, activeIcon: IoGrid, subAdmin: true },
     { path: '/admin/users', label: 'Users', icon: IoPeopleOutline, activeIcon: IoPeople, subAdmin: true },
-    { path: '/admin/money', label: 'Money', icon: HiOutlineCurrencyRupee, activeIcon: HiCurrencyRupee, badge: pendingCount.deposits + pendingCount.withdrawals, subAdmin: true },
+    { path: '/admin/money', label: 'Money', icon: HiOutlineCurrencyRupee, activeIcon: HiCurrencyRupee, badge: unreadMoney, subAdmin: true },
     { path: '/admin/bets', label: 'Bets', icon: IoBarChartOutline, activeIcon: IoBarChart, subAdmin: false },
-    { path: '/admin/notifications', label: 'Alerts', icon: IoNotificationsOutline, activeIcon: IoNotifications, badge: pendingCount.deposits + pendingCount.withdrawals + ludoAlertCount + kycAlertCount, subAdmin: true },
-    { path: '/admin/ludo', label: 'Ludo', icon: IoGridOutline, activeIcon: IoGrid, badge: ludoAlertCount, subAdmin: true },
+    { path: '/admin/notifications', label: 'Alerts', icon: IoNotificationsOutline, activeIcon: IoNotifications, badge: unreadAlerts, subAdmin: true },
+    { path: '/admin/ludo', label: 'Ludo', icon: IoGridOutline, activeIcon: IoGrid, badge: unreadLudo, subAdmin: true },
   ];
 
   const mobileNavItems = isManager
@@ -69,29 +79,43 @@ const AdminLayout = () => {
     }).catch(() => {});
   }, []);
 
-  // Fetch initial pending counts from API
+  // Single fetch on mount — passes all 4 timestamps, backend returns per-badge unread counts
   useEffect(() => {
-    adminAPI.getPendingCounts().then(res => {
-      const { pendingDeposits, pendingWithdrawals, pendingLudo, pendingKyc } = res.data;
-      setPendingCount({ deposits: pendingDeposits || 0, withdrawals: pendingWithdrawals || 0 });
-      setLudoAlertCount(pendingLudo || 0);
-      setKycAlertCount(pendingKyc || 0);
+    const params = {};
+    const m = localStorage.getItem(LS_MONEY);
+    const a = localStorage.getItem(LS_ALERTS);
+    const l = localStorage.getItem(LS_LUDO);
+    const k = localStorage.getItem(LS_KYC);
+    if (m) params.sinceMoney  = m;
+    if (a) params.sinceAlerts = a;
+    if (l) params.sinceLudo   = l;
+    if (k) params.sinceKyc    = k;
+
+    adminAPI.getPendingCounts(Object.keys(params).length ? params : undefined).then(res => {
+      const d = res.data;
+      setUnreadMoney((d.unreadDeposits || 0) + (d.unreadWithdrawals || 0));
+      setUnreadAlerts(d.unreadAlerts || 0);
+      setUnreadLudo(d.unreadLudo || 0);
+      setUnreadKyc(d.unreadKyc   || 0);
     }).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!socket) return;
     socket.on('admin:wallet-request', () => {
-      setPendingCount(prev => ({ ...prev, deposits: prev.deposits + 1 }));
+      setUnreadMoney(prev => prev + 1);
+      setUnreadAlerts(prev => prev + 1);
       playNotificationSound();
     });
     socket.on('admin:withdrawal-request', () => {
-      setPendingCount(prev => ({ ...prev, withdrawals: prev.withdrawals + 1 }));
+      setUnreadMoney(prev => prev + 1);
+      setUnreadAlerts(prev => prev + 1);
       playNotificationSound();
     });
     socket.on('admin:ludo-result-request', (data) => {
       toast(`Ludo result submitted by ${data?.userName || 'a player'}`, { icon: '🎲', duration: 5000 });
-      setLudoAlertCount(prev => prev + 1);
+      setUnreadLudo(prev => prev + 1);
+      setUnreadAlerts(prev => prev + 1);
       playNotificationSound();
     });
     socket.on('admin:new-user', (data) => {
@@ -100,7 +124,8 @@ const AdminLayout = () => {
     });
     socket.on('admin:kyc-request', (data) => {
       toast(`KYC request from ${data?.userName || 'a user'}`, { icon: '🪪', duration: 6000 });
-      setKycAlertCount(prev => prev + 1);
+      setUnreadKyc(prev => prev + 1);
+      setUnreadAlerts(prev => prev + 1);
       playNotificationSound();
     });
     return () => {
@@ -112,16 +137,24 @@ const AdminLayout = () => {
     };
   }, [socket]);
 
-  // Reset badges when admin visits the respective pages
+  // Mark as read when admin visits a page — persists to localStorage so refresh keeps it read
   useEffect(() => {
-    if (location.pathname.startsWith('/admin/ludo')) {
-      setLudoAlertCount(0);
-    }
+    const now = new Date().toISOString();
     if (location.pathname.startsWith('/admin/money')) {
-      setPendingCount({ deposits: 0, withdrawals: 0 });
+      localStorage.setItem(LS_MONEY, now);
+      setUnreadMoney(0);
+    }
+    if (location.pathname.startsWith('/admin/notifications')) {
+      localStorage.setItem(LS_ALERTS, now);
+      setUnreadAlerts(0);
+    }
+    if (location.pathname.startsWith('/admin/ludo')) {
+      localStorage.setItem(LS_LUDO, now);
+      setUnreadLudo(0);
     }
     if (location.pathname.startsWith('/admin/kyc')) {
-      setKycAlertCount(0);
+      localStorage.setItem(LS_KYC, now);
+      setUnreadKyc(0);
     }
   }, [location.pathname]);
 

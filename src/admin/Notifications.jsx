@@ -6,11 +6,20 @@ import { useSocket } from '../context/SocketContext';
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pendingSummary, setPendingSummary] = useState({ deposits: 0, withdrawals: 0, ludo: 0, kyc: 0 });
   const { socket } = useSocket();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotifications();
+    adminAPI.getPendingCounts().then(res => {
+      setPendingSummary({
+        deposits: res.data.pendingDeposits || 0,
+        withdrawals: res.data.pendingWithdrawals || 0,
+        ludo: res.data.pendingLudo || 0,
+        kyc: res.data.pendingKyc || 0,
+      });
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -116,7 +125,28 @@ const Notifications = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Notifications</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-3">Notifications</h1>
+
+      {/* Pending counts summary */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        {[
+          { label: 'Deposits', count: pendingSummary.deposits, color: 'bg-emerald-100 text-emerald-700', path: '/admin/money' },
+          { label: 'Withdrawals', count: pendingSummary.withdrawals, color: 'bg-rose-100 text-rose-700', path: '/admin/money' },
+          { label: 'Ludo', count: pendingSummary.ludo, color: 'bg-purple-100 text-purple-700', path: '/admin/ludo' },
+          { label: 'KYC', count: pendingSummary.kyc, color: 'bg-blue-100 text-blue-700', path: '/admin/kyc' },
+        ].map(({ label, count, color, path }) => (
+          <button
+            key={label}
+            onClick={() => navigate(path)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm ${color} hover:opacity-80 transition-opacity`}
+          >
+            {label}
+            <span className="bg-white/60 rounded-full px-1.5 py-0.5 text-xs font-bold">
+              Pending({count})
+            </span>
+          </button>
+        ))}
+      </div>
 
       {notifications.length === 0 ? (
         <div className="bg-white rounded-xl p-8 text-center text-gray-500">

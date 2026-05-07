@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 // Helper to render screenshot — handles both Cloudinary URLs and base64 data URIs
 function ScreenshotView({ url }) {
   const [imgError, setImgError] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   if (!url) return null;
   const isBase64 = url.startsWith('data:');
 
@@ -34,11 +35,28 @@ function ScreenshotView({ url }) {
         referrerPolicy="no-referrer"
         onError={() => setImgError(true)}
         className="max-w-[200px] max-h-[200px] rounded-lg border border-gray-300 cursor-pointer object-cover bg-gray-100"
-        onClick={() => {
-          // Open the image directly — safer than document.write (popup-blocker tolerant)
-          window.open(safeUrl, '_blank', 'noopener,noreferrer');
-        }}
+        onClick={() => setShowModal(true)}
       />
+      {showModal && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/90"
+          onClick={() => setShowModal(false)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/80 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold z-10"
+            onClick={(e) => { e.stopPropagation(); setShowModal(false); }}
+          >
+            ×
+          </button>
+          <img
+            src={safeUrl}
+            alt="Screenshot Full"
+            referrerPolicy="no-referrer"
+            className="max-w-full max-h-full w-full h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -724,17 +742,35 @@ export default function AdminLudo() {
                       </div>
                     ) : (
                       /* Normal result request */
-                      <div className="flex flex-wrap gap-1.5">
-                        {players.length ? players.map((p) => (
-                          <button
-                            key={p.userId}
-                            onClick={() => approveRequest(r._id, p.userId)}
-                            disabled={approvingId === r._id}
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                          >
-                            {approvingId === r._id ? '...' : `${p.userName} won ✓`}
-                          </button>
-                        )) : hasLegacy && (
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        {players.length ? (() => {
+                          const bothWin = claims.length >= 2 && claims.every(c => c.type === 'win' || c.type === 'win_dispute');
+                          return players.map((p) => {
+                            const playerClaim = claims.find(c => c.userId?.toString() === p.userId?.toString());
+                            const claimedWin = playerClaim?.type === 'win' || playerClaim?.type === 'win_dispute';
+                            const claimedLoss = playerClaim?.type === 'loss';
+                            let btnClass;
+                            if (bothWin) {
+                              btnClass = 'bg-orange-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50 shadow';
+                            } else if (claimedWin) {
+                              btnClass = 'bg-green-600 text-white px-6 py-3 rounded-lg text-base font-bold disabled:opacity-50 shadow-md';
+                            } else if (claimedLoss) {
+                              btnClass = 'bg-gray-400 text-white px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50';
+                            } else {
+                              btnClass = 'bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50';
+                            }
+                            return (
+                              <button
+                                key={p.userId}
+                                onClick={() => approveRequest(r._id, p.userId)}
+                                disabled={approvingId === r._id}
+                                className={btnClass}
+                              >
+                                {approvingId === r._id ? '...' : `${p.userName} won ✓`}
+                              </button>
+                            );
+                          });
+                        })() : hasLegacy && (
                           <button onClick={() => approveRequest(r._id, r.userId)} disabled={approvingId === r._id} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50">
                             {approvingId === r._id ? '...' : 'Approve'}
                           </button>
