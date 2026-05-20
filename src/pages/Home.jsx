@@ -21,7 +21,7 @@ const AdCarousel = () => {
     <div className="relative rounded-xl overflow-hidden shadow-sm mb-3">
       <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${current * 100}%)` }}>
         {AD_SLIDES.map((src, i) => (
-          <img key={i} src={src} alt={`Slide ${i + 1}`} className="w-full flex-shrink-0 h-auto object-cover" draggable={false} />
+          <img key={i} src={src} alt={`Slide ${i + 1}`} className="w-full flex-shrink-0 h-36 sm:h-40 object-cover" draggable={false} />
         ))}
       </div>
       {/* Dots */}

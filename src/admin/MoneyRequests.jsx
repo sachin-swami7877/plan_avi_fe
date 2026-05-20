@@ -8,6 +8,21 @@ import { useNavigate } from 'react-router-dom';
 
 const PER_PAGE = 25;
 
+// Format ms duration as "45s", "12m", "3h 50m", or "100d 10h 10m"
+const formatElapsed = (fromDate) => {
+  if (!fromDate) return '';
+  const ms = Date.now() - new Date(fromDate).getTime();
+  if (isNaN(ms) || ms < 0) return 'just now';
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `${sec}s`;
+  const m = Math.floor(sec / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ${m % 60}m`;
+  const d = Math.floor(h / 24);
+  return `${d}d ${h % 24}h ${m % 60}m`;
+};
+
 const MoneyRequests = () => {
   const navigate = useNavigate();
   const { socket } = useSocket();
@@ -28,6 +43,14 @@ const MoneyRequests = () => {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [tabPendingCounts, setTabPendingCounts] = useState({ deposits: 0, withdrawals: 0 });
+  const [, forceTick] = useState(0);
+
+  // Tick every 30s so the elapsed timers stay current on every filter tab
+  // (Pending status items can appear under "All" too — they all need live updates.)
+  useEffect(() => {
+    const id = setInterval(() => forceTick((t) => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   // Date filter state — default to 'today'
   const [datePreset, setDatePreset] = useState('today'); // '', 'today', 'last5', 'custom'
@@ -385,6 +408,11 @@ const MoneyRequests = () => {
                       }`}>
                         {request.status}
                       </span>
+                      {request.status === 'pending' && request.createdAt && (
+                        <p className="text-[10px] text-orange-700 font-semibold mt-0.5 whitespace-nowrap">
+                          ⏱ {formatElapsed(request.createdAt)}
+                        </p>
+                      )}
                     </div>
                     {isRejected && (
                       <button
@@ -439,6 +467,11 @@ const MoneyRequests = () => {
                       timeStyle: 'short',
                       hour12: true
                     })}</p>
+                    {request.status === 'pending' && (
+                      <p className="text-xs font-bold text-orange-700 mt-1">
+                        ⏱ Pending {formatElapsed(request.createdAt)}
+                      </p>
+                    )}
                   </div>
                 </div>
 
