@@ -2,11 +2,34 @@ import { useState, useEffect, useCallback } from 'react';
 import { adminAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
 
+// Format ms duration as "3h 50m" or "100d 10h 10m" (drops leading zero units)
+const formatElapsed = (fromDate) => {
+  if (!fromDate) return '';
+  const ms = Date.now() - new Date(fromDate).getTime();
+  if (ms < 0) return 'just now';
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `${sec}s`;
+  const m = Math.floor(sec / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ${m % 60}m`;
+  const d = Math.floor(h / 24);
+  return `${d}d ${h % 24}h ${m % 60}m`;
+};
+
 const WithdrawalRequests = () => {
   const { socket } = useSocket();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
+  const [, forceTick] = useState(0);
+
+  // Tick every 30s so pending elapsed time updates live
+  useEffect(() => {
+    if (filter !== 'pending') return;
+    const id = setInterval(() => forceTick((t) => t + 1), 30000);
+    return () => clearInterval(id);
+  }, [filter]);
 
   useEffect(() => {
     fetchRequests();
@@ -112,9 +135,16 @@ const WithdrawalRequests = () => {
                   <p className="font-bold text-lg">₹{request.userId?.walletBalance?.toFixed(2)}</p>
                 </div>
 
-                <p className="text-xs text-gray-400 mb-3">
-                  Requested: {new Date(request.createdAt).toLocaleString()}
-                </p>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-gray-400">
+                    Requested: {new Date(request.createdAt).toLocaleString()}
+                  </p>
+                  {request.status === 'pending' && (
+                    <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                      Pending {formatElapsed(request.createdAt)}
+                    </span>
+                  )}
+                </div>
 
                 {request.status === 'pending' && (
                   <div className="flex gap-2">

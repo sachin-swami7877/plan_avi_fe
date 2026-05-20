@@ -183,7 +183,7 @@ const Home = () => {
                       navigate(game.path);
                     }
                   }}
-                  className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-[3/4]"
+                  className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg active:scale-[0.98] transition-all w-full aspect-[7/9]"
                 >
                   {game.customRender ? (
                     game.customRender
