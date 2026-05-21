@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 import { IoChevronBack, IoChevronForward, IoChevronDown } from 'react-icons/io5';
 import DatePickerModal from '../components/DatePickerModal';
 import toast from 'react-hot-toast';
@@ -26,6 +27,8 @@ const formatElapsed = (fromDate) => {
 const MoneyRequests = () => {
   const navigate = useNavigate();
   const { socket } = useSocket();
+  const { role: myRole } = useAuth();
+  const isManager = myRole === 'manager';
   const [tab, setTab] = useState('deposit');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -392,7 +395,7 @@ const MoneyRequests = () => {
                         className="text-xs text-gray-500 cursor-pointer hover:text-primary-600 transition-colors"
                         onClick={(e) => { e.stopPropagation(); if (request.userId?._id) navigate(`/admin/users/${request.userId._id}`); }}
                       >
-                        {request.userId?.phone || request.userId?.email}
+                        {isManager ? request.userId?.email : (request.userId?.phone || request.userId?.email)}
                       </p>
                     </div>
                   </div>
@@ -476,7 +479,7 @@ const MoneyRequests = () => {
                 </div>
 
                 {/* User Payment Info */}
-                {(request.userId?.upiId || request.userId?.upiNumber || request.userId?.phone ||
+                {(request.userId?.upiId || request.userId?.upiNumber || (!isManager && request.userId?.phone) ||
                   request.userId?.bankAccountNumber || request.userId?.bankIfscCode) && (
                   <div className="bg-blue-50 rounded-lg p-3 mb-3">
                     <p className="text-xs text-gray-500 mb-1 font-medium">User Payment Info</p>
@@ -515,7 +518,7 @@ const MoneyRequests = () => {
                     {request.userId?.bankAccountHolder && (
                       <p className="text-sm"><span className="text-gray-500">Holder:</span> <span className="font-medium">{request.userId.bankAccountHolder}</span></p>
                     )}
-                    {request.userId?.phone && (
+                    {request.userId?.phone && !isManager && (
                       <div className="flex items-center gap-2">
                         <p className="text-sm"><span className="text-gray-500">Phone:</span> <span className="font-medium">{request.userId.phone}</span></p>
                         <button onClick={() => { navigator.clipboard.writeText(request.userId.phone); toast.success('Phone copied'); }} className="p-0.5 rounded hover:bg-blue-100" title="Copy">

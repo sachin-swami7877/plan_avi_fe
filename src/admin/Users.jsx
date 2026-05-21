@@ -27,6 +27,7 @@ const Users = () => {
   const { role: myRole } = useAuth();
   const { socket } = useSocket();
   const isFullAdmin = myRole === 'admin' || myRole === 'superadmin';
+  const isManager = myRole === 'manager';
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', phone: '', walletBalance: 0, role: 'user' });
@@ -351,7 +352,7 @@ const Users = () => {
       <div className="flex gap-1 mb-3 bg-white rounded-xl p-1 shadow-sm overflow-x-auto">
         {[
           { value: 'all', label: 'All' },
-          { value: 'online', label: 'Online', dot: true },
+          ...(isManager ? [] : [{ value: 'online', label: 'Online', dot: true }]),
           { value: 'deactivated', label: 'Deactivated' },
           { value: 'blocked', label: 'Blocked' },
         ].map(tab => (
@@ -393,10 +394,10 @@ const Users = () => {
         >
           <option value="all">All Roles</option>
           <option value="user">User</option>
-          <option value="manager">Manager</option>
-          <option value="admin">Admin</option>
+          {!isManager && <option value="manager">Manager</option>}
+          {!isManager && <option value="admin">Admin</option>}
         </select>
-        {statusTab !== 'online' && (
+        {statusTab !== 'online' && !isManager && (
           <label className="flex items-center gap-1.5 cursor-pointer select-none ml-auto">
             <div className="relative">
               <input type="checkbox" checked={activeOnly} onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }} className="sr-only peer" />
@@ -464,7 +465,7 @@ const Users = () => {
           type="text"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search by name, email, or phone..."
+          placeholder={isManager ? 'Search by name or email...' : 'Search by name, email, or phone...'}
           className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">Search</button>
@@ -475,36 +476,39 @@ const Users = () => {
 
       <div className="space-y-3">
         {users.map((user) => {
-          const isExpanded = expandedUser === user._id;
+          const isExpanded = !isManager && expandedUser === user._id;
           return (
             <div key={user._id} className="bg-white rounded-xl shadow-sm border-l-4 border-primary-500 overflow-hidden">
               {/* Collapsed header — always visible */}
               <button
                 type="button"
-                onClick={() => setExpandedUser(isExpanded ? null : user._id)}
-                className="w-full p-4 flex items-center justify-between text-left"
+                onClick={() => { if (!isManager) setExpandedUser(isExpanded ? null : user._id); }}
+                disabled={isManager}
+                className={`w-full p-4 flex items-center justify-between text-left ${isManager ? 'cursor-default' : ''}`}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="relative flex-shrink-0">
                     <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                       <span className="text-primary-700 font-bold">{user.name?.charAt(0)?.toUpperCase() || 'U'}</span>
                     </div>
-                    {activeUserIds.has(user._id) && (
+                    {activeUserIds.has(user._id) && !isManager && (
                       <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold text-gray-800 truncate">{user.name || '(no name)'}</h3>
-                      {(user.role === 'admin' || user.isAdmin) && <span className="bg-yellow-100 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded-full">Admin</span>}
-                      {user.role === 'manager' && !user.isAdmin && <span className="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded-full">Manager</span>}
+                      {!isManager && (user.role === 'admin' || user.isAdmin) && <span className="bg-yellow-100 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded-full">Admin</span>}
+                      {!isManager && user.role === 'manager' && !user.isAdmin && <span className="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded-full">Manager</span>}
                       {getStatusBadge(user.status)}
                     </div>
-                    <p className="text-xs text-gray-500 truncate">{user.phone || user.email}</p>
+                    <p className="text-xs text-gray-500 truncate">{isManager ? user.email : (user.phone || user.email)}</p>
                   </div>
                   <p className="text-sm font-bold text-green-600 flex-shrink-0 mr-2">₹{user.walletBalance?.toFixed(2)}</p>
                 </div>
-                <svg className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                {!isManager && (
+                  <svg className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                )}
               </button>
 
               {/* Expanded content */}
@@ -544,7 +548,7 @@ const Users = () => {
                       </button>
                     </div>
                   )}
-                  {user.phone && (
+                  {user.phone && !isManager && (
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-sm text-gray-600">Phone: {user.phone}</p>
                       <button onClick={() => { navigator.clipboard.writeText(user.phone); toast.success('Phone copied'); }} className="p-0.5 rounded hover:bg-gray-100" title="Copy">

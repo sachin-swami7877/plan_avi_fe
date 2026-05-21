@@ -23,6 +23,7 @@ const roleBadge = (role) => {
 
 const AdminProfile = () => {
   const { user, role } = useAuth();
+  const hideRole = role === 'manager';
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
@@ -47,7 +48,7 @@ const AdminProfile = () => {
         <div>
           <p className="text-xl font-bold text-gray-900">{user?.name || '—'}</p>
           <p className="text-gray-500 text-sm">{user?.email || '—'}</p>
-          <div className="mt-2">{roleBadge(role)}</div>
+          {!hideRole && <div className="mt-2">{roleBadge(role)}</div>}
         </div>
       </div>
 
@@ -57,7 +58,7 @@ const AdminProfile = () => {
         {fieldRow('Full Name', user?.name)}
         {fieldRow('Email', user?.email)}
         {fieldRow('Phone', user?.phone)}
-        {fieldRow('Role', roleBadge(role))}
+        {!hideRole && fieldRow('Role', roleBadge(role))}
         {fieldRow('User ID', user?._id)}
         {fieldRow('Member Since', formatDate(user?.createdAt))}
         {typeof user?.wallet?.balance === 'number' && fieldRow('Wallet Balance', `₹${user.wallet.balance.toFixed(2)}`)}

@@ -172,7 +172,9 @@ const AdminLayout = () => {
             <img src={appLogoUrl || '/logo.jpeg'} alt="Logo" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 ring-2 ring-white/20" />
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-bold leading-tight">Rushkro<span className="text-emerald-300">Ludo</span></h1>
-              <p className="text-white/60 text-xs leading-none">{role === 'superadmin' ? 'Super Admin' : 'Admin'}</p>
+              {!isManager && (
+                <p className="text-white/60 text-xs leading-none">{role === 'superadmin' ? 'Super Admin' : 'Admin'}</p>
+              )}
             </div>
           </div>
 
