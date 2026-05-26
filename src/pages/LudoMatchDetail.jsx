@@ -393,6 +393,12 @@ export default function LudoMatchDetail() {
   };
 
   const handleSubmitRoomCode = async () => {
+    // Frozen-once guard: never allow re-submission if a code already exists in local state.
+    if (match?.roomCode && match.roomCode.trim() !== '') {
+      toast.error('Room code is already set and cannot be changed.');
+      setRoomCodeInput('');
+      return;
+    }
     const code = roomCodeInput.trim().toUpperCase();
     if (!code) { toast.error('Enter room code from Ludo King'); return; }
     setSubmittingRoomCode(true);
@@ -402,7 +408,14 @@ export default function LudoMatchDetail() {
       setMatch((prev) => prev ? { ...prev, roomCode: code, gameActualStartAt: new Date().toISOString(), gameStartedAt: new Date().toISOString() } : prev);
       setRoomCodeInput('');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit room code');
+      // Backend rejected — most likely because the code was already set.
+      // If the error payload carries the existing match snapshot, resync local state so the input form vanishes and the saved code shows.
+      const data = err.response?.data;
+      if (data?.match?.roomCode) {
+        setMatch((prev) => prev ? { ...prev, ...data.match } : prev);
+        setRoomCodeInput('');
+      }
+      toast.error(data?.message || 'Failed to submit room code');
     } finally {
       setSubmittingRoomCode(false);
     }
@@ -647,12 +660,14 @@ export default function LudoMatchDetail() {
                     value={roomCodeInput}
                     onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                     maxLength={10}
-                    className="flex-1 border-2 border-blue-500 rounded-xl px-4 py-3 text-lg font-mono font-bold uppercase tracking-widest text-center placeholder:text-gray-400 placeholder:text-base placeholder:tracking-normal placeholder:font-normal"
+                    disabled={submittingRoomCode || hasRoomCode}
+                    readOnly={hasRoomCode}
+                    className="flex-1 border-2 border-blue-500 rounded-xl px-4 py-3 text-lg font-mono font-bold uppercase tracking-widest text-center placeholder:text-gray-400 placeholder:text-base placeholder:tracking-normal placeholder:font-normal disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                   <button
                     onClick={handleSubmitRoomCode}
-                    disabled={submittingRoomCode || !roomCodeInput.trim()}
-                    className="bg-primary-600 text-white px-5 py-3 rounded-xl text-base font-bold disabled:opacity-50"
+                    disabled={submittingRoomCode || hasRoomCode || !roomCodeInput.trim()}
+                    className="bg-primary-600 text-white px-5 py-3 rounded-xl text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submittingRoomCode ? '...' : 'Set'}
                   </button>
