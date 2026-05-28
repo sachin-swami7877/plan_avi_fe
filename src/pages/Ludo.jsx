@@ -313,6 +313,10 @@ export default function Ludo() {
       toast.error(`Minimum entry is Rs. ${ENTRY_MIN}`);
       return;
     }
+    if (!Number.isInteger(effectiveAmount) || effectiveAmount % 50 !== 0) {
+      toast.error('Amount must be in multiples of 50 (e.g. 50, 100, 150, 200, 250)');
+      return;
+    }
     if ((user?.walletBalance ?? 0) < effectiveAmount) {
       toast.error('Insufficient balance');
       return;
@@ -435,17 +439,51 @@ export default function Ludo() {
             </button> */}
 
             {/* Create a battle */}
-            {ludoEnabled && (
+            {ludoEnabled && (() => {
+              const customNum = Number(customAmount);
+              const customInvalidMultiple = customAmount.trim() !== '' && !isNaN(customNum) && customNum >= ENTRY_MIN && customNum % 50 !== 0;
+              const isValidAmount = customAmount.trim() !== '' && !isNaN(customNum) && customNum >= ENTRY_MIN && customNum % 50 === 0;
+              return (
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <h2 className="text-lg font-bold text-gray-800 mb-3">Create a battle</h2>
+                <h2 className="text-lg font-bold text-gray-800 mb-1">Create a battle</h2>
+                <p className="text-xs text-gray-500 mb-3">Enter amount in multiples of <b>50</b> (e.g. 50, 100, 150, 200, 250). Min ₹50.</p>
                 <div className="flex gap-2">
-                  <input type="number" min={ENTRY_MIN} placeholder="Enter amount (min ₹50)" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                  <button onClick={handleCreateClick} disabled={creating || !customAmount.trim() || effectiveAmount < ENTRY_MIN || (user?.walletBalance ?? 0) < effectiveAmount} className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50">
+                  <input
+                    type="number"
+                    min={ENTRY_MIN}
+                    step={50}
+                    placeholder="50, 100, 150, ..."
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    className={`flex-1 border rounded-lg px-3 py-2 text-sm ${customInvalidMultiple ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-300'}`}
+                  />
+                  <button onClick={handleCreateClick} disabled={creating || !isValidAmount || (user?.walletBalance ?? 0) < customNum} className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50">
                     {creating ? '...' : `SET`}
                   </button>
                 </div>
+                {customInvalidMultiple && (
+                  <p className="text-xs text-red-600 mt-1.5">⚠️ Only multiples of 50 allowed — try 50, 100, 150, 200, 250…</p>
+                )}
+                {/* Quick-pick chips */}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {[50, 100, 150, 200, 250].map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => setCustomAmount(String(q))}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                        Number(customAmount) === q
+                          ? 'bg-primary-600 text-white border-primary-600'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      ₹{q}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* Your battles — waiting or live */}
             {(myWaitingList.length > 0 || myLive.length > 0) && (

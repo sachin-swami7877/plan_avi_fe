@@ -165,6 +165,10 @@ const Wallet = () => {
         return;
       }
       if (!amount || Number(amount) < 100) { setMessage({ type: 'error', text: 'Minimum withdrawal is ₹100' }); return; }
+      if (!Number.isInteger(Number(amount)) || Number(amount) % 50 !== 0) {
+        setMessage({ type: 'error', text: 'Amount must be in multiples of 50 (e.g. 100, 150, 200, 250, 500)' });
+        return;
+      }
       if (Number(amount) > earningsInfo.earnings) { setMessage({ type: 'error', text: `You can only withdraw earnings. Withdrawable: ₹${earningsInfo.earnings.toFixed(2)}` }); return; }
       const res = await walletAPI.withdraw(Number(amount));
       updateBalance(res.data.newBalance);
@@ -414,18 +418,52 @@ const Wallet = () => {
                 <span className="font-bold text-green-700">₹{earningsInfo.earnings.toFixed(2)}</span>
               </div>
             </div>
-            {earningsInfo.withdrawalsEnabled !== false && (
+            {earningsInfo.withdrawalsEnabled !== false && (() => {
+              const num = Number(amount);
+              const invalidMultiple = amount && !isNaN(num) && num >= 100 && num % 50 !== 0;
+              return (
               <form onSubmit={handleWithdraw}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Amount (Min ₹100)</label>
-                  <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" max={earningsInfo.earnings} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500" />
-                  <p className="text-xs text-gray-500 mt-1">Withdrawable: ₹{earningsInfo.earnings.toFixed(2)} | Max 2 requests/day</p>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (Min ₹100)</label>
+                  <p className="text-xs text-gray-500 mb-2">Enter amount in multiples of <b>50</b> (e.g. 100, 150, 200, 250, 500).</p>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="100, 150, 200, ..."
+                    min={100}
+                    step={50}
+                    max={earningsInfo.earnings}
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${invalidMultiple ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-rose-500'}`}
+                  />
+                  {invalidMultiple && (
+                    <p className="text-xs text-red-600 mt-1.5">⚠️ Only multiples of 50 allowed — try 100, 150, 200, 250…</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1.5">Withdrawable: ₹{earningsInfo.earnings.toFixed(2)} | Max 2 requests/day</p>
+                  {/* Quick-pick chips — only show amounts the user can actually withdraw */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {[100, 200, 500, 1000, 2000].filter((q) => q <= earningsInfo.earnings).map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => setAmount(String(q))}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                          Number(amount) === q
+                            ? 'bg-rose-600 text-white border-rose-600'
+                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        ₹{q}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <button type="submit" disabled={loading || earningsInfo.earnings < 100} className="w-full bg-rose-600 text-white py-3 rounded-lg font-medium hover:bg-rose-700 disabled:opacity-50">
+                <button type="submit" disabled={loading || earningsInfo.earnings < 100 || invalidMultiple} className="w-full bg-rose-600 text-white py-3 rounded-lg font-medium hover:bg-rose-700 disabled:opacity-50">
                   {loading ? 'Submitting...' : 'Submit Withdrawal Request'}
                 </button>
               </form>
-            )}
+              );
+            })()}
           </div>
         )}
 

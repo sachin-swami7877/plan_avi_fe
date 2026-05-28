@@ -124,8 +124,8 @@ const Home = () => {
       title: 'WhatsApp',
       subtitle: 'Contact support',
       path: null,
-      gradient: 'from-black to-gray-900',
-      image: null,
+      // Use a light bg matching the support image so there's no dark flash before the image paints
+      gradient: 'from-emerald-100 to-emerald-200',
       isExternal: true,
       image: '/ludosupport.png',
     },
