@@ -37,6 +37,13 @@ function getRemainingDisplay(expiryDate, nowMs = Date.now()) {
 const INDIAN_MALE_NAMES = ['Rahul', 'Amit', 'Vikram', 'Arjun', 'Rohan', 'Suresh', 'Rajesh', 'Karan', 'Anil', 'Deepak', 'Sachin', 'Ravi', 'Sanjay', 'Vijay', 'Manish', 'Pradeep', 'Nitin', 'Gaurav', 'Akash', 'Rishabh', 'Kunal', 'Yash', 'Aditya', 'Varun', 'Abhishek', 'danglegame123', 'boss123', 'ludoking11', 'khiladi123', 'gamerking11', 'Harsh', 'Mohit', 'Tushar', 'Pawan', 'Dinesh', 'Naveen', 'Rakesh', 'Hitesh', 'Jatin', 'Ankit', 'Sumit', 'Lalit', 'Tarun', 'Bharat', 'Yogesh'];
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+// Random multiple of 50 in [min, max], snapped to the 50 grid (e.g. 50, 100, 150, …)
+function randomEntryAmount(min, max) {
+  const lo = Math.ceil(min / 50);
+  const hi = Math.floor(max / 50);
+  if (hi < lo) return min;
+  return randomInt(lo, hi) * 50;
+}
 
 
 function calcPrizeFrontend(entry, tiers) {
@@ -60,7 +67,7 @@ function generateDummyBattles(countFromSettings, tiers) {
   const seed = Date.now();
   const battles = [];
   for (let i = 0; i < count; i++) {
-    const entry = randomInt(50, 3000);
+    const entry = randomEntryAmount(50, 3000);
     const prize = calcPrizeFrontend(entry, tiers);
     const useGameStyle = Math.random() < 0.3;
     const name1 = useGameStyle ? `Game${randomInt(1000, 9999)}` : pickRandom(INDIAN_MALE_NAMES);
@@ -148,7 +155,7 @@ export default function Ludo() {
         setDummyBattles((p) => {
           const updated = p.map((item, i) => {
             if (i % 2 === 0) {
-              const entry = randomInt(50, 3000);
+              const entry = randomEntryAmount(50, 3000);
               const prize = calcPrizeFrontend(entry, commTiers);
               const useGameStyle = Math.random() < 0.3;
               const name1 = useGameStyle ? `Game${randomInt(1000, 9999)}` : pickRandom(INDIAN_MALE_NAMES);
@@ -176,7 +183,7 @@ export default function Ludo() {
     if (n === 0) { setDummyOpenBattles([]); return; }
     const seed = Date.now();
     const generate = (count) => Array.from({ length: count }, (_, i) => {
-      const entry = randomInt(50, 2000);
+      const entry = randomEntryAmount(50, 2000);
       const prize = calcPrizeFrontend(entry, commTiers);
       const name = Math.random() < 0.3 ? `Game${randomInt(1000, 9999)}` : pickRandom(INDIAN_MALE_NAMES);
       return { _id: `dopen-${seed}-${i}-${Math.random()}`, entryAmount: entry, prize, creatorName: name, isDummyOpen: true };
@@ -193,7 +200,7 @@ export default function Ludo() {
       setTimeout(() => {
         setDummyOpenBattles((p) => p.map((item, i) => {
           if (i % 2 !== 0) return item;
-          const entry = randomInt(50, 2000);
+          const entry = randomEntryAmount(50, 2000);
           const prize = calcPrizeFrontend(entry, commTiers);
           const name = Math.random() < 0.3 ? `Game${randomInt(1000, 9999)}` : pickRandom(INDIAN_MALE_NAMES);
           return { _id: `dopen-${Date.now()}-${i}`, entryAmount: entry, prize, creatorName: name, isDummyOpen: true };
