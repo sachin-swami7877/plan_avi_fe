@@ -91,7 +91,7 @@ const FindEmail = () => {
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/20">
               <PlaneSvg className="w-4 h-4 text-white -rotate-12" />
             </div>
-            <span className="text-xl font-extrabold tracking-tight">Lean<span className="text-red-500">Aviator</span></span>
+            <span className="text-xl font-extrabold tracking-tight">Rushkro<span className="text-red-500">Ludo</span></span>
           </Link>
         </div>
       </header>

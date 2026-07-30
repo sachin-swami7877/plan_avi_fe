@@ -5,9 +5,9 @@ const AboutUs = () => {
   return (
     <>
       <Helmet>
-        <title>About Us - RushkroLudo | Play Ludo, Aviator & Win Real Cash</title>
-        <meta name="description" content="RushkroLudo is India's trusted online gaming platform. Play Ludo King, Aviator crash game & Lucky Spinner. Win real cash with instant UPI withdrawals." />
-        <meta name="keywords" content="RushkroLudo about, rushkroludo, Rushkro Ludo, Rush Kro Ludo, RushLudo, rushludo, Rush Ludo, rush ludo, RushKro, rushkro, Ludo Rush, LudoRush, online gaming India, Ludo game, Aviator game, real cash games, UPI withdrawal, ludo paisa wala game, online ludo khelo, rushkroludo kya hai" />
+        <title>About Us - RushkroLudo | Play Ludo & Win Real Cash</title>
+        <meta name="description" content="RushkroLudo is India's trusted online gaming platform. Play Ludo King and win real cash with instant UPI withdrawals." />
+        <meta name="keywords" content="RushkroLudo about, rushkroludo, Rushkro Ludo, Rush Kro Ludo, RushLudo, rushludo, Rush Ludo, rush ludo, RushKro, rushkro, Ludo Rush, LudoRush, online gaming India, Ludo game, real cash games, UPI withdrawal, ludo paisa wala game, online ludo khelo, rushkroludo kya hai" />
         <link rel="canonical" href="https://rushkroludo.com/about" />
       </Helmet>
 
@@ -40,7 +40,7 @@ const AboutUs = () => {
 
           <div className="space-y-8 text-white/80 text-lg leading-relaxed">
             <p>
-              <strong className="text-white">RushkroLudo</strong> is India's fastest-growing online gaming platform where you can play your favorite games like <strong className="text-white">Ludo King</strong>, <strong className="text-white">Aviator crash game</strong>, and <strong className="text-white">Lucky Spinner</strong> — and win real cash!
+              <strong className="text-white">RushkroLudo</strong> is India's fastest-growing online gaming platform where you can play your favorite game <strong className="text-white">Ludo King</strong> — and win real cash!
             </p>
 
             <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
@@ -49,8 +49,6 @@ const AboutUs = () => {
                 <li className="flex items-start gap-3"><span className="text-violet-400 mt-1">&#10003;</span> <span>100% Safe & Secure Platform</span></li>
                 <li className="flex items-start gap-3"><span className="text-violet-400 mt-1">&#10003;</span> <span>Instant UPI Withdrawals — Get your winnings directly to your bank</span></li>
                 <li className="flex items-start gap-3"><span className="text-violet-400 mt-1">&#10003;</span> <span>Play Ludo King with real players from across India</span></li>
-                <li className="flex items-start gap-3"><span className="text-violet-400 mt-1">&#10003;</span> <span>Aviator Crash Game — Predict the multiplier and win big</span></li>
-                <li className="flex items-start gap-3"><span className="text-violet-400 mt-1">&#10003;</span> <span>Lucky Spinner — Spin and win real cash prizes</span></li>
                 <li className="flex items-start gap-3"><span className="text-violet-400 mt-1">&#10003;</span> <span>24/7 Customer Support</span></li>
                 <li className="flex items-start gap-3"><span className="text-violet-400 mt-1">&#10003;</span> <span>Refer & Earn Bonus Program</span></li>
               </ul>
@@ -58,21 +56,11 @@ const AboutUs = () => {
 
             <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
               <h2 className="text-2xl font-bold text-white mb-4">Our Games</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="p-4 rounded-xl bg-white/[0.03] text-center">
                   <div className="text-4xl mb-2">&#x1F3B2;</div>
                   <h3 className="font-bold text-white">Ludo King</h3>
                   <p className="text-sm text-white/60 mt-1">Classic board game, real cash stakes</p>
-                </div>
-                <div className="p-4 rounded-xl bg-white/[0.03] text-center">
-                  <div className="text-4xl mb-2">&#x1F680;</div>
-                  <h3 className="font-bold text-white">Aviator</h3>
-                  <p className="text-sm text-white/60 mt-1">Crash game with live multipliers</p>
-                </div>
-                <div className="p-4 rounded-xl bg-white/[0.03] text-center">
-                  <div className="text-4xl mb-2">&#x1F3AF;</div>
-                  <h3 className="font-bold text-white">Lucky Spinner</h3>
-                  <p className="text-sm text-white/60 mt-1">Spin the wheel, win instant prizes</p>
                 </div>
               </div>
             </div>
@@ -82,7 +70,7 @@ const AboutUs = () => {
               <ol className="space-y-3 list-decimal list-inside">
                 <li><strong className="text-white">Sign Up</strong> — Create your free account on RushkroLudo</li>
                 <li><strong className="text-white">Add Money</strong> — Deposit via UPI, PhonePe, Google Pay, Paytm</li>
-                <li><strong className="text-white">Play Games</strong> — Choose Ludo, Aviator or Spinner</li>
+                <li><strong className="text-white">Play Ludo</strong> — Create or join a battle and compete</li>
                 <li><strong className="text-white">Win & Withdraw</strong> — Withdraw winnings instantly to your UPI</li>
               </ol>
             </div>

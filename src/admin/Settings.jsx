@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../services/api';
-import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
-  const { socket } = useSocket();
   const { user, isSuperAdmin } = useAuth();
-  const canSeeAviatorToggle = isSuperAdmin;
-  const [betsEnabled, setBetsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -21,7 +17,6 @@ const Settings = () => {
   const [bonusMinBet, setBonusMinBet] = useState(1000);
   const [bonusCashback, setBonusCashback] = useState(100);
   const [termsGeneral, setTermsGeneral] = useState('');
-  const [dummyUserCount, setDummyUserCount] = useState(10);
   const [layout, setLayout] = useState(false);
   const [ludoDummyRunningBattles, setLudoDummyRunningBattles] = useState(15);
   const [ludoDummyOpenBattles, setLudoDummyOpenBattles] = useState(4);
@@ -46,8 +41,6 @@ const Settings = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [qrFile, setQrFile] = useState(null);
   const [qrUploading, setQrUploading] = useState(false);
-  const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
-  const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState('RushkroLudo');
   const [notificationMessage, setNotificationMessage] = useState('Refer RushkroLudo & earn 2 free spins + commission on every friend\'s win. Share your code now!');
   const [websiteUrl, setWebsiteUrl] = useState('https://rushkroludo.com');
@@ -58,17 +51,12 @@ const Settings = () => {
 
   useEffect(() => {
     fetchSettings();
-    if (socket) {
-      socket.on('settings:bets-enabled', (data) => setBetsEnabled(data.enabled));
-      return () => { socket.off('settings:bets-enabled'); };
-    }
-  }, [socket]);
+  }, []);
 
   const fetchSettings = async () => {
     try {
       const res = await adminAPI.getSettings();
       const d = res.data;
-      setBetsEnabled(d.betsEnabled);
       setUpiId(d.upiId || '');
       setUpiNumber(d.upiNumber || '');
       setSupportPhone(d.supportPhone || '');
@@ -76,7 +64,6 @@ const Settings = () => {
       setBonusMinBet(d.bonusMinBet || 1000);
       setBonusCashback(d.bonusCashback || 100);
       setTermsGeneral(d.termsGeneral || '');
-      setDummyUserCount(d.dummyUserCount || 10);
       setLayout(d.layout ?? false);
       setLandingPlayers(d.landingPlayers || '1000+');
       setLandingWonToday(d.landingWonToday || '₹1K+');
@@ -95,23 +82,9 @@ const Settings = () => {
       setLudoWarning(d.ludoWarning || '');
       setLogoUrl(d.logoUrl || null);
       setQrCodeUrl(d.qrCodeUrl || null);
-      setAviatorComingSoon(d.aviatorComingSoon ?? false);
-      setSpinnerComingSoon(d.spinnerComingSoon ?? false);
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to load settings' });
     } finally { setLoading(false); }
-  };
-
-  const handleToggleBets = async () => {
-    const newValue = !betsEnabled;
-    setSaving(true); setMessage({ type: '', text: '' });
-    try {
-      await adminAPI.updateSettings({ betsEnabled: newValue });
-      setBetsEnabled(newValue);
-      toast.success(`Bets ${newValue ? 'enabled' : 'disabled'} successfully`);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update bets setting');
-    } finally { setSaving(false); }
   };
 
   const handleSavePayment = async () => {
@@ -154,17 +127,6 @@ const Settings = () => {
       toast.success('Terms & Conditions saved successfully');
     } catch { 
       toast.error('Failed to save terms & conditions');
-    }
-    finally { setSaving(false); }
-  };
-
-  const handleSaveDummyUsers = async () => {
-    setSaving(true);
-    try {
-      await adminAPI.updateSettings({ dummyUserCount: Number(dummyUserCount) });
-      toast.success('Dummy user count saved successfully');
-    } catch { 
-      toast.error('Failed to save dummy user count');
     }
     finally { setSaving(false); }
   };
@@ -254,14 +216,6 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-
-      {/* Bets Toggle */}
-      <Section title="Run the Bets" desc={betsEnabled ? 'Bets are currently enabled.' : 'Bets are disabled.'}>
-        <button onClick={handleToggleBets} disabled={saving}
-          className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${betsEnabled ? 'bg-emerald-600' : 'bg-gray-300'} ${saving ? 'opacity-50' : ''}`}>
-          <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${betsEnabled ? 'translate-x-8' : 'translate-x-1'}`} />
-        </button>
-      </Section>
 
       {/* Withdrawals Toggle */}
       <Section title="Withdrawals" desc={withdrawalsEnabled ? 'Users can submit withdrawal requests.' : 'Withdrawals are disabled — users cannot request withdrawals.'}>
@@ -552,23 +506,6 @@ const Settings = () => {
         <button onClick={handleSaveTerms} disabled={saving} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save Terms</button>
       </Section>
 
-      {/* Dummy Users */}
-      <Section title="Dummy Users" desc="Number of dummy users shown in the Aviator game. Only 33% will show cashout.">
-        <div className="mb-3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Dummy User Count</label>
-          <input 
-            type="number" 
-            value={dummyUserCount} 
-            onChange={(e) => setDummyUserCount(e.target.value)} 
-            min="0"
-            max="100"
-            className="w-full px-3 py-2 border rounded-lg text-sm" 
-          />
-          <p className="text-xs text-gray-500 mt-1">Current: {dummyUserCount} dummy users (33% will cashout)</p>
-        </div>
-        <button onClick={handleSaveDummyUsers} disabled={saving} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save Dummy User Count</button>
-      </Section>
-
       {/* Landing Page Stats */}
       <Section title="Landing Page Stats" desc="Update the stats displayed on the landing page (Players count and Won Today amount).">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -645,48 +582,6 @@ const Settings = () => {
               </div>
             </div>
             <button onClick={handleSaveBonus} disabled={saving} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save Bonus Settings</button>
-          </Section>
-
-          <Section title="Aviator — Coming Soon" desc={aviatorComingSoon ? 'Aviator is HIDDEN from users (Dashboard, Profile, Landing). Direct URL shows "Coming Soon".' : 'Aviator is live and visible to all users.'}>
-            <button
-              onClick={async () => {
-                const newValue = !aviatorComingSoon;
-                setAviatorComingSoon(newValue);
-                setSaving(true);
-                try {
-                  await adminAPI.updateSettings({ aviatorComingSoon: newValue });
-                  toast.success(`Aviator ${newValue ? 'hidden from users' : 'is now live'}`);
-                } catch (error) {
-                  setAviatorComingSoon(!newValue);
-                  toast.error('Failed to update');
-                } finally { setSaving(false); }
-              }}
-              disabled={saving}
-              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${aviatorComingSoon ? 'bg-amber-500' : 'bg-emerald-600'} ${saving ? 'opacity-50' : ''}`}
-            >
-              <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${aviatorComingSoon ? 'translate-x-8' : 'translate-x-1'}`} />
-            </button>
-          </Section>
-
-          <Section title="Spinner — Coming Soon" desc={spinnerComingSoon ? 'Spinner is HIDDEN from users (Dashboard, Profile, Landing). Direct URL shows "Coming Soon".' : 'Spinner is live and visible to all users.'}>
-            <button
-              onClick={async () => {
-                const newValue = !spinnerComingSoon;
-                setSpinnerComingSoon(newValue);
-                setSaving(true);
-                try {
-                  await adminAPI.updateSettings({ spinnerComingSoon: newValue });
-                  toast.success(`Spinner ${newValue ? 'hidden from users' : 'is now live'}`);
-                } catch (error) {
-                  setSpinnerComingSoon(!newValue);
-                  toast.error('Failed to update');
-                } finally { setSaving(false); }
-              }}
-              disabled={saving}
-              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${spinnerComingSoon ? 'bg-amber-500' : 'bg-emerald-600'} ${saving ? 'opacity-50' : ''}`}
-            >
-              <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${spinnerComingSoon ? 'translate-x-8' : 'translate-x-1'}`} />
-            </button>
           </Section>
 
           <Section title="Send Notification" desc="Send push notifications to all users with optional image.">

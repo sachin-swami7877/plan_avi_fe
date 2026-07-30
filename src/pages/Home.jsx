@@ -40,9 +40,6 @@ const Home = () => {
   const [userWarning, setUserWarning] = useState('');
   const [supportWhatsApp, setSupportWhatsApp] = useState('');
   const [showInstallTip, setShowInstallTip] = useState(false);
-  const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
-  const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
-  const [gameStatusLoaded, setGameStatusLoaded] = useState(false);
   const [appLogoUrl, setAppLogoUrl] = useState(null);
 
   const handleDownload = () => {
@@ -62,10 +59,6 @@ const Home = () => {
     settingsAPI.getSupport().then(res => {
       if (res.data?.supportWhatsApp) setSupportWhatsApp(res.data.supportWhatsApp);
     }).catch(() => {});
-    settingsAPI.getAviatorStatus().then(res => {
-      if (res.data?.aviatorComingSoon) setAviatorComingSoon(true);
-      if (res.data?.spinnerComingSoon) setSpinnerComingSoon(true);
-    }).catch(() => {}).finally(() => setGameStatusLoaded(true));
     settingsAPI.getLogo().then(res => {
       if (res.data?.logoUrl) setAppLogoUrl(res.data.logoUrl);
     }).catch(() => {});
@@ -87,35 +80,6 @@ const Home = () => {
           <circle cx="44" cy="20" r="4" fill="white" />
           <circle cx="20" cy="44" r="4" fill="white" />
           <circle cx="44" cy="44" r="4" fill="white" />
-        </svg>
-      ),
-    },
-    {
-      id: 'aviator',
-      title: 'Aviator',
-      subtitle: 'Watch it fly & cash out',
-      path: '/aviator',
-      gradient: 'from-red-500 to-orange-600',
-      image: '/avi.jpeg',
-      fallbackIcon: (
-        <svg className="w-full h-full" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M32 8 L40 24 L56 28 L44 40 L46 56 L32 48 L18 56 L20 40 L8 28 L24 24 Z" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M32 20 L36 28 L44 30 L38 36 L39 42 L32 38 L25 42 L26 36 L20 30 L28 28 Z" fill="currentColor" />
-        </svg>
-      ),
-    },
-    {
-      id: 'lucky-draw',
-      title: 'Lucky Draw',
-      subtitle: 'Spin the wheel & win',
-      path: '/spinner',
-      gradient: 'from-amber-500 to-orange-600',
-      image: '/spinner.jpeg',
-      fallbackIcon: (
-        <svg className="w-full h-full" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="3" fill="none" />
-          <path d="M32 4 L32 60 M32 32 L56 32 M32 32 L8 32 M32 32 L50 12 M32 32 L14 52 M32 32 L50 52 M32 32 L14 12" stroke="currentColor" strokeWidth="2" />
-          <circle cx="32" cy="32" r="6" fill="currentColor" />
         </svg>
       ),
     },
@@ -154,21 +118,10 @@ const Home = () => {
           </div>
         )}
 
-        {/* Games — wait for status API, then filter hidden games */}
+        {/* Games */}
         <div className="mb-4">
-          {!gameStatusLoaded ? (
-            <div className="flex justify-center py-8">
-              <div className="w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : (
           <div className="grid grid-cols-2 gap-3 pt-3">
-            {gameCards.filter((g) => {
-              if (g.id === 'aviator' && aviatorComingSoon) return false;
-              if (g.id === 'lucky-draw' && spinnerComingSoon) return false;
-              if (g.id === 'ludo') return true;
-              if (g.id === 'whatsapp') return true;
-              return true;
-            }).map((game) => (
+            {gameCards.map((game) => (
               <div key={game.id} className="flex flex-col">
                 {/* LIVE badge — above the box, outside */}
                 <div className="flex items-center gap-1 bg-black/70 rounded-full px-2 py-0.5 self-start mb-1 ml-1">
@@ -214,7 +167,6 @@ const Home = () => {
               </div>
             ))}
           </div>
-          )}
         </div>
 
         {/* Ad Banner */}

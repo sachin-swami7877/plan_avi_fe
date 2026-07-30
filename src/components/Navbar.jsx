@@ -65,7 +65,7 @@ const Navbar = () => {
       ? item.matchPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'))
       : location.pathname === item.path;
 
-  const isHomePage = location.pathname === '/dashboard' || location.pathname === '/aviator' || location.pathname === '/spinner';
+  const isHomePage = location.pathname === '/dashboard';
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]"

@@ -29,6 +29,7 @@ const MoneyRequests = () => {
   const { socket } = useSocket();
   const { role: myRole } = useAuth();
   const isManager = myRole === 'manager';
+  const canProcess = myRole === 'admin' || myRole === 'superadmin';
   const [tab, setTab] = useState('deposit');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -540,7 +541,27 @@ const MoneyRequests = () => {
                   </a>
                 )}
 
-                {request.status === 'pending' && (
+                {/* Who processed this request */}
+                {request.status !== 'pending' && request.processedBy && (
+                  <div className={`rounded-lg p-3 mb-3 ${request.status === 'approved' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                    <p className="text-xs text-gray-500 mb-0.5 font-medium">
+                      {request.status === 'approved' ? 'Approved By' : 'Rejected By'}
+                    </p>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {request.processedBy?.name || request.processedBy?.email || 'Admin'}
+                      {request.processedBy?.role && (
+                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 capitalize font-medium">{request.processedBy.role}</span>
+                      )}
+                    </p>
+                    {request.processedAt && (
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {new Date(request.processedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'short', timeStyle: 'short', hour12: true })}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {request.status === 'pending' && canProcess && (
                   <div>
                     {/* Editable amount for deposit requests */}
                     {tab === 'deposit' && (
@@ -600,6 +621,12 @@ const MoneyRequests = () => {
                       </button>
                     )}
                   </div>
+                )}
+
+                {request.status === 'pending' && !canProcess && (
+                  <p className="text-xs text-gray-400 text-center py-2 bg-gray-50 rounded-lg">
+                    Only Admin / Super Admin can approve or reject requests
+                  </p>
                 )}
               </div>
               )}

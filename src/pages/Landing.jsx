@@ -12,38 +12,6 @@ const fetchLayoutOnce = () => {
 };
 
 /* ────────── Animated multiplier counter ────────── */
-const LiveMultiplier = () => {
-  const [val, setVal] = useState(1.0);
-  const [crashed, setCrashed] = useState(false);
-  const frameRef = useRef(null);
-
-  useEffect(() => {
-    let start = Date.now();
-    const crashAt = 2.5 + Math.random() * 5;
-    const tick = () => {
-      const elapsed = (Date.now() - start) / 1000;
-      const next = Math.pow(Math.E, 0.12 * elapsed);
-      if (next >= crashAt) {
-        setVal(Number(crashAt.toFixed(2)));
-        setCrashed(true);
-        setTimeout(() => { setCrashed(false); setVal(1.0); start = Date.now(); frameRef.current = requestAnimationFrame(tick); }, 2000);
-        return;
-      }
-      setVal(Number(next.toFixed(2)));
-      frameRef.current = requestAnimationFrame(tick);
-    };
-    frameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameRef.current);
-  }, []);
-
-  return (
-    <div className={`font-black tabular-nums transition-colors duration-200 ${crashed ? 'text-red-500' : 'text-emerald-400'}`}>
-      <span className="text-5xl sm:text-7xl lg:text-8xl">{val.toFixed(2)}</span>
-      <span className="text-3xl sm:text-5xl lg:text-6xl ml-1">x</span>
-    </div>
-  );
-};
-
 /* ────────── Floating particles ────────── */
 const Particles = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -64,28 +32,6 @@ const Particles = () => (
   </div>
 );
 
-/* ────────── Plane SVG ────────── */
-const PlaneSvg = ({ className = '' }) => (
-  <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M58 12L6 30l16 4 4 18 10-12 14 4z" fill="currentColor" opacity="0.9" />
-    <path d="M58 12L22 34m0 0l4 18m-4-18L6 30" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
-  </svg>
-);
-
-/* ────────── RushkroLudo Logo SVG (Dice + Plane) ────────── */
-const LogoSvg = ({ className = '' }) => (
-  <svg className={className} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="8" width="24" height="24" rx="5" fill="white" opacity="0.95"/>
-    <circle cx="9" cy="15" r="2.5" fill="#ef4444"/>
-    <circle cx="19" cy="15" r="2.5" fill="#ef4444"/>
-    <circle cx="14" cy="20" r="2.5" fill="#ef4444"/>
-    <circle cx="9" cy="25" r="2.5" fill="#ef4444"/>
-    <circle cx="19" cy="25" r="2.5" fill="#ef4444"/>
-    <path d="M30 4l8 5-14 9 6-14z" fill="white" opacity="0.85"/>
-    <path d="M30 4l2 1" stroke="white" strokeWidth="1" opacity="0.5"/>
-  </svg>
-);
-
 /* ────────── Game data for showcase ────────── */
 const GAME_DATA = [
   {
@@ -96,24 +42,6 @@ const GAME_DATA = [
     gradient: 'from-green-500 to-emerald-600',
     image: '/ludo.jpeg',
     fallbackEmoji: '🎲',
-  },
-  {
-    id: 'aviator',
-    title: 'Aviator',
-    desc: 'Crash & cash out',
-    path: '/aviator',
-    gradient: 'from-red-500 to-orange-600',
-    image: '/avi.jpeg',
-    fallbackEmoji: '✈️',
-  },
-  {
-    id: 'spinner',
-    title: 'Lucky Spinner',
-    desc: 'Spin & win big',
-    path: '/spinner',
-    gradient: 'from-amber-500 to-orange-600',
-    image: '/spinner.jpeg',
-    fallbackEmoji: '🎡',
   },
 ];
 
@@ -211,8 +139,6 @@ const Landing = () => {
 
   const features = [
     { icon: '🎲', title: 'Ludo King', desc: 'Play classic Ludo with room codes. Create or join rooms, bet and compete with friends.' },
-    { icon: '✈️', title: 'Aviator Game', desc: 'Watch the multiplier climb and cash out before it crashes. Fast rounds, big wins.' },
-    { icon: '🎡', title: 'Lucky Spinner', desc: 'Spin the wheel of fortune and win instant prizes. Try your luck every day!' },
     { icon: '💰', title: 'Real Winnings', desc: 'Deposit via UPI, play your favorite game, and withdraw your earnings instantly.' },
     { icon: '🔒', title: 'Secure & Fair', desc: 'Transparent system with provable outcomes. Your funds are always safe.' },
     { icon: '📱', title: 'Play Anywhere', desc: 'Optimized for mobile and desktop. Play on the go, anytime, anywhere.' },
@@ -221,16 +147,16 @@ const Landing = () => {
   const steps = [
     { num: '01', title: 'Create Account', desc: 'Sign up with your email in seconds. Quick OTP verification.' },
     { num: '02', title: 'Add Funds', desc: 'Deposit via UPI or QR code. Minimum ₹100 to get started.' },
-    { num: '03', title: 'Choose Your Game', desc: 'Pick from Ludo King, Aviator, or Lucky Spinner and start playing.' },
+    { num: '03', title: 'Start a Battle', desc: 'Create or join a Ludo battle with a room code and start playing.' },
     { num: '04', title: 'Win & Withdraw', desc: 'Win real cash and withdraw your winnings to UPI instantly!' },
   ];
 
   return (
     <div className="min-h-screen bg-[#07070d] text-white overflow-x-hidden relative">
       <Helmet>
-        <title>RushkroLudo – Play Ludo, Aviator & Win Real Cash | India's #1 Gaming Platform</title>
-        <meta name="description" content="RushkroLudo (Rush Kro Ludo) – Play Ludo King, Aviator crash game & Lucky Spinner. Win real cash with instant UPI withdrawals. Join now and start winning!" />
-        <meta name="keywords" content="RushkroLudo, rushkroludo, Rushkro Ludo, rushkro ludo, Rush Kro Ludo, rush kro ludo, RushKroLudo, Rush Ludo, rush ludo, RushLudo, rushludo, Rush Kro, rushkro, RushKro, Ludo Rush, ludo rush, LudoRush, ludorush, Rushkroludo game, rushkro ludo game, rush ludo game, Ludo King, Aviator game, Lucky Spinner, win real cash, online gaming, UPI withdrawal, crash game, ludo online, real money ludo, online ludo game India, rushkroludo kya hai, rushkroludo kaise khele, ludo paisa wala game, online ludo khelo, paisa kamao game, ludo khelo paise jeeto, aviator game kaise khele, real cash ludo app" />
+        <title>RushkroLudo – Play Ludo & Win Real Cash | India's #1 Ludo Platform</title>
+        <meta name="description" content="RushkroLudo (Rush Kro Ludo) – Play Ludo King and win real cash with instant UPI withdrawals. Join now and start winning!" />
+        <meta name="keywords" content="RushkroLudo, rushkroludo, Rushkro Ludo, rushkro ludo, Rush Kro Ludo, rush kro ludo, RushKroLudo, Rush Ludo, rush ludo, RushLudo, rushludo, Rush Kro, rushkro, RushKro, Ludo Rush, ludo rush, LudoRush, ludorush, Rushkroludo game, rushkro ludo game, rush ludo game, Ludo King, win real cash, online gaming, UPI withdrawal, ludo online, real money ludo, online ludo game India, rushkroludo kya hai, rushkroludo kaise khele, ludo paisa wala game, online ludo khelo, paisa kamao game, ludo khelo paise jeeto, real cash ludo app" />
         <link rel="canonical" href="https://rushkroludo.com/" />
       </Helmet>
       {/* ═══ Background layers ═══ */}
@@ -330,7 +256,7 @@ const Landing = () => {
       <section className="relative z-10 px-4 sm:px-6">
         <div className="max-w-md mx-auto flex gap-3 justify-center">
           <a
-            href={`https://wa.me/?text=${encodeURIComponent('Play Ludo, Aviator & Lucky Spinner! Win real cash. Join now: ' + window.location.origin)}`}
+            href={`https://wa.me/?text=${encodeURIComponent('Play Ludo! Win real cash. Join now: ' + window.location.origin)}`}
             rel="noopener noreferrer"
             className="flex-1 max-w-[200px] bg-[#25D366] text-white py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm hover:bg-[#20bd5a] transition-colors"
           >
@@ -357,14 +283,14 @@ const Landing = () => {
               LIVE — Players winning right now
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] mb-6">
-              Play Ludo, Aviator
+              Play Ludo
               <span className="block bg-gradient-to-r from-red-500 via-orange-400 to-amber-400 bg-clip-text text-transparent">
-                & Lucky Spinner.
+                with Friends.
               </span>
               Win Real Cash!
             </h1>
             <p className="text-white/60 text-base sm:text-lg lg:text-xl leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
-              Three exciting games on one platform. Play Ludo with friends, bet on the Aviator, or spin the lucky wheel — all with real money winnings.
+              Play Ludo battles with friends using room codes — with real money winnings and instant UPI withdrawals.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <button
@@ -393,32 +319,12 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Right — live multiplier demo */}
+          {/* Right — ludo dice demo */}
           <div className="flex-shrink-0 relative">
-            <div className="absolute inset-0 -m-10 bg-gradient-to-br from-red-600/20 via-orange-500/10 to-transparent rounded-full blur-3xl" />
+            <div className="absolute inset-0 -m-10 bg-gradient-to-br from-green-600/20 via-emerald-500/10 to-transparent rounded-full blur-3xl" />
             <div className="relative w-72 h-72 sm:w-80 sm:h-80 lg:w-96 lg:h-96 rounded-3xl bg-gradient-to-br from-[#12121f] to-[#0a0a14] border border-white/10 shadow-2xl flex flex-col items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 opacity-5">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={`h${i}`} className="absolute w-full h-px bg-white" style={{ top: `${(i + 1) * 12.5}%` }} />
-                ))}
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={`v${i}`} className="absolute h-full w-px bg-white" style={{ left: `${(i + 1) * 12.5}%` }} />
-                ))}
-              </div>
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 400" preserveAspectRatio="none">
-                <path d="M0 380 Q100 370 150 340 Q200 300 250 220 Q300 120 350 40" stroke="url(#curveGrad)" strokeWidth="3" fill="none" opacity="0.6" />
-                <defs>
-                  <linearGradient id="curveGrad" x1="0" y1="1" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#f97316" stopOpacity="0.8" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute top-8 right-8 animate-bounce-slow">
-                <PlaneSvg className="w-10 h-10 text-red-500/60 -rotate-45" />
-              </div>
-              <LiveMultiplier />
-              <p className="text-white/30 text-xs mt-3 font-medium tracking-wider uppercase">Live Demo</p>
+              <span className="text-7xl sm:text-8xl">🎲</span>
+              <p className="text-white/30 text-xs mt-6 font-medium tracking-wider uppercase">Play & Win Real Cash</p>
             </div>
           </div>
         </div>
@@ -430,7 +336,7 @@ const Landing = () => {
           {[
             { val: landingPlayers, label: 'Players' },
             { val: landingWonToday, label: 'Won Today' },
-            { val: '3 Games', label: 'Ludo, Aviator, Spinner' },
+            { val: 'Ludo King', label: 'Real Money Battles' },
             { val: '24/7', label: 'Live Games' },
           ].map((s, i) => (
             <div key={i}>
@@ -514,45 +420,6 @@ const Landing = () => {
               </div>
             </div>
 
-            {/* Aviator */}
-            <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-[#12121f] to-[#0e0e1a] border border-white/5 p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/20">
-                  <PlaneSvg className="w-12 h-12 sm:w-14 sm:h-14 text-white -rotate-12" />
-                </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-2xl font-black mb-2">Aviator</h3>
-                  <p className="text-white/50 leading-relaxed mb-3">
-                    The ultimate crash game! Place your bet and watch the multiplier rise as the plane flies higher. Cash out before it crashes to lock in your winnings. Every round is different — the multiplier could crash at 1.2x or soar past 50x!
-                  </p>
-                  <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
-                    <span className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">Fast Rounds</span>
-                    <span className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">Rising Multiplier</span>
-                    <span className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">Cash Out Anytime</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Lucky Spinner */}
-            <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-[#12121f] to-[#0e0e1a] border border-white/5 p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
-                  <span className="text-4xl sm:text-5xl">🎡</span>
-                </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-2xl font-black mb-2">Lucky Spinner</h3>
-                  <p className="text-white/50 leading-relaxed mb-3">
-                    Feeling lucky? Spin the colorful wheel of fortune and win instant prizes! Multiple prize segments with different multipliers. Simple, fun, and exciting — just spin and see where the wheel stops.
-                  </p>
-                  <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
-                    <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium">Instant Prizes</span>
-                    <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium">Multiple Multipliers</span>
-                    <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium">Daily Spins</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -586,7 +453,7 @@ const Landing = () => {
             Ready to <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">Play & Win?</span>
           </h2>
           <p className="text-white/50 text-lg mb-8 max-w-xl mx-auto">
-            Join thousands of players winning every day. Create your account, add funds, and choose from Ludo, Aviator, or Spinner!
+            Join thousands of players winning every day. Create your account, add funds, and start your Ludo battle!
           </p>
           <button
             onClick={handlePlay}
@@ -594,7 +461,7 @@ const Landing = () => {
           >
             <span className="relative z-10 flex items-center justify-center gap-3">
               Start Playing
-              <PlaneSvg className="w-6 h-6 -rotate-45 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
           </button>

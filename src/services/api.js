@@ -183,11 +183,14 @@ export const ludoAPI = {
   getSettings: () => api.get('/ludo/settings'),
 };
 
+// This frontend belongs to the rushkroludo site — admin lists are scoped to it
+const SITE_TYPE = 'rushkroludo';
+
 // Admin API
 export const adminAPI = {
-  getDashboard: (params) => api.get('/admin/dashboard', { params }),
-  getPendingCounts: (params) => api.get('/admin/pending-counts', { params }),
-  getUsers: (params) => api.get('/admin/users', { params }),
+  getDashboard: (params) => api.get('/admin/dashboard', { params: { ...params, siteType: SITE_TYPE } }),
+  getPendingCounts: (params) => api.get('/admin/pending-counts', { params: { ...params, siteType: SITE_TYPE } }),
+  getUsers: (params) => api.get('/admin/users', { params: { ...params, siteType: SITE_TYPE } }),
   getActiveUsers: () => api.get('/admin/active-users'),
   createUser: (data) => api.post('/admin/users', data),
   updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
@@ -199,7 +202,7 @@ export const adminAPI = {
     api.put(`/admin/users/${id}/status`, { status }),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   getUserDetail: (id) => api.get(`/admin/users/${id}/detail`),
-  getWalletRequests: (params) => api.get('/admin/wallet-requests', { params }),
+  getWalletRequests: (params) => api.get('/admin/wallet-requests', { params: { ...params, siteType: SITE_TYPE } }),
   processWalletRequest: (id, action, editedAmount) =>
     api.put(`/admin/wallet-requests/${id}`, { action, ...(editedAmount !== undefined && { editedAmount }) }),
   bulkDeleteWalletRequests: (ids) => api.post('/admin/wallet-requests/bulk-delete', { ids }),

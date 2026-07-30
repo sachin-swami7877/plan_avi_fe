@@ -10,12 +10,6 @@ const PERIODS = [
   { value: '30days', label: 'Last 1 Month' },
 ];
 
-const GAME_OPTIONS = [
-  { value: 'aviator', label: 'Aviator' },
-  { value: 'ludo', label: 'Ludo' },
-  { value: 'spinner', label: 'Spinner' },
-];
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
@@ -25,7 +19,6 @@ const Dashboard = () => {
   const [customTo, setCustomTo] = useState('');
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [selectedGames, setSelectedGames] = useState(['aviator', 'ludo', 'spinner']); // All selected by default
   const exportRef = useRef(null);
 
   // Close dropdown on outside click
@@ -129,23 +122,15 @@ const Dashboard = () => {
     return <div className="text-center py-8">Loading...</div>;
   }
 
-  // Calculate house profit based on selected games
-  const filteredBet = selectedGames.reduce((sum, g) => sum + (stats?.games?.[g]?.bet || 0), 0);
-  const filteredWin = selectedGames.reduce((sum, g) => sum + (stats?.games?.[g]?.win || 0), 0);
+  // House profit from Ludo
+  const filteredBet = stats?.games?.ludo?.bet || 0;
+  const filteredWin = stats?.games?.ludo?.win || 0;
   const houseProfit = filteredBet - filteredWin;
-
-  const toggleGame = (g) => {
-    setSelectedGames(prev =>
-      prev.includes(g) ? (prev.length > 1 ? prev.filter(x => x !== g) : prev) : [...prev, g]
-    );
-  };
 
   const statCards = [
     { label: 'Total Users', value: stats?.totalUsers || 0, icon: '👥', color: 'bg-blue-500', link: '/admin/users' },
     { label: 'Pending Deposits', value: stats?.pendingDeposits || 0, icon: '💰', color: 'bg-yellow-500', link: '/admin/money' },
     { label: 'Pending Withdrawals', value: stats?.pendingWithdrawals || 0, icon: '💸', color: 'bg-orange-500', link: '/admin/money' },
-    { label: 'Total Bets', value: stats?.totalBets || 0, icon: '🎰', color: 'bg-primary-500', link: '/admin/bets' },
-    { label: 'Total Wins', value: stats?.totalWins || 0, icon: '🏆', color: 'bg-green-500', link: '/admin/wins-bets' },
     { label: 'Total Bet Amount', value: `₹${filteredBet.toFixed(0)}`, icon: '💵', color: 'bg-indigo-500' },
     { label: 'Total Win Amount', value: `₹${filteredWin.toFixed(0)}`, icon: '💎', color: 'bg-purple-500' },
     {
@@ -218,24 +203,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Game Filter for House Profit */}
-      <div className="flex gap-2 mb-4 flex-wrap items-center">
-        <span className="text-xs text-gray-500 font-medium">Games:</span>
-        {GAME_OPTIONS.map((g) => (
-          <button
-            key={g.value}
-            onClick={() => toggleGame(g.value)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-              selectedGames.includes(g.value)
-                ? 'bg-primary-600 text-white border-primary-600'
-                : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {g.label}
-          </button>
-        ))}
-      </div>
-
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statCards.map((card, index) => (
           <div
@@ -254,33 +221,6 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Win Rate */}
-      <div className="mt-6 bg-white rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">Win Rate Analysis</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <p className="text-sm text-gray-600 mb-2">Current Win Rate</p>
-            <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary-600 transition-all duration-500"
-                style={{ 
-                  width: `${stats?.totalBets > 0 
-                    ? (stats.totalWins / stats.totalBets * 100).toFixed(1) 
-                    : 0}%` 
-                }}
-              ></div>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-primary-700">
-              {stats?.totalBets > 0 
-                ? (stats.totalWins / stats.totalBets * 100).toFixed(1) 
-                : 0}%
-            </p>
-            <p className="text-xs text-gray-500">Target: 40%</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

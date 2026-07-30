@@ -12,13 +12,10 @@ import Login from './pages/Login';
 import FindEmail from './pages/FindEmail';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
-import Aviator from './pages/Aviator';
 import Wallet from './pages/Wallet';
 import History from './pages/History';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
-import Spinner from './pages/Spinner';
-import SpinnerRecords from './pages/SpinnerRecords';
 import Ludo from './pages/Ludo';
 import LudoMatchDetail from './pages/LudoMatchDetail';
 import Support from './pages/Support';
@@ -27,7 +24,6 @@ import Bonus from './pages/Bonus';
 import PaymentInfo from './pages/PaymentInfo';
 import WalletRecords from './pages/WalletRecords';
 import Referral from './pages/Referral';
-import AviatorPublic from './pages/AviatorPublic';
 import AboutUs from './pages/AboutUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import HowToPlay from './pages/HowToPlay';
@@ -39,10 +35,7 @@ import AdminLayout from './admin/AdminLayout';
 import AdminDashboard from './admin/Dashboard';
 import AdminUsers from './admin/Users';
 import AdminMoneyRequests from './admin/MoneyRequests';
-import AdminBets from './admin/Bets';
-import AdminWinsBets from './admin/WinsBets';
 import AdminNotifications from './admin/Notifications';
-import AdminSpinnerRecords from './admin/SpinnerRecords';
 import AdminSettings from './admin/Settings';
 import AdminBonusRecords from './admin/BonusRecords';
 import AdminLudo from './admin/AdminLudo';
@@ -132,25 +125,6 @@ const LandingRoute = ({ children }) => {
   return children;
 };
 
-// Public Game Route — redirect authenticated users to the real game page
-const PublicGameRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-700"></div>
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/aviator" replace />;
-  }
-
-  return children;
-};
-
 // Component to block subadmin from accessing settings
 const SubAdminBlock = ({ children }) => {
   const { isSubAdmin, isAdmin } = useAuth();
@@ -227,9 +201,6 @@ function AppRoutes() {
       <Route path="/dashboard" element={
         <ProtectedRoute><SocketProvider><Home /></SocketProvider></ProtectedRoute>
       } />
-      <Route path="/aviator" element={
-        <ProtectedRoute><SocketProvider><Aviator /></SocketProvider></ProtectedRoute>
-      } />
       <Route path="/wallet" element={
         <ProtectedRoute><SocketProvider><Wallet /></SocketProvider></ProtectedRoute>
       } />
@@ -241,12 +212,6 @@ function AppRoutes() {
       } />
       <Route path="/profile" element={
         <ProtectedRoute><SocketProvider><Profile /></SocketProvider></ProtectedRoute>
-      } />
-      <Route path="/spinner" element={
-        <ProtectedRoute><SocketProvider><Spinner /></SocketProvider></ProtectedRoute>
-      } />
-      <Route path="/spinner-records" element={
-        <ProtectedRoute><SocketProvider><SpinnerRecords /></SocketProvider></ProtectedRoute>
       } />
       <Route path="/ludo" element={
         <ProtectedRoute><SocketProvider><Ludo /></SocketProvider></ProtectedRoute>
@@ -289,9 +254,6 @@ function AppRoutes() {
         <Route path="money" element={<AdminMoneyRequests />} />
         <Route path="wallet-balance-request" element={<Navigate to="/admin/money" replace />} />
         <Route path="withdrawal-request" element={<Navigate to="/admin/money" replace />} />
-        <Route path="bets" element={<AdminBets />} />
-        <Route path="wins-bets" element={<AdminWinsBets />} />
-        <Route path="spinner-records" element={<AdminSpinnerRecords />} />
         <Route path="bonus-records" element={<AdminBonusRecords />} />
         <Route path="ludo" element={<AdminLudo />} />
         <Route path="profile" element={<AdminProfile />} />
@@ -307,11 +269,6 @@ function AppRoutes() {
           </SubAdminBlock>
         } />
       </Route>
-
-      {/* Public Aviator (view-only for unauthenticated users) */}
-      <Route path="/aviator-public" element={
-        <PublicGameRoute><AviatorPublic /></PublicGameRoute>
-      } />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

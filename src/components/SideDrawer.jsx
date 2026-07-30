@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { IoClose, IoDocumentTextOutline, IoWalletOutline } from 'react-icons/io5';
 import { HiOutlineCog6Tooth } from 'react-icons/hi2';
 import { IoNotificationsOutline, IoLogOutOutline, IoGameControllerOutline, IoGiftOutline } from 'react-icons/io5';
-import { PiSpinnerBallFill } from 'react-icons/pi';
 import { useAuth } from '../context/AuthContext';
 
 const SideDrawer = ({ open, onClose }) => {
@@ -14,7 +13,6 @@ const SideDrawer = ({ open, onClose }) => {
     { to: '/wallet', label: 'Wallet', icon: IoWalletOutline },
     { to: '/bonus', label: 'Cashback & Offers', icon: IoGiftOutline },
     { to: '/history', label: 'Game History', icon: IoGameControllerOutline },
-    { to: '/spinner-records', label: 'Spinner Records', icon: PiSpinnerBallFill },
     { to: '/notifications', label: 'Notifications', icon: IoNotificationsOutline },
     { to: '/terms', label: 'Terms & Conditions', icon: IoDocumentTextOutline },
     { to: '/profile', label: 'Profile Settings', icon: HiOutlineCog6Tooth },

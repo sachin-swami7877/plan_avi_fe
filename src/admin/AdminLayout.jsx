@@ -38,9 +38,6 @@ const AdminLayout = () => {
     { path: '/admin', label: 'Dashboard', icon: '📊', subAdmin: true },
     { path: '/admin/users', label: 'Users', icon: '👥', subAdmin: true },
     { path: '/admin/money', label: 'Money', icon: '💰', badge: unreadMoney, subAdmin: true },
-    { path: '/admin/bets', label: 'All Bets', icon: '🎰', subAdmin: false },
-    { path: '/admin/wins-bets', label: 'Winning Bets', icon: '🏆', subAdmin: false },
-    { path: '/admin/spinner-records', label: 'Spinner Records', icon: '🎡', subAdmin: false },
     { path: '/admin/notifications', label: 'Notifications', icon: '🔔', badge: unreadAlerts, subAdmin: true },
     { path: '/admin/bonus-records', label: 'Bonus Records', icon: '🎁', subAdmin: false },
     { path: '/admin/ludo', label: 'Ludo', icon: '🎲', badge: unreadLudo, subAdmin: true },
@@ -63,7 +60,6 @@ const AdminLayout = () => {
     { path: '/admin', label: 'Home', icon: IoGridOutline, activeIcon: IoGrid, subAdmin: true },
     { path: '/admin/users', label: 'Users', icon: IoPeopleOutline, activeIcon: IoPeople, subAdmin: true },
     { path: '/admin/money', label: 'Money', icon: HiOutlineCurrencyRupee, activeIcon: HiCurrencyRupee, badge: unreadMoney, subAdmin: true },
-    { path: '/admin/bets', label: 'Bets', icon: IoBarChartOutline, activeIcon: IoBarChart, subAdmin: false },
     { path: '/admin/notifications', label: 'Alerts', icon: IoNotificationsOutline, activeIcon: IoNotifications, badge: unreadAlerts, subAdmin: true },
     { path: '/admin/ludo', label: 'Ludo', icon: IoGridOutline, activeIcon: IoGrid, badge: unreadLudo, subAdmin: true },
   ];

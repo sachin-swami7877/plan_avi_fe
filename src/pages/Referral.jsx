@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { referralAPI, spinnerAPI } from '../services/api';
+import { referralAPI } from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import ReferralSpinner from '../components/ReferralSpinner';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 const Referral = () => {
   const { refreshCommission, user } = useAuth();
   const [data, setData] = useState(null);
-  const [referralSpins, setReferralSpins] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openUser, setOpenUser] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -21,10 +18,6 @@ const Referral = () => {
       .then(res => setData(res.data))
       .catch(() => {})
       .finally(() => setLoading(false));
-
-    spinnerAPI.getReferralStatus()
-      .then(res => setReferralSpins(res.data))
-      .catch(() => {});
   };
 
   useEffect(() => {
@@ -103,29 +96,6 @@ const Referral = () => {
                 </a>
               )}
             </div>
-
-            {/* Free Spins Card — Moved to Top */}
-            {referralSpins && (
-              <Link
-                to="/spinner?tab=free"
-                className="block bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-4 shadow-sm text-white mb-4 active:scale-95 transition-transform"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-white/80 mb-0.5">Free Spinner Spins</p>
-                    <p className="text-3xl font-black">
-                      {Math.floor(referralSpins.offered)}
-                      {referralSpins.fractional > 0 && <span className="text-lg">.{referralSpins.fractional.split('.')[1]}</span>}
-                    </p>
-                    <p className="text-[10px] text-white/70 mt-0.5">Earned from referrals • No payment needed</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-black">{referralSpins.remaining}</p>
-                    <p className="text-xs text-white/80">available</p>
-                  </div>
-                </div>
-              </Link>
-            )}
 
             {/* Pending Redemption Card */}
             {(data?.pendingAmount > 0 || data?.redeemedAmount > 0) && (
@@ -234,11 +204,6 @@ const Referral = () => {
                 <li>Tap <strong>Redeem</strong> to add it to your play balance</li>
                 <li>Redeemed balance can be used to play </li>
               </ul>
-            </div>
-
-            {/* Referral Spinner */}
-            <div className="mb-4">
-              <ReferralSpinner />
             </div>
           </>
         )}

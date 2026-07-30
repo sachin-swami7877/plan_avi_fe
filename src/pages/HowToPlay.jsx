@@ -5,9 +5,9 @@ const HowToPlay = () => {
   return (
     <>
       <Helmet>
-        <title>How to Play - RushkroLudo | Ludo, Aviator & Spinner Guide</title>
-        <meta name="description" content="Learn how to play Ludo King, Aviator crash game and Lucky Spinner on RushkroLudo. Step-by-step guide to win real cash. Download and start playing now!" />
-        <meta name="keywords" content="how to play RushkroLudo, rushkroludo, Rushkro Ludo, Rush Kro Ludo, RushLudo, rushludo, Rush Ludo, RushKro, rushkro, Ludo Rush, LudoRush, Ludo King guide, Aviator game tips, how to win real cash, online Ludo, crash game guide, rushkroludo kaise khele, ludo kaise khele, aviator game kaise khele" />
+        <title>How to Play - RushkroLudo | Ludo Guide</title>
+        <meta name="description" content="Learn how to play Ludo King on RushkroLudo. Step-by-step guide to win real cash. Download and start playing now!" />
+        <meta name="keywords" content="how to play RushkroLudo, rushkroludo, Rushkro Ludo, Rush Kro Ludo, RushLudo, rushludo, Rush Ludo, RushKro, rushkro, Ludo Rush, LudoRush, Ludo King guide, how to win real cash, online Ludo, rushkroludo kaise khele, ludo kaise khele" />
         <link rel="canonical" href="https://rushkroludo.com/how-to-play" />
       </Helmet>
 
@@ -46,7 +46,7 @@ const HowToPlay = () => {
                 <li><strong className="text-white">Visit</strong> <a href="https://rushkroludo.com" className="text-violet-400 hover:underline">rushkroludo.com</a> on your mobile or desktop</li>
                 <li><strong className="text-white">Sign Up</strong> with your email address</li>
                 <li><strong className="text-white">Add Money</strong> to your wallet using UPI (Google Pay, PhonePe, Paytm)</li>
-                <li><strong className="text-white">Choose a Game</strong> — Ludo, Aviator, or Spinner</li>
+                <li><strong className="text-white">Start a Ludo Battle</strong> — create or join with a room code</li>
                 <li><strong className="text-white">Win & Withdraw</strong> — Cash out instantly to your UPI</li>
               </ol>
             </div>
@@ -62,30 +62,6 @@ const HowToPlay = () => {
                 <li>Winner takes the prize pool!</li>
               </ul>
               <p className="mt-4 text-violet-400 font-semibold">Tip: Move all 4 tokens strategically. Don't keep all tokens in one path!</p>
-            </div>
-
-            {/* Aviator */}
-            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
-              <h2 className="text-2xl font-bold text-white mb-4">&#x1F680; How to Play Aviator Crash Game</h2>
-              <ul className="space-y-2 list-disc list-inside">
-                <li>Place your bet before the round starts</li>
-                <li>Watch the multiplier go up (1.00x, 1.50x, 2.00x...)</li>
-                <li>Cash out before the plane crashes!</li>
-                <li>The longer you wait, the higher the multiplier — but risk increases</li>
-                <li>If the plane crashes before you cash out, you lose your bet</li>
-              </ul>
-              <p className="mt-4 text-violet-400 font-semibold">Tip: Start with small bets. Cash out at 1.5x-2x for consistent wins!</p>
-            </div>
-
-            {/* Spinner */}
-            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10">
-              <h2 className="text-2xl font-bold text-white mb-4">&#x1F3AF; How to Play Lucky Spinner</h2>
-              <ul className="space-y-2 list-disc list-inside">
-                <li>Go to the Spinner section</li>
-                <li>Use your spin tokens or buy spins</li>
-                <li>Spin the wheel and win cash prizes</li>
-                <li>Prizes are credited instantly to your wallet</li>
-              </ul>
             </div>
 
             {/* Withdrawal */}
@@ -109,7 +85,7 @@ const HowToPlay = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-white">What is the minimum deposit?</h3>
-                  <p>Minimum deposit is Rs 100. Aviator bets start from Rs 10 and Ludo bets start from Rs 50.</p>
+                  <p>Minimum deposit is Rs 100. Ludo bets start from Rs 50.</p>
                 </div>
                 <div>
                   <h3 className="font-bold text-white">How fast are withdrawals?</h3>

@@ -13,9 +13,7 @@ function fmt(date) {
 
 const TABS = [
   { key: 'wallet',  label: 'Wallet',   icon: '💰' },
-  { key: 'aviator', label: 'Aviator',  icon: '✈️' },
   { key: 'ludo',    label: 'Ludo',     icon: '🎲' },
-  { key: 'spinner', label: 'Spinner',  icon: '🎡' },
   { key: 'kyc',     label: 'KYC',      icon: '🪪' },
 ];
 
@@ -54,7 +52,7 @@ const AdminUserDetail = () => {
     return <div className="text-center py-12 text-red-500 font-medium">{error}</div>;
   }
 
-  const { user, walletRequests, aviatorBets, ludoMatches, spinnerRecords, kycRequest, adminTransactions = [] } = data;
+  const { user, walletRequests, ludoMatches, kycRequest, adminTransactions = [] } = data;
 
   // Summary stats
   const totalDeposited = walletRequests
@@ -63,12 +61,6 @@ const AdminUserDetail = () => {
   const totalWithdrawn = walletRequests
     .filter(r => r.type === 'withdrawal' && r.status === 'approved')
     .reduce((s, r) => s + r.amount, 0);
-  const totalAviatorBet = aviatorBets.reduce((s, b) => s + b.amount, 0);
-  const totalAviatorWon = aviatorBets
-    .filter(b => b.status === 'won')
-    .reduce((s, b) => s + (b.profit || 0), 0);
-  const totalSpinWon = spinnerRecords.reduce((s, r) => s + r.winAmount, 0);
-  const totalSpinCost = spinnerRecords.reduce((s, r) => s + r.spinCost, 0);
   const totalLudoWins = ludoMatches.filter(
     m => m.status === 'completed' && String(m.winnerId) === String(id)
   ).length;
@@ -77,9 +69,7 @@ const AdminUserDetail = () => {
   const getTabData = () => {
     switch (tab) {
       case 'wallet': return walletRequests;
-      case 'aviator': return aviatorBets;
       case 'ludo': return ludoMatches;
-      case 'spinner': return spinnerRecords;
       default: return [];
     }
   };
@@ -214,24 +204,9 @@ const AdminUserDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-3 mt-3">
-          <div className="bg-amber-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-500 mb-0.5">Aviator Bet Total</p>
-            <p className="font-bold text-amber-600">₹{totalAviatorBet.toFixed(0)}</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3 mt-3">
-          <div className="bg-purple-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-500 mb-0.5">Aviator Won</p>
-            <p className="font-bold text-purple-600">₹{totalAviatorWon.toFixed(0)}</p>
-          </div>
           <div className="bg-green-50 rounded-xl p-3 text-center">
             <p className="text-xs text-gray-500 mb-0.5">Ludo Wins</p>
             <p className="font-bold text-green-600">{totalLudoWins} match{totalLudoWins !== 1 ? 'es' : ''}</p>
-          </div>
-          <div className="bg-orange-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-500 mb-0.5">Spinner Won</p>
-            <p className="font-bold text-orange-500">₹{totalSpinWon} / ₹{totalSpinCost} spent</p>
           </div>
         </div>
       </div>
@@ -255,10 +230,8 @@ const AdminUserDetail = () => {
                 tab === t.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
               }`}>
                 {t.key === 'wallet' ? walletRequests.length :
-                 t.key === 'aviator' ? aviatorBets.length :
                  t.key === 'ludo' ? ludoMatches.length :
-                 t.key === 'kyc' ? (kycRequest ? 1 : 0) :
-                 spinnerRecords.length}
+                 (kycRequest ? 1 : 0)}
               </span>
             </button>
           ))}
@@ -342,44 +315,6 @@ const AdminUserDetail = () => {
         </div>
       )}
 
-      {/* ── Aviator Tab ── */}
-      {tab === 'aviator' && (
-        <div className="space-y-2">
-          {aviatorBets.length === 0 ? (
-            <EmptyState icon="✈️" text="No Aviator bets" />
-          ) : pagedData.map(b => (
-            <div key={b._id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-50 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    b.status === 'won' ? 'bg-green-100 text-green-700' :
-                    b.status === 'lost' ? 'bg-red-100 text-red-600' :
-                    'bg-blue-100 text-blue-600'
-                  }`}>
-                    {b.status}
-                  </span>
-                  {b.cashOutMultiplier && (
-                    <span className="text-xs text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded-full">
-                      {b.cashOutMultiplier}x
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-400">{fmt(b.createdAt)}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-gray-800">₹{b.amount}</p>
-                {b.status === 'won' && (
-                  <p className="text-xs text-green-600 font-semibold">+₹{b.profit?.toFixed(2)}</p>
-                )}
-                {b.status === 'lost' && (
-                  <p className="text-xs text-red-500 font-semibold">-₹{b.amount}</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* ── Ludo Tab ── */}
       {tab === 'ludo' && (
         <div className="space-y-2">
@@ -427,36 +362,6 @@ const AdminUserDetail = () => {
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* ── Spinner Tab ── */}
-      {tab === 'spinner' && (
-        <div className="space-y-2">
-          {spinnerRecords.length === 0 ? (
-            <EmptyState icon="🎡" text="No Spinner records" />
-          ) : pagedData.map(r => (
-            <div key={r._id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-50 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    r.winAmount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                  }`}>
-                    {r.outcome === 'thank_you' ? 'No Win' : `🎉 Won ₹${r.winAmount}`}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400">{fmt(r.createdAt)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Balance after: ₹{r.balanceAfter?.toFixed(2)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Cost: ₹{r.spinCost}</p>
-                {r.winAmount > 0
-                  ? <p className="font-bold text-green-600 text-lg">+₹{r.winAmount}</p>
-                  : <p className="font-bold text-gray-400">—</p>
-                }
-              </div>
-            </div>
-          ))}
         </div>
       )}
 

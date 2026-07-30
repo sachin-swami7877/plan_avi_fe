@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { IoClose } from 'react-icons/io5';
 import { HiOutlineCog6Tooth, HiOutlineGift, HiOutlineUser, HiOutlineIdentification, HiOutlineUserGroup } from 'react-icons/hi2';
 import { IoLogOutOutline, IoGridOutline, IoTrendingUpOutline, IoServerOutline, IoReceiptOutline } from 'react-icons/io5';
-import { PiSpinnerBallFill } from 'react-icons/pi';
 
 const AdminSideDrawer = ({ open, onClose }) => {
   const { user, logout, isAdmin, isSubAdmin, isSuperAdmin } = useAuth();
@@ -17,7 +16,6 @@ const AdminSideDrawer = ({ open, onClose }) => {
   if (!open) return null;
 
   const allLinks = [
-    { to: '/admin/spinner-records', label: 'Spinner Records', icon: PiSpinnerBallFill, subAdmin: false },
     { to: '/admin/bonus-records', label: 'Bonus Records', icon: HiOutlineGift, subAdmin: false },
     { to: '/admin/ludo', label: 'Ludo', icon: IoGridOutline, subAdmin: true },
     { to: '/admin/profit', label: 'Profit', icon: IoTrendingUpOutline, subAdmin: false },

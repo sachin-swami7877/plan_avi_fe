@@ -140,18 +140,7 @@ const PaymentInfo = () => {
               </div>
             )}
 
-            {/* Instructions */}
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
-              <p className="text-amber-300 text-sm font-medium mb-2">Instructions / निर्देश:</p>
-              <ol className="text-white/50 text-sm space-y-1.5 list-decimal list-inside">
-                <li>UPI app mein jaake QR scan karein ya UPI ID/number par pay karein</li>
-                <li>Payment hone ke baad screenshot le lein</li>
-                <li>Neeche "Upload Proof" button dabayein</li>
-                <li>UTR number aur screenshot upload karein</li>
-              </ol>
-            </div>
-
-            {/* Action button — go to upload proof */}
+            {/* Action button — go to upload proof (right below QR / UPI section) */}
             <button
               onClick={() => navigate(`/wallet?amount=${amount}&step=proof`)}
               className="w-full py-4 rounded-xl font-bold text-base bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-400 transition-all flex items-center justify-center gap-2"
@@ -159,6 +148,17 @@ const PaymentInfo = () => {
               Payment Done? Upload Proof
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </button>
+
+            {/* Instructions */}
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+              <p className="text-amber-300 text-sm font-medium mb-2">Instructions / निर्देश:</p>
+              <ol className="text-white/50 text-sm space-y-1.5 list-decimal list-inside">
+                <li>UPI app mein jaake QR scan karein ya UPI ID/number par pay karein</li>
+                <li>Payment hone ke baad screenshot le lein</li>
+                <li>Upar "Payment Done? Upload Proof" button dabayein</li>
+                <li>UTR number aur screenshot upload karein</li>
+              </ol>
+            </div>
           </div>
         )}
       </div>

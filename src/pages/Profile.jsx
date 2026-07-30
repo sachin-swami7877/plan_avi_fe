@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { compressImage } from '../utils/compressImage';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { walletAPI, gameAPI, authAPI, settingsAPI, spinnerAPI, ludoAPI } from '../services/api';
+import { walletAPI, authAPI, settingsAPI, ludoAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
@@ -21,13 +21,10 @@ const Profile = () => {
   const { socket } = useSocket();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [stats, setStats] = useState({ totalBets: 0, totalWins: 0, todayEarnings: 0, spinnerEarnings: 0, ludoEarnings: 0 });
+  const [stats, setStats] = useState({ todayEarnings: 0, ludoEarnings: 0 });
   const [support, setSupport] = useState({ supportPhone: null, supportWhatsApp: null });
   const whatsAppNumber = support.supportWhatsApp || support.supportPhone;
   const [showInstallTip, setShowInstallTip] = useState(false);
-  const [aviatorComingSoon, setAviatorComingSoon] = useState(false);
-  const [spinnerComingSoon, setSpinnerComingSoon] = useState(false);
-  const [gameStatusLoaded, setGameStatusLoaded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', phone: '', upiId: '', upiNumber: '', bankAccountNumber: '', bankIfscCode: '', bankAccountHolder: '' });
   const [paymentTab, setPaymentTab] = useState('upi'); // 'upi' | 'bank'
@@ -48,10 +45,6 @@ const Profile = () => {
     fetchSupport();
     fetchBalanceDetails();
     fetchKycStatus();
-    settingsAPI.getAviatorStatus().then(res => {
-      if (res.data?.aviatorComingSoon) setAviatorComingSoon(true);
-      if (res.data?.spinnerComingSoon) setSpinnerComingSoon(true);
-    }).catch(() => {}).finally(() => setGameStatusLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -150,23 +143,7 @@ const Profile = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await gameAPI.getHistory({ limit: 100 });
-      const bets = res.data?.records || res.data || [];
       const today = new Date().toDateString();
-      const todayBets = bets.filter(b => new Date(b.createdAt).toDateString() === today);
-      const todayWins = todayBets.filter(b => b.status === 'won');
-      const todayEarnings = todayWins.reduce((sum, b) => sum + (b.profit || 0), 0);
-      
-      // Fetch spinner earnings for today (profit = winAmount - 50 per spin)
-      let spinnerEarnings = 0;
-      try {
-        const spinnerRes = await spinnerAPI.getHistory();
-        const spinnerRecords = (spinnerRes.data?.records || spinnerRes.data) || [];
-        const todaySpinnerRecords = spinnerRecords.filter(s => new Date(s.createdAt).toDateString() === today);
-        spinnerEarnings = todaySpinnerRecords.reduce((sum, s) => sum + ((s.winAmount || 0) - 50), 0);
-      } catch (err) {
-        // Silent fail for spinner earnings
-      }
 
       // Fetch ludo earnings for today (profit = prize - entryAmount for wins, -entryAmount for losses)
       let ludoEarnings = 0;
@@ -189,10 +166,7 @@ const Profile = () => {
       }
 
       setStats({
-        totalBets: bets.length,
-        totalWins: bets.filter(b => b.status === 'won').length,
-        todayEarnings: todayEarnings + spinnerEarnings + ludoEarnings,
-        spinnerEarnings,
+        todayEarnings: ludoEarnings,
         ludoEarnings,
       });
     } catch (error) {
@@ -261,7 +235,6 @@ const Profile = () => {
 
   const otherFunctions = [
     { icon: '🎁', label: 'Bonus', path: '/bonus' },
-    { icon: '🎰', label: 'Lucky', path: '/spinner' },
     { icon: '⬇️', label: 'Download', path: '#', isDownload: true },
     { icon: '📜', label: 'T&C', path: '/terms' },
   ];
@@ -281,35 +254,6 @@ const Profile = () => {
           <circle cx="44" cy="20" r="4" fill="white" />
           <circle cx="20" cy="44" r="4" fill="white" />
           <circle cx="44" cy="44" r="4" fill="white" />
-        </svg>
-      ),
-    },
-    {
-      id: 'aviator',
-      title: 'Aviator',
-      subtitle: 'Watch it fly & cash out',
-      path: '/aviator',
-      gradient: 'from-red-500 to-orange-600',
-      image: '/avi.jpeg',
-      fallbackIcon: (
-        <svg className="w-full h-full" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M32 8 L40 24 L56 28 L44 40 L46 56 L32 48 L18 56 L20 40 L8 28 L24 24 Z" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M32 20 L36 28 L44 30 L38 36 L39 42 L32 38 L25 42 L26 36 L20 30 L28 28 Z" fill="currentColor" />
-        </svg>
-      ),
-    },
-    {
-      id: 'lucky-draw',
-      title: 'Lucky Draw',
-      subtitle: 'Spin the wheel & win',
-      path: '/spinner',
-      gradient: 'from-amber-500 to-orange-600',
-      image: '/spinner.jpeg',
-      fallbackIcon: (
-        <svg className="w-full h-full" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="3" fill="none" />
-          <path d="M32 4 L32 60 M32 32 L56 32 M32 32 L8 32 M32 32 L50 12 M32 32 L14 52 M32 32 L50 52 M32 32 L14 12" stroke="currentColor" strokeWidth="2" />
-          <circle cx="32" cy="32" r="6" fill="currentColor" />
         </svg>
       ),
     },
@@ -355,17 +299,8 @@ const Profile = () => {
         {/* Games - Show First */}
         <div className="mb-6">
           <h3 className="font-bold text-gray-800 mb-3">Games</h3>
-          {!gameStatusLoaded ? (
-            <div className="flex justify-center py-8">
-              <div className="w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : (
           <div className="grid grid-cols-2 gap-4">
-            {gameCards.filter((g) => {
-              if (g.id === 'aviator' && aviatorComingSoon) return false;
-              if (g.id === 'lucky-draw' && spinnerComingSoon) return false;
-              return true;
-            }).map((game) => (
+            {gameCards.map((game) => (
               <button
                 key={game.id}
                 onClick={() => {
@@ -410,7 +345,6 @@ const Profile = () => {
               </button>
             ))}
           </div>
-          )}
         </div>
 
         {/* Balance Card */}
@@ -420,7 +354,7 @@ const Profile = () => {
               <p className="text-sm opacity-80">Wallet Balance</p>
               <p className="text-2xl sm:text-3xl font-bold mt-1 truncate">₹{user?.walletBalance?.toFixed(2) || '0.00'}</p>
               <p className="text-sm opacity-80 mt-1">Today's Earnings: ₹{stats.todayEarnings.toFixed(2)}</p>
-              <p className="text-xs opacity-70 mt-0.5">(Aviator: ₹{(stats.todayEarnings - stats.spinnerEarnings - stats.ludoEarnings).toFixed(2)} | Spinner: ₹{stats.spinnerEarnings.toFixed(2)} | Ludo: ₹{stats.ludoEarnings.toFixed(2)})</p>
+              <p className="text-xs opacity-70 mt-0.5">(Ludo: ₹{stats.ludoEarnings.toFixed(2)})</p>
               <div className="flex gap-4 mt-2 pt-2 border-t border-white/20">
                 <div><p className="text-xs opacity-70">Deposit</p><p className="text-sm font-bold">₹{balanceDetails.depositBalance.toFixed(2)}</p></div>
                 <div><p className="text-xs opacity-70">Earnings</p><p className="text-sm font-bold">₹{balanceDetails.earningsBalance.toFixed(2)}</p></div>
@@ -684,7 +618,7 @@ const Profile = () => {
           <h3 className="font-bold text-gray-800 mb-3">Share & Invite</h3>
           <div className="flex gap-3">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent('Play Ludo, Aviator & Lucky Spinner! Win real cash with instant UPI withdrawals. Join now: ' + window.location.origin)}`}
+              href={`https://wa.me/?text=${encodeURIComponent('Play Ludo! Win real cash with instant UPI withdrawals. Join now: ' + window.location.origin)}`}
               rel="noopener noreferrer"
               className="flex-1 bg-[#25D366] text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 text-sm"
             >
