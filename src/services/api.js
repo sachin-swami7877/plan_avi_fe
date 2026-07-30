@@ -248,7 +248,7 @@ export const adminAPI = {
   cleanupLudoMatches: (data) => api.post('/admin/cleanup/ludo-matches', data),
   // Export
   exportUsers: () => api.get('/admin/export/users'),
-  getCreditLog: (params) => api.get('/admin/credit-log', { params }),
+  getCreditLog: (params) => api.get('/admin/credit-log', { params: { ...params, siteType: SITE_TYPE } }),
   // KYC
   getKycRequests: (params) => api.get('/admin/kyc', { params }),
   approveKyc: (id) => api.put(`/admin/kyc/${id}/approve`),
