@@ -29,7 +29,6 @@ const MoneyRequests = () => {
   const { socket } = useSocket();
   const { role: myRole } = useAuth();
   const isManager = myRole === 'manager';
-  const canProcess = myRole === 'admin' || myRole === 'superadmin';
   const [tab, setTab] = useState('deposit');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -561,7 +560,7 @@ const MoneyRequests = () => {
                   </div>
                 )}
 
-                {request.status === 'pending' && canProcess && (
+                {request.status === 'pending' && (
                   <div>
                     {/* Editable amount for deposit requests */}
                     {tab === 'deposit' && (
@@ -623,11 +622,6 @@ const MoneyRequests = () => {
                   </div>
                 )}
 
-                {request.status === 'pending' && !canProcess && (
-                  <p className="text-xs text-gray-400 text-center py-2 bg-gray-50 rounded-lg">
-                    Only Admin / Super Admin can approve or reject requests
-                  </p>
-                )}
               </div>
               )}
             </div>
