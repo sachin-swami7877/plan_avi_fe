@@ -345,8 +345,10 @@ export default function Ludo() {
     if (!matchId) return;
     setCancelling(true);
     try {
-      await ludoAPI.cancelMatch(matchId);
-      toast.success('Match cancelled. Refunded.');
+      const res = await ludoAPI.cancelMatch(matchId);
+      // Backend says "Refunded" only when money was actually deducted (live match);
+      // waiting matches never deduct, so their message is just "Match cancelled."
+      toast.success(res.data?.message || 'Match cancelled.');
       await refreshUser();
       await loadAll();
     } catch (err) {
