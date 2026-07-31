@@ -192,7 +192,7 @@ export const adminAPI = {
   getPendingCounts: (params) => api.get('/admin/pending-counts', { params: { ...params, siteType: SITE_TYPE } }),
   getUsers: (params) => api.get('/admin/users', { params: { ...params, siteType: SITE_TYPE } }),
   getActiveUsers: () => api.get('/admin/active-users'),
-  createUser: (data) => api.post('/admin/users', data),
+  createUser: (data) => api.post('/admin/users', { ...data, siteType: SITE_TYPE }),
   updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
   updateUserBalance: (id, amount, operation) =>
     api.put(`/admin/users/${id}/balance`, { amount, operation }),
@@ -221,7 +221,7 @@ export const adminAPI = {
   clearSequentialCrashes: () => api.post('/admin/game/clear-sequential-crashes'),
   getCrashQueue: () => api.get('/admin/game/crash-queue'),
   getWinningBets: (params) => api.get('/admin/wins-bets', { params }),
-  getNotifications: () => api.get('/admin/notifications'),
+  getNotifications: () => api.get('/admin/notifications', { params: { siteType: SITE_TYPE } }),
   getSpinnerRecords: (params) => api.get('/admin/spinner-records', { params }),
   getSettings: () => api.get('/admin/settings'),
   updateSettings: (data) => api.put('/admin/settings', data),
