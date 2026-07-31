@@ -249,6 +249,7 @@ export const adminAPI = {
   // Export
   exportUsers: () => api.get('/admin/export/users'),
   getCreditLog: (params) => api.get('/admin/credit-log', { params: { ...params, siteType: SITE_TYPE } }),
+  getDepositUsersReport: (params) => api.get('/admin/reports/deposit-users', { params: { ...params, siteType: SITE_TYPE } }),
   // KYC
   getKycRequests: (params) => api.get('/admin/kyc', { params }),
   approveKyc: (id) => api.put(`/admin/kyc/${id}/approve`),

@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { IoClose } from 'react-icons/io5';
 import { HiOutlineCog6Tooth, HiOutlineGift, HiOutlineUser, HiOutlineIdentification, HiOutlineUserGroup } from 'react-icons/hi2';
-import { IoLogOutOutline, IoGridOutline, IoTrendingUpOutline, IoServerOutline, IoReceiptOutline } from 'react-icons/io5';
+import { IoLogOutOutline, IoGridOutline, IoTrendingUpOutline, IoServerOutline, IoReceiptOutline, IoWalletOutline } from 'react-icons/io5';
 
 const AdminSideDrawer = ({ open, onClose }) => {
   const { user, logout, isAdmin, isSubAdmin, isSuperAdmin } = useAuth();
@@ -22,6 +22,7 @@ const AdminSideDrawer = ({ open, onClose }) => {
     { to: '/admin/kyc', label: 'KYC', icon: HiOutlineIdentification, subAdmin: false },
     { to: '/admin/database', label: 'Database', icon: IoServerOutline, subAdmin: false },
     ...(isSuperAdmin ? [{ to: '/admin/credit-log', label: 'Credit Log', icon: IoReceiptOutline, subAdmin: false }] : []),
+    ...(isSuperAdmin ? [{ to: '/admin/deposit-users', label: 'Deposit Users', icon: IoWalletOutline, subAdmin: false }] : []),
     { to: '/admin/referrals', label: 'Referrals', icon: HiOutlineUserGroup, subAdmin: false },
     { to: '/admin/settings', label: 'Settings', icon: HiOutlineCog6Tooth, subAdmin: false },
     { to: '/admin/profile', label: 'Your Profile', icon: HiOutlineUser, subAdmin: true },

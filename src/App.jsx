@@ -46,6 +46,7 @@ import AdminProfit from './admin/AdminProfit';
 import AdminDatabase from './admin/AdminDatabase';
 import AdminKyc from './admin/AdminKyc';
 import AdminCreditLog from './admin/AdminCreditLog';
+import AdminDepositUsers from './admin/AdminDepositUsers';
 import AdminReferral from './admin/AdminReferral';
 
 // Protected Route Component
@@ -128,11 +129,22 @@ const LandingRoute = ({ children }) => {
 // Component to block subadmin from accessing settings
 const SubAdminBlock = ({ children }) => {
   const { isSubAdmin, isAdmin } = useAuth();
-  
+
   if (isSubAdmin && !isAdmin) {
     return <Navigate to="/admin" replace />;
   }
-  
+
+  return children;
+};
+
+// Component to allow only super admin
+const SuperAdminBlock = ({ children }) => {
+  const { isSuperAdmin } = useAuth();
+
+  if (!isSuperAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
   return children;
 };
 
@@ -261,6 +273,7 @@ function AppRoutes() {
         <Route path="kyc" element={<SubAdminBlock><AdminKyc /></SubAdminBlock>} />
         <Route path="database" element={<SubAdminBlock><AdminDatabase /></SubAdminBlock>} />
         <Route path="credit-log" element={<SubAdminBlock><AdminCreditLog /></SubAdminBlock>} />
+        <Route path="deposit-users" element={<SuperAdminBlock><AdminDepositUsers /></SuperAdminBlock>} />
         <Route path="referrals" element={<SubAdminBlock><AdminReferral /></SubAdminBlock>} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="settings" element={

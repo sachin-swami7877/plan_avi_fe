@@ -3,6 +3,7 @@ import { adminAPI } from '../services/api';
 import { useCountdown } from '../hooks/useCountdown';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import ImageViewerModal from '../components/ImageViewerModal';
 
 // Helper to render screenshot — handles both Cloudinary URLs and base64 data URIs
 function ScreenshotView({ url }) {
@@ -38,24 +39,7 @@ function ScreenshotView({ url }) {
         onClick={() => setShowModal(true)}
       />
       {showModal && (
-        <div
-          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/90"
-          onClick={() => setShowModal(false)}
-        >
-          <button
-            className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/80 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold z-10"
-            onClick={(e) => { e.stopPropagation(); setShowModal(false); }}
-          >
-            ×
-          </button>
-          <img
-            src={safeUrl}
-            alt="Screenshot Full"
-            referrerPolicy="no-referrer"
-            className="max-w-full max-h-full w-full h-full object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+        <ImageViewerModal url={safeUrl} onClose={() => setShowModal(false)} title="Ludo Result Screenshot" />
       )}
     </div>
   );

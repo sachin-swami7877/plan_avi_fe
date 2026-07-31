@@ -4,6 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import { IoChevronBack, IoChevronForward, IoChevronDown } from 'react-icons/io5';
 import DatePickerModal from '../components/DatePickerModal';
+import ImageViewerModal from '../components/ImageViewerModal';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,6 +41,7 @@ const MoneyRequests = () => {
   const [editAmounts, setEditAmounts] = useState({});
   const [processing, setProcessing] = useState(null);
   const [rejectDeductConfirm, setRejectDeductConfirm] = useState(null); // { id, amount, userName }
+  const [viewShot, setViewShot] = useState(null); // screenshot url shown in the in-page viewer
   const [depositTotals, setDepositTotals] = useState({ totalAmount: 0, count: 0 });
   const [withdrawalTotals, setWithdrawalTotals] = useState({ totalAmount: 0, count: 0 });
   const [selectedIds, setSelectedIds] = useState([]);
@@ -530,14 +532,12 @@ const MoneyRequests = () => {
                 )}
 
                 {tab === 'deposit' && request.screenshotUrl && (
-                  <a
-                    href={request.screenshotUrl.startsWith('http') ? request.screenshotUrl : `${import.meta.env.VITE_APP_ENVIRONMENT === 'production' ? import.meta.env.VITE_APP_PRODUCTION_API_URL : import.meta.env.VITE_APP_LOCAL_API_URL}${request.screenshotUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block bg-violet-50 text-violet-700 text-center py-2 rounded-lg mb-3 font-medium text-sm"
+                  <button
+                    onClick={() => setViewShot(request.screenshotUrl.startsWith('http') ? request.screenshotUrl : `${import.meta.env.VITE_APP_ENVIRONMENT === 'production' ? import.meta.env.VITE_APP_PRODUCTION_API_URL : import.meta.env.VITE_APP_LOCAL_API_URL}${request.screenshotUrl}`)}
+                    className="block w-full bg-violet-50 text-violet-700 text-center py-2 rounded-lg mb-3 font-medium text-sm"
                   >
                     View Screenshot
-                  </a>
+                  </button>
                 )}
 
                 {/* Who processed this request */}
@@ -712,6 +712,9 @@ const MoneyRequests = () => {
           </div>
         </div>
       )}
+
+      {/* In-page screenshot viewer */}
+      <ImageViewerModal url={viewShot} onClose={() => setViewShot(null)} title="Deposit Screenshot" />
     </div>
   );
 };
