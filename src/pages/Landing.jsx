@@ -474,7 +474,7 @@ const Landing = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-                <LogoSvg className="w-6 h-6" />
+                <img src="/logo.jpeg" alt="RushkroLudo" className="w-6 h-6 rounded-full object-cover" />
               </div>
               <span className="font-extrabold">Rushkro<span className="text-red-500">Ludo</span></span>
             </div>
